@@ -7,4 +7,4 @@ import { AttemptsService } from './attempts.service';
   providers: [AttemptsService],
   exports: [AttemptsService],
 })
-export class AttemptsModule {}
+export class AttemptsModule { }

@@ -237,24 +237,22 @@ export default function ExamTakingPage() {
             {exam.questions[currentQuestion].options.map((option, index) => {
               const questionId = exam.questions[currentQuestion].id
               const isSelected = answers[questionId] === index
-              
+
               return (
                 <button
                   key={`${questionId}-option-${index}`}
                   onClick={() => handleAnswerSelect(questionId, index)}
-                  className={`w-full p-4 text-left border-2 rounded-lg transition-all duration-200 ${
-                    isSelected
+                  className={`w-full p-4 text-left border-2 rounded-lg transition-all duration-200 ${isSelected
                       ? 'border-blue-500 bg-blue-50 shadow-md'
                       : 'border-gray-200 hover:border-blue-300 hover:bg-gray-50'
-                  }`}
+                    }`}
                 >
                   <div className="flex items-center space-x-3">
                     <div
-                      className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
-                        isSelected
+                      className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${isSelected
                           ? 'border-blue-500 bg-blue-500'
                           : 'border-gray-300'
-                      }`}
+                        }`}
                     >
                       {isSelected && (
                         <div className="w-3 h-3 bg-white rounded-full"></div>
@@ -283,7 +281,7 @@ export default function ExamTakingPage() {
           {exam.questions.map((question, index) => {
             const isAnswered = answers[question.id] !== undefined
             const isCurrent = currentQuestion === index
-            
+
             let buttonClass = 'w-10 h-10 rounded-full font-medium transition-all '
             if (isCurrent) {
               buttonClass += 'bg-blue-600 text-white'
@@ -292,7 +290,7 @@ export default function ExamTakingPage() {
             } else {
               buttonClass += 'bg-gray-100 text-gray-600 border border-gray-300'
             }
-            
+
             return (
               <button
                 key={question.id}

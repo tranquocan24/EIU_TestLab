@@ -4,7 +4,7 @@ import { SubmitAnswerDto } from './dto';
 
 @Injectable()
 export class AttemptsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   async startAttempt(examId: string, userId: string) {
     // Check if exam exists

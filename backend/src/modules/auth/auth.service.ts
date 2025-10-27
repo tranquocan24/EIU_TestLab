@@ -9,7 +9,7 @@ export class AuthService {
   constructor(
     private prisma: PrismaService,
     private jwt: JwtService,
-  ) {}
+  ) { }
 
   async register(dto: RegisterDto) {
     // Check if user exists

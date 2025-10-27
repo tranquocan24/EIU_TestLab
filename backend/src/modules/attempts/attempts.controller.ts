@@ -7,7 +7,7 @@ import { StartAttemptDto, SubmitAnswerDto, SubmitAttemptDto } from './dto';
 @Controller('attempts')
 @UseGuards(JwtAuthGuard)
 export class AttemptsController {
-  constructor(private readonly attemptsService: AttemptsService) {}
+  constructor(private readonly attemptsService: AttemptsService) { }
 
   @Post('start')
   startAttempt(@Body() dto: StartAttemptDto, @GetUser('id') userId: string) {

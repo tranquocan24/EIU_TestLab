@@ -27,11 +27,11 @@ export default function StudentResultsPage() {
   const [results, setResults] = useState<ExamResult[]>([])
   const [filteredResults, setFilteredResults] = useState<ExamResult[]>([])
   const [loading, setLoading] = useState(true)
-  
+
   // Filters
   const [subjectFilter, setSubjectFilter] = useState('all')
   const [searchTerm, setSearchTerm] = useState('')
-  
+
   // Stats
   const [stats, setStats] = useState({
     totalExams: 0,
@@ -57,7 +57,7 @@ export default function StudentResultsPage() {
       setLoading(true)
       // TODO: Replace with actual API call
       // const response = await apiClient.getMyResults()
-      
+
       // Mock data
       const mockResults: ExamResult[] = [
         {
@@ -97,12 +97,12 @@ export default function StudentResultsPage() {
 
       setResults(mockResults)
       setFilteredResults(mockResults)
-      
+
       // Calculate stats
       const total = mockResults.length
       const avg = mockResults.reduce((sum, r) => sum + r.score, 0) / total
       const highest = Math.max(...mockResults.map(r => r.score))
-      
+
       setStats({
         totalExams: total,
         averageScore: Math.round(avg),
@@ -274,11 +274,11 @@ export default function StudentResultsPage() {
                       </div>
                       <div className="flex items-center gap-2">
                         <TrendingUp className="h-4 w-4" />
-                        <span>{((result.correctAnswers/result.totalQuestions)*100).toFixed(0)}% chính xác</span>
+                        <span>{((result.correctAnswers / result.totalQuestions) * 100).toFixed(0)}% chính xác</span>
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center gap-4">
                     <Card className={`p-6 text-center min-w-[120px] border-2 ${getScoreColor(result.score)}`}>
                       <div className={`text-4xl font-bold mb-1 ${result.score >= 80 ? 'text-green-600' : result.score >= 60 ? 'text-yellow-600' : 'text-red-600'}`}>
@@ -286,7 +286,7 @@ export default function StudentResultsPage() {
                       </div>
                       <div className="text-xs text-gray-600 font-medium">Điểm số</div>
                     </Card>
-                    
+
                     <Button
                       variant="outline"
                       size="sm"

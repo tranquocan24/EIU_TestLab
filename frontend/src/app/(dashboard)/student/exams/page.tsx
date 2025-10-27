@@ -38,7 +38,7 @@ export default function StudentExamList() {
     const filtered = exams.filter(exam => {
       const matchSubject = !subjectFilter || exam.subject === subjectFilter
       const matchStatus = !statusFilter || exam.status === statusFilter
-      const matchSearch = !searchTerm || 
+      const matchSearch = !searchTerm ||
         exam.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         exam.subject.toLowerCase().includes(searchTerm.toLowerCase())
 
@@ -52,7 +52,7 @@ export default function StudentExamList() {
     try {
       // Simulate API call with mock data
       await new Promise(resolve => setTimeout(resolve, 1000))
-      
+
       const mockExams: Exam[] = [
         {
           id: '1',
@@ -135,9 +135,9 @@ export default function StudentExamList() {
 
   const formatDateTime = (dateTimeString: string) => {
     const date = new Date(dateTimeString)
-    return date.toLocaleDateString('vi-VN') + ' ' + date.toLocaleTimeString('vi-VN', { 
-      hour: '2-digit', 
-      minute: '2-digit' 
+    return date.toLocaleDateString('vi-VN') + ' ' + date.toLocaleTimeString('vi-VN', {
+      hour: '2-digit',
+      minute: '2-digit'
     })
   }
 
@@ -229,7 +229,7 @@ export default function StudentExamList() {
                   </span>
                 </div>
               </CardHeader>
-              
+
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div className="flex items-center space-x-2">
@@ -275,14 +275,14 @@ export default function StudentExamList() {
 
                 <div className="flex space-x-2">
                   {exam.status === 'available' && (
-                    <Button 
+                    <Button
                       onClick={() => handleTakeExam(exam)}
                       className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
                     >
                       Bắt đầu thi
                     </Button>
                   )}
-                  
+
                   {exam.status === 'completed' && (
                     <>
                       <Button variant="outline" className="flex-1">
@@ -293,7 +293,7 @@ export default function StudentExamList() {
                       </Button>
                     </>
                   )}
-                  
+
                   {exam.status === 'expired' && (
                     <Button disabled className="flex-1">
                       Hết hạn
@@ -323,7 +323,7 @@ export default function StudentExamList() {
               Vui lòng xem kỹ thông tin bài thi trước khi bắt đầu
             </DialogDescription>
           </DialogHeader>
-          
+
           {selectedExam && (
             <div className="space-y-4">
               <div className="space-y-2">

@@ -136,7 +136,7 @@ export interface SocketEvents {
   'exam:start': { examId: string; userId: string };
   'exam:submit': { submissionId: string; answers: Record<string, any> };
   'exam:heartbeat': { submissionId: string };
-  
+
   // Server to client
   'exam:started': { submissionId: string };
   'exam:time-warning': { timeLeft: number };

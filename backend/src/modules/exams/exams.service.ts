@@ -4,7 +4,7 @@ import { CreateExamDto, UpdateExamDto } from './dto';
 
 @Injectable()
 export class ExamsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   async findAll() {
     return this.prisma.exam.findMany({
@@ -78,7 +78,7 @@ export class ExamsService {
 
   async update(id: string, updateExamDto: UpdateExamDto) {
     const exam = await this.prisma.exam.findUnique({ where: { id } });
-    
+
     if (!exam) {
       throw new NotFoundException(`Exam with ID ${id} not found`);
     }
@@ -100,7 +100,7 @@ export class ExamsService {
 
   async remove(id: string) {
     const exam = await this.prisma.exam.findUnique({ where: { id } });
-    
+
     if (!exam) {
       throw new NotFoundException(`Exam with ID ${id} not found`);
     }

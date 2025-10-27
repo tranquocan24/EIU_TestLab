@@ -4,7 +4,7 @@ import { CreateQuestionDto, UpdateQuestionDto } from './dto';
 
 @Injectable()
 export class QuestionsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   async create(createQuestionDto: CreateQuestionDto) {
     const { options, ...questionData } = createQuestionDto;
@@ -40,7 +40,7 @@ export class QuestionsService {
 
   async update(id: string, updateQuestionDto: UpdateQuestionDto) {
     const question = await this.prisma.question.findUnique({ where: { id } });
-    
+
     if (!question) {
       throw new NotFoundException(`Question with ID ${id} not found`);
     }
@@ -72,7 +72,7 @@ export class QuestionsService {
 
   async remove(id: string) {
     const question = await this.prisma.question.findUnique({ where: { id } });
-    
+
     if (!question) {
       throw new NotFoundException(`Question with ID ${id} not found`);
     }

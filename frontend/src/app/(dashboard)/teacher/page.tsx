@@ -43,7 +43,7 @@ export default function TeacherDashboard() {
     try {
       // Simulate API call with mock data
       await new Promise(resolve => setTimeout(resolve, 1000))
-      
+
       setRecentExams([
         {
           id: '1',
@@ -112,9 +112,9 @@ export default function TeacherDashboard() {
 
   const formatDateTime = (dateTimeString: string) => {
     const date = new Date(dateTimeString)
-    return date.toLocaleDateString('vi-VN') + ' ' + date.toLocaleTimeString('vi-VN', { 
-      hour: '2-digit', 
-      minute: '2-digit' 
+    return date.toLocaleDateString('vi-VN') + ' ' + date.toLocaleTimeString('vi-VN', {
+      hour: '2-digit',
+      minute: '2-digit'
     })
   }
 
@@ -139,7 +139,7 @@ export default function TeacherDashboard() {
 
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card 
+        <Card
           className="cursor-pointer hover:shadow-lg transition-all border-l-4 border-l-purple-500"
           onClick={() => router.push('/teacher/create')}
         >
@@ -156,7 +156,7 @@ export default function TeacherDashboard() {
           </CardContent>
         </Card>
 
-        <Card 
+        <Card
           className="cursor-pointer hover:shadow-lg transition-all border-l-4 border-l-blue-500"
           onClick={() => router.push('/teacher/exams')}
         >
@@ -173,7 +173,7 @@ export default function TeacherDashboard() {
           </CardContent>
         </Card>
 
-        <Card 
+        <Card
           className="cursor-pointer hover:shadow-lg transition-all border-l-4 border-l-green-500"
           onClick={() => router.push('/teacher/results')}
         >

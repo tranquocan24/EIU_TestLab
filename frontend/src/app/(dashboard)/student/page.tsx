@@ -30,7 +30,7 @@ export default function StudentDashboard() {
     try {
       // Simulate API call with mock data
       await new Promise(resolve => setTimeout(resolve, 1000))
-      
+
       setStats({
         totalExams: 8,
         completedExams: 5,
@@ -69,9 +69,9 @@ export default function StudentDashboard() {
 
   const formatDateTime = (dateTimeString: string) => {
     const date = new Date(dateTimeString)
-    return date.toLocaleDateString('vi-VN') + ' ' + date.toLocaleTimeString('vi-VN', { 
-      hour: '2-digit', 
-      minute: '2-digit' 
+    return date.toLocaleDateString('vi-VN') + ' ' + date.toLocaleTimeString('vi-VN', {
+      hour: '2-digit',
+      minute: '2-digit'
     })
   }
 

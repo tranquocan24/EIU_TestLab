@@ -1,14 +1,14 @@
 import { Header } from '@/components/header'
 
 export default function PublicLayout({
-  children,
+    children,
 }: {
-  children: React.ReactNode
+    children: React.ReactNode
 }) {
-  return (
-    <>
-      <Header />
-      {children}
-    </>
-  )
+    return (
+        <>
+            <Header />
+            {children}
+        </>
+    )
 }

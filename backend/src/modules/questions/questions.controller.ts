@@ -8,7 +8,7 @@ import { CreateQuestionDto, UpdateQuestionDto } from './dto';
 @Controller('questions')
 @UseGuards(JwtAuthGuard)
 export class QuestionsController {
-  constructor(private readonly questionsService: QuestionsService) {}
+  constructor(private readonly questionsService: QuestionsService) { }
 
   @Post()
   @UseGuards(RolesGuard)

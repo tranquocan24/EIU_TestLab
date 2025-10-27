@@ -7,4 +7,4 @@ import { QuestionsService } from './questions.service';
   providers: [QuestionsService],
   exports: [QuestionsService],
 })
-export class QuestionsModule {}
+export class QuestionsModule { }

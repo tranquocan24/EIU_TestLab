@@ -14,7 +14,7 @@ export function LoginForm() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
-  
+
   const router = useRouter()
   const { login } = useAuth()
 
@@ -27,11 +27,11 @@ export function LoginForm() {
     try {
       const userData = await login(username, password)
       setSuccess('Đăng nhập thành công!')
-      
+
       // Redirect based on user role
       setTimeout(() => {
         const role = userData?.role?.toLowerCase() || 'student'
-        
+
         switch (role) {
           case 'teacher':
             router.push('/teacher')

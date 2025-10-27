@@ -9,7 +9,7 @@ import { CreateExamDto, UpdateExamDto } from './dto';
 @Controller('exams')
 @UseGuards(JwtAuthGuard)
 export class ExamsController {
-  constructor(private readonly examsService: ExamsService) {}
+  constructor(private readonly examsService: ExamsService) { }
 
   @Get()
   findAll() {
