@@ -1,0 +1,149 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  TEACHER
+  STUDENT
+}
+
+enum ExamStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum AttemptStatus {
+  IN_PROGRESS
+  SUBMITTED
+  GRADED
+}
+
+model User {
+  id        String   @id @default(uuid())
+  username  String   @unique
+  password  String
+  email     String?  @unique
+  name      String
+  role      UserRole @default(STUDENT)
+  isActive  Boolean  @default(true)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  createdExams Exam[]    @relation("ExamCreator")
+  attempts     Attempt[]
+  
+  @@map("users")
+}
+
+model Exam {
+  id          String     @id @default(uuid())
+  title       String
+  description String?
+  subject     String
+  duration    Int        // in minutes
+  passingScore Int       @default(60)
+  status      ExamStatus @default(DRAFT)
+  
+  startTime   DateTime?
+  endTime     DateTime?
+  
+  createdById String
+  createdBy   User      @relation("ExamCreator", fields: [createdById], references: [id])
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  // Relations
+  questions   Question[]
+  attempts    Attempt[]
+  
+  @@map("exams")
+}
+
+model Question {
+  id       String  @id @default(uuid())
+  question String
+  type     String  @default("multiple-choice") // multiple-choice, true-false, essay
+  points   Int     @default(10)
+  order    Int     @default(0)
+  
+  examId   String
+  exam     Exam    @relation(fields: [examId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  options  QuestionOption[]
+  answers  Answer[]
+  
+  @@map("questions")
+}
+
+model QuestionOption {
+  id         String  @id @default(uuid())
+  option     String
+  isCorrect  Boolean @default(false)
+  order      Int     @default(0)
+  
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  
+  @@map("question_options")
+}
+
+model Attempt {
+  id            String        @id @default(uuid())
+  status        AttemptStatus @default(IN_PROGRESS)
+  score         Float?
+  startedAt     DateTime      @default(now())
+  submittedAt   DateTime?
+  timeSpent     Int?          // in seconds
+  
+  studentId     String
+  student       User          @relation(fields: [studentId], references: [id])
+  
+  examId        String
+  exam          Exam          @relation(fields: [examId], references: [id])
+  
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  
+  // Relations
+  answers       Answer[]
+  
+  @@unique([studentId, examId])
+  @@map("attempts")
+}
+
+model Answer {
+  id              String   @id @default(uuid())
+  selectedOption  String?  // ID của option được chọn
+  answerText      String?  // Cho câu trả lời tự luận
+  isCorrect       Boolean  @default(false)
+  points          Float    @default(0)
+  
+  attemptId       String
+  attempt         Attempt  @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  
+  questionId      String
+  question        Question @relation(fields: [questionId], references: [id])
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@unique([attemptId, questionId])
+  @@map("answers")
+}

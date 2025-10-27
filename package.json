@@ -5,7 +5,13 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "cd backend && npm run start:dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "install:all": "cd backend && npm install && cd ../frontend && npm install",
+    "build:backend": "cd backend && npm run build",
+    "build:frontend": "cd frontend && npm run build",
+    "build:all": "npm run build:backend && npm run build:frontend",
     "test": "node test-complete-flow.js",
     "test:basic": "node test-basic-flow.js",
     "test:ci": "node test-basic-flow.js",
@@ -34,6 +40,7 @@
   },
   "homepage": "http://localhost:3000",
   "devDependencies": {
+    "concurrently": "^8.2.2",
     "puppeteer": "^24.12.1"
   },
   "browserslist": [
