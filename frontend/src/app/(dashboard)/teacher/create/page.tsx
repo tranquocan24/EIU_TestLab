@@ -124,15 +124,15 @@ export default function CreateExamPage() {
 
             // Call API to create exam
             const response = await api.createExam(examData)
-            
+
             console.log('API response:', response)
-            
+
             // Redirect immediately after successful creation
             const successMessage = status === 'draft' ? 'Lưu bản nháp thành công!' : 'Xuất bản đề thi thành công!'
-            
+
             // Store success message in sessionStorage to show on next page
             sessionStorage.setItem('examCreated', successMessage)
-            
+
             // Navigate to exams page
             router.push('/teacher/exams')
         } catch (error: any) {

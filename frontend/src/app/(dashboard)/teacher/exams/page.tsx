@@ -42,7 +42,7 @@ export default function ManageExamsPage() {
         }
 
         loadExams()
-        
+
         // Check for success message from create page
         const successMessage = sessionStorage.getItem('examCreated')
         if (successMessage) {
@@ -61,7 +61,7 @@ export default function ManageExamsPage() {
             console.log('Loading exams...')
             const examsData = await api.getExams()
             console.log('Exams API response:', examsData)
-            
+
             // Backend returns array directly, not paginated response
             const mappedExams = (examsData || []).map((exam: any) => ({
                 id: exam.id,
@@ -72,7 +72,7 @@ export default function ManageExamsPage() {
                 createdAt: exam.createdAt,
                 _count: exam._count
             }))
-            
+
             console.log('Mapped exams:', mappedExams)
             setExams(mappedExams)
         } catch (error) {

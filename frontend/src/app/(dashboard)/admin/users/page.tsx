@@ -136,7 +136,7 @@ export default function ManageUsersPage() {
                 email: ''
             })
             setShowAddDialog(false)
-            
+
             alert('Thêm người dùng thành công!')
         } catch (error: any) {
             console.error('Error adding user:', error)
@@ -156,12 +156,12 @@ export default function ManageUsersPage() {
 
             // Update state immediately - remove user from list
             setUsers(prevUsers => prevUsers.filter(u => u.id !== userId))
-            
+
             alert('Xóa người dùng thành công!')
         } catch (error: unknown) {
             console.error('Error deleting user:', error)
             const errorMessage = error instanceof Error && 'response' in error
-                ? (error as any).response?.data?.message 
+                ? (error as any).response?.data?.message
                 : 'Có lỗi xảy ra. Vui lòng thử lại!'
             alert(errorMessage || 'Có lỗi xảy ra. Vui lòng thử lại!')
         }
