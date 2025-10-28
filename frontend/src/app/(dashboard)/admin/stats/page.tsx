@@ -6,7 +6,8 @@ import { useAuth } from '@/hooks/useAuth'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { BarChart, Users, FileText, TrendingUp, Download, Calendar } from 'lucide-react'
+import { BarChart as BarChartIcon, Users, FileText, TrendingUp, Download, Calendar } from 'lucide-react'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts'
 
 interface LoginStats {
     date: string
@@ -41,21 +42,39 @@ export default function AdminStatsPage() {
         loadStats()
     }, [timeRange])
 
+    // Generate realistic login stats based on actual dates
+    const generateLoginStats = (range: string): LoginStats[] => {
+        const today = new Date()
+        const days = range === '7days' ? 7 : range === '30days' ? 30 : range === '90days' ? 90 : 365
+        const stats: LoginStats[] = []
+
+        for (let i = days - 1; i >= 0; i--) {
+            const date = new Date(today)
+            date.setDate(date.getDate() - i)
+            
+            // Format date as DD-MM
+            const day = String(date.getDate()).padStart(2, '0')
+            const month = String(date.getMonth() + 1).padStart(2, '0')
+            const dateStr = `${day}-${month}`
+
+            // Generate random logins (30-65 range, higher on weekdays)
+            const dayOfWeek = date.getDay()
+            const baseLogins = dayOfWeek === 0 || dayOfWeek === 6 ? 20 : 40 // Lower on weekends
+            const logins = Math.floor(baseLogins + Math.random() * 25)
+
+            stats.push({ date: dateStr, logins })
+        }
+
+        return stats
+    }
+
     const loadStats = async () => {
         try {
             setLoading(true)
             // TODO: Replace with actual API call
 
-            // Mock login stats
-            const mockLoginStats: LoginStats[] = [
-                { date: '2025-01-21', logins: 45 },
-                { date: '2025-01-22', logins: 52 },
-                { date: '2025-01-23', logins: 38 },
-                { date: '2025-01-24', logins: 61 },
-                { date: '2025-01-25', logins: 48 },
-                { date: '2025-01-26', logins: 55 },
-                { date: '2025-01-27', logins: 42 }
-            ]
+            // Generate login stats based on actual dates
+            const mockLoginStats: LoginStats[] = generateLoginStats(timeRange)
 
             // Mock exam stats
             const mockExamStats: ExamStats[] = [
@@ -78,16 +97,16 @@ export default function AdminStatsPage() {
                     averageScore: 7.5
                 },
                 {
-                    subject: 'Kỹ thuật phần mềm',
-                    totalExams: 6,
-                    totalSubmissions: 187,
+                    subject: 'Lập trình hướng đối tượng',
+                    totalExams: 15,
+                    totalSubmissions: 412,
                     averageScore: 8.0
                 },
                 {
-                    subject: 'Hệ điều hành',
+                    subject: 'Cấu trúc dữ liệu',
                     totalExams: 9,
-                    totalSubmissions: 234,
-                    averageScore: 7.6
+                    totalSubmissions: 287,
+                    averageScore: 7.9
                 }
             ]
 
@@ -98,11 +117,6 @@ export default function AdminStatsPage() {
         } finally {
             setLoading(false)
         }
-    }
-
-    const formatDate = (dateString: string) => {
-        const date = new Date(dateString)
-        return date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })
     }
 
     const totalLogins = loginStats.reduce((sum, stat) => sum + stat.logins, 0)
@@ -178,33 +192,43 @@ export default function AdminStatsPage() {
                         </Card>
                     </div>
 
-                    {/* Simple Bar Chart */}
-                    <div className="space-y-2">
-                        {loginStats.map((stat, index) => {
-                            const percentage = maxLogins > 0 ? (stat.logins / maxLogins) * 100 : 0
-                            return (
-                                <div key={index} className="flex items-center gap-4">
-                                    <div className="w-20 text-sm text-gray-600 font-medium">
-                                        {formatDate(stat.date)}
-                                    </div>
-                                    <div className="flex-1 bg-gray-100 rounded-full h-8 relative overflow-hidden">
-                                        <div
-                                            className="bg-gradient-to-r from-blue-500 to-blue-600 h-full rounded-full flex items-center justify-end pr-3 transition-all duration-500"
-                                            style={{ width: `${percentage}%` }}
-                                        >
-                                            {percentage > 15 && (
-                                                <span className="text-white text-sm font-semibold">{stat.logins}</span>
-                                            )}
-                                        </div>
-                                        {percentage <= 15 && (
-                                            <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-700 text-sm font-semibold">
-                                                {stat.logins}
-                                            </span>
-                                        )}
-                                    </div>
-                                </div>
-                            )
-                        })}
+                    {/* Recharts Bar Chart */}
+                    <div className="h-[300px] w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={loginStats} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                                <XAxis 
+                                    dataKey="date" 
+                                    tick={{ fill: '#6b7280', fontSize: 12 }}
+                                    tickLine={{ stroke: '#9ca3af' }}
+                                />
+                                <YAxis 
+                                    tick={{ fill: '#6b7280', fontSize: 12 }}
+                                    tickLine={{ stroke: '#9ca3af' }}
+                                />
+                                <Tooltip 
+                                    contentStyle={{ 
+                                        backgroundColor: '#fff', 
+                                        border: '1px solid #e5e7eb',
+                                        borderRadius: '8px',
+                                        boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+                                    }}
+                                    labelStyle={{ color: '#111827', fontWeight: 600 }}
+                                    cursor={{ fill: 'rgba(59, 130, 246, 0.1)' }}
+                                />
+                                <Legend 
+                                    wrapperStyle={{ paddingTop: '20px' }}
+                                    iconType="rect"
+                                />
+                                <Bar 
+                                    dataKey="logins" 
+                                    fill="#3b82f6" 
+                                    name="Số lượt đăng nhập"
+                                    radius={[8, 8, 0, 0]}
+                                    maxBarSize={50}
+                                />
+                            </BarChart>
+                        </ResponsiveContainer>
                     </div>
                 </CardContent>
             </Card>
@@ -213,7 +237,7 @@ export default function AdminStatsPage() {
             <Card>
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                        <BarChart className="h-5 w-5" />
+                        <BarChartIcon className="h-5 w-5" />
                         Thống kê theo môn học
                     </CardTitle>
                 </CardHeader>
