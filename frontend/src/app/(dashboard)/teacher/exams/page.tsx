@@ -8,16 +8,19 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { FileText, Users, CheckCircle, FileEdit, PlusCircle, RefreshCw, Search, Filter, Edit, Copy, Trash2, Eye, Archive } from 'lucide-react'
+import api from '@/lib/api'
 
 interface Exam {
     id: string
     title: string
     subject: string
-    status: 'published' | 'draft' | 'archived'
-    questionCount: number
+    status: 'PUBLISHED' | 'DRAFT' | 'ARCHIVED'
     duration: number
-    submissions: number
     createdAt: string
+    _count?: {
+        questions: number
+        attempts: number
+    }
 }
 
 export default function ManageExamsPage() {
@@ -39,6 +42,13 @@ export default function ManageExamsPage() {
         }
 
         loadExams()
+        
+        // Check for success message from create page
+        const successMessage = sessionStorage.getItem('examCreated')
+        if (successMessage) {
+            alert(successMessage)
+            sessionStorage.removeItem('examCreated')
+        }
     }, [isAuthenticated, user, router])
 
     useEffect(() => {
@@ -48,63 +58,26 @@ export default function ManageExamsPage() {
     const loadExams = async () => {
         try {
             setLoading(true)
-            // TODO: Replace with actual API call
-            const mockExams: Exam[] = [
-                {
-                    id: '1',
-                    title: 'Kiểm tra giữa kỳ - Lập trình Web',
-                    subject: 'Lập trình Web',
-                    status: 'published',
-                    questionCount: 30,
-                    duration: 60,
-                    submissions: 45,
-                    createdAt: '2025-01-15'
-                },
-                {
-                    id: '2',
-                    title: 'Bài tập JavaScript cơ bản',
-                    subject: 'Lập trình Web',
-                    status: 'published',
-                    questionCount: 20,
-                    duration: 45,
-                    submissions: 38,
-                    createdAt: '2025-01-10'
-                },
-                {
-                    id: '3',
-                    title: 'Thiết kế cơ sở dữ liệu',
-                    subject: 'Cơ sở dữ liệu',
-                    status: 'draft',
-                    questionCount: 25,
-                    duration: 90,
-                    submissions: 0,
-                    createdAt: '2025-01-20'
-                },
-                {
-                    id: '4',
-                    title: 'SQL nâng cao',
-                    subject: 'Cơ sở dữ liệu',
-                    status: 'published',
-                    questionCount: 35,
-                    duration: 75,
-                    submissions: 52,
-                    createdAt: '2025-01-05'
-                },
-                {
-                    id: '5',
-                    title: 'Mạng máy tính - Tầng giao vận',
-                    subject: 'Mạng máy tính',
-                    status: 'archived',
-                    questionCount: 40,
-                    duration: 120,
-                    submissions: 60,
-                    createdAt: '2024-12-20'
-                }
-            ]
-
-            setExams(mockExams)
+            console.log('Loading exams...')
+            const examsData = await api.getExams()
+            console.log('Exams API response:', examsData)
+            
+            // Backend returns array directly, not paginated response
+            const mappedExams = (examsData || []).map((exam: any) => ({
+                id: exam.id,
+                title: exam.title,
+                subject: exam.subject,
+                status: exam.status,
+                duration: exam.duration,
+                createdAt: exam.createdAt,
+                _count: exam._count
+            }))
+            
+            console.log('Mapped exams:', mappedExams)
+            setExams(mappedExams)
         } catch (error) {
             console.error('Error loading exams:', error)
+            alert('Không thể tải danh sách đề thi!')
         } finally {
             setLoading(false)
         }
@@ -144,7 +117,7 @@ export default function ManageExamsPage() {
                 case 'title-desc':
                     return b.title.localeCompare(a.title)
                 case 'submissions-desc':
-                    return b.submissions - a.submissions
+                    return (b._count?.attempts || 0) - (a._count?.attempts || 0)
                 default:
                     return 0
             }
@@ -155,11 +128,11 @@ export default function ManageExamsPage() {
 
     const getStatusBadge = (status: string) => {
         switch (status) {
-            case 'published':
+            case 'PUBLISHED':
                 return <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">Đã xuất bản</span>
-            case 'draft':
+            case 'DRAFT':
                 return <span className="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-xs font-semibold">Bản nháp</span>
-            case 'archived':
+            case 'ARCHIVED':
                 return <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-semibold">Đã lưu trữ</span>
             default:
                 return null
@@ -173,9 +146,9 @@ export default function ManageExamsPage() {
 
     const stats = {
         total: exams.length,
-        published: exams.filter(e => e.status === 'published').length,
-        draft: exams.filter(e => e.status === 'draft').length,
-        submissions: exams.reduce((sum, e) => sum + e.submissions, 0)
+        published: exams.filter(e => e.status === 'PUBLISHED').length,
+        draft: exams.filter(e => e.status === 'DRAFT').length,
+        submissions: exams.reduce((sum, e) => sum + (e._count?.attempts || 0), 0)
     }
 
     if (loading) {
@@ -304,9 +277,9 @@ export default function ManageExamsPage() {
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="all">Tất cả trạng thái</SelectItem>
-                                    <SelectItem value="published">Đã xuất bản</SelectItem>
-                                    <SelectItem value="draft">Bản nháp</SelectItem>
-                                    <SelectItem value="archived">Đã lưu trữ</SelectItem>
+                                    <SelectItem value="PUBLISHED">Đã xuất bản</SelectItem>
+                                    <SelectItem value="DRAFT">Bản nháp</SelectItem>
+                                    <SelectItem value="ARCHIVED">Đã lưu trữ</SelectItem>
                                 </SelectContent>
                             </Select>
 
@@ -355,7 +328,7 @@ export default function ManageExamsPage() {
                                 <div className="space-y-3 mb-4">
                                     <div className="flex justify-between text-sm">
                                         <span className="text-gray-600">Số câu hỏi:</span>
-                                        <span className="font-semibold text-gray-800">{exam.questionCount} câu</span>
+                                        <span className="font-semibold text-gray-800">{exam._count?.questions || 0} câu</span>
                                     </div>
                                     <div className="flex justify-between text-sm">
                                         <span className="text-gray-600">Thời lượng:</span>
@@ -363,7 +336,7 @@ export default function ManageExamsPage() {
                                     </div>
                                     <div className="flex justify-between text-sm">
                                         <span className="text-gray-600">Lượt thi:</span>
-                                        <span className="font-semibold text-purple-600">{exam.submissions} lượt</span>
+                                        <span className="font-semibold text-purple-600">{exam._count?.attempts || 0} lượt</span>
                                     </div>
                                     <div className="flex justify-between text-sm">
                                         <span className="text-gray-600">Ngày tạo:</span>

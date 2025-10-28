@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
 import { PlusCircle, Search, Edit, Trash2, UserPlus } from 'lucide-react'
+import api from '@/lib/api'
 
 interface User {
     id: string
@@ -55,53 +56,11 @@ export default function ManageUsersPage() {
     const loadUsers = async () => {
         try {
             setLoading(true)
-            // TODO: Replace with actual API call
-            const mockUsers: User[] = [
-                {
-                    id: '1',
-                    username: 'nphau',
-                    name: 'Nguyễn Phương Hậu',
-                    role: 'STUDENT',
-                    email: 'nphau@student.eiu.edu.vn',
-                    createdAt: '2025-01-15'
-                },
-                {
-                    id: '2',
-                    username: 'student1',
-                    name: 'Lê Văn Cường',
-                    role: 'STUDENT',
-                    email: 'student1@student.eiu.edu.vn',
-                    createdAt: '2025-01-10'
-                },
-                {
-                    id: '3',
-                    username: 'giaovien',
-                    name: 'Giáo Viên',
-                    role: 'TEACHER',
-                    email: 'giaovien@eiu.edu.vn',
-                    createdAt: '2025-01-05'
-                },
-                {
-                    id: '4',
-                    username: 'teacher1',
-                    name: 'Nguyễn Văn An',
-                    role: 'TEACHER',
-                    email: 'teacher1@eiu.edu.vn',
-                    createdAt: '2025-01-08'
-                },
-                {
-                    id: '5',
-                    username: 'admin',
-                    name: 'Administrator',
-                    role: 'ADMIN',
-                    email: 'admin@eiu.edu.vn',
-                    createdAt: '2025-01-01'
-                }
-            ]
-
-            setUsers(mockUsers)
+            const users = await api.getUsers()
+            setUsers(users || [])
         } catch (error) {
             console.error('Error loading users:', error)
+            alert('Không thể tải danh sách người dùng!')
         } finally {
             setLoading(false)
         }
@@ -148,10 +107,27 @@ export default function ManageUsersPage() {
 
     const handleAddUser = async () => {
         try {
-            // TODO: Replace with actual API call
-            console.log('Adding user:', formData)
-            alert('Thêm người dùng thành công!')
-            setShowAddDialog(false)
+            // Validate required fields
+            if (!formData.username || !formData.password || !formData.name) {
+                alert('Vui lòng điền đầy đủ các trường bắt buộc!')
+                return
+            }
+
+            // Call API to create user
+            const response = await api.createUser({
+                username: formData.username,
+                password: formData.password,
+                name: formData.name,
+                role: formData.role as 'STUDENT' | 'TEACHER' | 'ADMIN',
+                email: formData.email || undefined,
+            })
+
+            // Update state with new user from backend
+            if (response.data) {
+                setUsers(prevUsers => [...prevUsers, response.data!])
+            }
+
+            // Reset form and close dialog
             setFormData({
                 username: '',
                 password: '',
@@ -159,10 +135,13 @@ export default function ManageUsersPage() {
                 role: 'STUDENT',
                 email: ''
             })
-            loadUsers()
-        } catch (error) {
+            setShowAddDialog(false)
+            
+            alert('Thêm người dùng thành công!')
+        } catch (error: any) {
             console.error('Error adding user:', error)
-            alert('Có lỗi xảy ra. Vui lòng thử lại!')
+            const errorMessage = error.response?.data?.message || 'Có lỗi xảy ra. Vui lòng thử lại!'
+            alert(errorMessage)
         }
     }
 
@@ -172,13 +151,19 @@ export default function ManageUsersPage() {
         }
 
         try {
-            // TODO: Replace with actual API call
-            console.log('Deleting user:', userId)
+            // Call API to delete user from database
+            await api.deleteUser(userId)
+
+            // Update state immediately - remove user from list
+            setUsers(prevUsers => prevUsers.filter(u => u.id !== userId))
+            
             alert('Xóa người dùng thành công!')
-            loadUsers()
-        } catch (error) {
+        } catch (error: unknown) {
             console.error('Error deleting user:', error)
-            alert('Có lỗi xảy ra. Vui lòng thử lại!')
+            const errorMessage = error instanceof Error && 'response' in error
+                ? (error as any).response?.data?.message 
+                : 'Có lỗi xảy ra. Vui lòng thử lại!'
+            alert(errorMessage || 'Có lỗi xảy ra. Vui lòng thử lại!')
         }
     }
 

@@ -3,10 +3,12 @@ export interface User {
   id: string;
   username: string;
   name: string;
-  role: 'student' | 'teacher' | 'admin';
+  role: 'STUDENT' | 'TEACHER' | 'ADMIN';  // Backend returns uppercase
+  email?: string;
+  isActive?: boolean;
   subject?: string; // For teachers
   createdAt: string;
-  updatedAt: string;
+  updatedAt?: string;
 }
 
 export interface Class {

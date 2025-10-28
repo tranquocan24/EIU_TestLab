@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Label } from '@/components/ui/label'
 import { PlusCircle, Trash2, Save, Send, FileText, Upload } from 'lucide-react'
+import api from '@/lib/api'
 
 interface Question {
     id: string
@@ -87,36 +88,58 @@ export default function CreateExamPage() {
 
     const handleSubmit = async (status: 'draft' | 'published') => {
         try {
+            console.log('handleSubmit called with status:', status)
             setLoading(true)
 
-            const examData = {
-                title,
-                subject,
-                description,
-                duration: parseInt(duration),
-                classes: selectedClasses,
-                settings: {
-                    shuffleQuestions,
-                    shuffleAnswers,
-                    showResults,
-                    allowReview,
-                    startDate,
-                    endDate
-                },
-                questions,
-                status
+            // Validate required fields
+            if (!title || !subject || !duration) {
+                console.log('Validation failed: Missing required fields', { title, subject, duration })
+                alert('Vui lòng điền đầy đủ thông tin cơ bản (Tên đề thi, Môn học, Thời gian)!')
+                setLoading(false)
+                return
             }
 
-            console.log('Submitting exam:', examData)
+            if (questions.length === 0) {
+                console.log('Validation failed: No questions')
+                alert('Vui lòng thêm ít nhất 1 câu hỏi!')
+                setLoading(false)
+                return
+            }
 
-            // TODO: Replace with actual API call
-            await new Promise(resolve => setTimeout(resolve, 1000))
+            // Map status to backend enum (DRAFT, PUBLISHED, ARCHIVED)
+            const examStatus = status === 'draft' ? 'DRAFT' : 'PUBLISHED'
 
-            alert(status === 'draft' ? 'Lưu bản nháp thành công!' : 'Xuất bản đề thi thành công!')
+            const examData: any = {
+                title,
+                subject,
+                description: description || undefined,
+                duration: Number.parseInt(duration),
+                status: examStatus,
+                passingScore: 60, // Default passing score
+                startTime: startDate ? new Date(startDate).toISOString() : undefined,
+                endTime: endDate ? new Date(endDate).toISOString() : undefined,
+            }
+
+            console.log('Creating exam with data:', examData)
+
+            // Call API to create exam
+            const response = await api.createExam(examData)
+            
+            console.log('API response:', response)
+            
+            // Redirect immediately after successful creation
+            const successMessage = status === 'draft' ? 'Lưu bản nháp thành công!' : 'Xuất bản đề thi thành công!'
+            
+            // Store success message in sessionStorage to show on next page
+            sessionStorage.setItem('examCreated', successMessage)
+            
+            // Navigate to exams page
             router.push('/teacher/exams')
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error creating exam:', error)
-            alert('Có lỗi xảy ra. Vui lòng thử lại!')
+            console.error('Error details:', error.response?.data)
+            const errorMessage = error.response?.data?.message || 'Có lỗi xảy ra. Vui lòng thử lại!'
+            alert(errorMessage)
         } finally {
             setLoading(false)
         }

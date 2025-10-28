@@ -85,8 +85,8 @@ class ApiClient {
   }
 
   // User endpoints
-  async getUsers(params?: { page?: number; limit?: number; role?: string }): Promise<PaginatedResponse<User>> {
-    const response: AxiosResponse<PaginatedResponse<User>> =
+  async getUsers(params?: { page?: number; limit?: number; role?: string }): Promise<User[]> {
+    const response: AxiosResponse<User[]> =
       await this.client.get('/users', { params });
     return response.data;
   }
@@ -96,7 +96,7 @@ class ApiClient {
     return response.data;
   }
 
-  async createUser(userData: Partial<User>): Promise<ApiResponse<User>> {
+  async createUser(userData: Partial<User> & { password?: string }): Promise<ApiResponse<User>> {
     const response: AxiosResponse<ApiResponse<User>> =
       await this.client.post('/users', userData);
     return response.data;
@@ -125,8 +125,8 @@ class ApiClient {
   }
 
   // Exam endpoints
-  async getExams(params?: { page?: number; limit?: number; subject?: string }): Promise<PaginatedResponse<Exam>> {
-    const response: AxiosResponse<PaginatedResponse<Exam>> =
+  async getExams(params?: { page?: number; limit?: number; subject?: string }): Promise<any[]> {
+    const response: AxiosResponse<any[]> =
       await this.client.get('/exams', { params });
     return response.data;
   }
