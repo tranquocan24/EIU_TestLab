@@ -79,6 +79,9 @@ npx prisma studio
 # Từ thư mục root
 cd ../frontend
 npm install
+
+# Cài đặt recharts cho biểu đồ thống kê (admin dashboard)
+npm install recharts
 ```
 
 ### 3.2. (Optional) Cấu hình Environment Variables
