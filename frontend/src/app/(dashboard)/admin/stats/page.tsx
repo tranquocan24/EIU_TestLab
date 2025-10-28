@@ -51,7 +51,7 @@ export default function AdminStatsPage() {
         for (let i = days - 1; i >= 0; i--) {
             const date = new Date(today)
             date.setDate(date.getDate() - i)
-            
+
             // Format date as DD-MM
             const day = String(date.getDate()).padStart(2, '0')
             const month = String(date.getMonth() + 1).padStart(2, '0')
@@ -197,18 +197,18 @@ export default function AdminStatsPage() {
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={loginStats} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
                                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                                <XAxis 
-                                    dataKey="date" 
+                                <XAxis
+                                    dataKey="date"
                                     tick={{ fill: '#6b7280', fontSize: 12 }}
                                     tickLine={{ stroke: '#9ca3af' }}
                                 />
-                                <YAxis 
+                                <YAxis
                                     tick={{ fill: '#6b7280', fontSize: 12 }}
                                     tickLine={{ stroke: '#9ca3af' }}
                                 />
-                                <Tooltip 
-                                    contentStyle={{ 
-                                        backgroundColor: '#fff', 
+                                <Tooltip
+                                    contentStyle={{
+                                        backgroundColor: '#fff',
                                         border: '1px solid #e5e7eb',
                                         borderRadius: '8px',
                                         boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
@@ -216,13 +216,13 @@ export default function AdminStatsPage() {
                                     labelStyle={{ color: '#111827', fontWeight: 600 }}
                                     cursor={{ fill: 'rgba(59, 130, 246, 0.1)' }}
                                 />
-                                <Legend 
+                                <Legend
                                     wrapperStyle={{ paddingTop: '20px' }}
                                     iconType="rect"
                                 />
-                                <Bar 
-                                    dataKey="logins" 
-                                    fill="#3b82f6" 
+                                <Bar
+                                    dataKey="logins"
+                                    fill="#3b82f6"
                                     name="Số lượt đăng nhập"
                                     radius={[8, 8, 0, 0]}
                                     maxBarSize={50}
