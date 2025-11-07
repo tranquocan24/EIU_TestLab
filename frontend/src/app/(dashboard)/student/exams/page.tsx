@@ -150,7 +150,7 @@ export default function StudentExamList() {
 
         // Check if student has completed this exam
         const myAttempt = attemptMap.get(exam.id)
-        
+
         // Only mark as completed if:
         // 1. Student has attempts AND
         // 2. maxAttempts is not null (not unlimited) AND
@@ -158,10 +158,10 @@ export default function StudentExamList() {
         if (myAttempt) {
           // Get student's attempt count for this exam
           const studentAttemptsCount = myAttempts.filter(
-            (a: any) => a.exam.id === exam.id && 
-            (a.status === 'SUBMITTED' || a.status === 'GRADED')
+            (a: any) => a.exam.id === exam.id &&
+              (a.status === 'SUBMITTED' || a.status === 'GRADED')
           ).length
-          
+
           // Check if max attempts reached (only if maxAttempts is set)
           if (exam.maxAttempts !== null && exam.maxAttempts !== undefined) {
             if (studentAttemptsCount >= exam.maxAttempts) {

@@ -371,33 +371,33 @@ export default function ManageExamsPage() {
                                 </div>
 
                                 <div className="flex gap-2 pt-3 border-t border-gray-100">
-                                    <Button 
-                                        variant="outline" 
-                                        size="sm" 
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
                                         className="flex-1"
                                         onClick={() => router.push(`/teacher/exams/${exam.id}/results`)}
                                     >
                                         <Eye className="h-4 w-4 mr-1" />
                                         Xem
                                     </Button>
-                                    <Button 
-                                        variant="outline" 
-                                        size="sm" 
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
                                         className="flex-1"
                                         onClick={() => router.push(`/teacher/exams/${exam.id}/edit`)}
                                     >
                                         <Edit className="h-4 w-4 mr-1" />
                                         Sửa
                                     </Button>
-                                    <Button 
-                                        variant="outline" 
+                                    <Button
+                                        variant="outline"
                                         size="sm"
                                         onClick={() => handleDuplicate(exam.id)}
                                     >
                                         <Copy className="h-4 w-4" />
                                     </Button>
-                                    <Button 
-                                        variant="outline" 
+                                    <Button
+                                        variant="outline"
                                         size="sm"
                                         onClick={() => handleDelete(exam.id, exam.title)}
                                     >

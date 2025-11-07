@@ -54,14 +54,14 @@ export default function EditExamPage() {
         try {
             setLoadingExam(true)
             const exam = await api.getExamById(examId)
-            
+
             // Populate form fields
             setTitle(exam.title)
             setSelectedCourse(exam.subject)
             setDescription(exam.description || '')
             setDuration(exam.duration.toString())
             setMaxAttempts(exam.maxAttempts ? exam.maxAttempts.toString() : '')
-            
+
             // Convert dates to datetime-local format
             if (exam.startTime) {
                 const startDateTime = new Date(exam.startTime)
@@ -71,7 +71,7 @@ export default function EditExamPage() {
                 const endDateTime = new Date(exam.endTime)
                 setEndDate(endDateTime.toISOString().slice(0, 16))
             }
-            
+
             // Transform questions
             if (exam.questions && exam.questions.length > 0) {
                 const transformedQuestions = exam.questions.map((q: any) => {
@@ -87,7 +87,7 @@ export default function EditExamPage() {
                         const optionsArray = q.options.map((opt: any) => opt.text || opt)
                         // Find correct answer index
                         const correctIndex = q.options.findIndex((opt: any) => opt.isCorrect)
-                        
+
                         return {
                             ...baseQuestion,
                             options: optionsArray,
@@ -99,7 +99,7 @@ export default function EditExamPage() {
                 })
                 setQuestions(transformedQuestions)
             }
-            
+
             setLoadingExam(false)
         } catch (error: any) {
             console.error('Error loading exam:', error)

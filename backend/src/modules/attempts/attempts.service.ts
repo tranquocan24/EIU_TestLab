@@ -93,8 +93,8 @@ export class AttemptsService {
     console.log('[startAttempt] Creating new attempt...');
 
     // Calculate next attempt number
-    const nextAttemptNumber = previousAttempts.length > 0 
-      ? previousAttempts[0].attemptNumber + 1 
+    const nextAttemptNumber = previousAttempts.length > 0
+      ? previousAttempts[0].attemptNumber + 1
       : 1;
 
     // Create new attempt
