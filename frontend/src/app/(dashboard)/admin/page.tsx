@@ -6,6 +6,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Users, GraduationCap, FileText, Activity, RefreshCw, TrendingUp } from 'lucide-react'
+import api from '@/lib/api'
 
 interface DashboardStats {
     totalStudents: number
@@ -46,56 +47,16 @@ export default function AdminDashboard() {
     const loadDashboardData = async () => {
         try {
             setLoading(true)
-            // TODO: Replace with actual API call
+            const data = await api.getDashboardStats()
 
-            // Mock stats data
             setStats({
-                totalStudents: 150,
-                totalTeachers: 25,
-                totalExams: 45,
-                todayAttempts: 38
+                totalStudents: data.totalStudents,
+                totalTeachers: data.totalTeachers,
+                totalExams: data.totalExams,
+                todayAttempts: data.todayAttempts
             })
 
-            // Mock activities data
-            const mockActivities: RecentActivity[] = [
-                {
-                    id: '1',
-                    type: 'exam_created',
-                    userName: 'Nguyễn Văn An',
-                    description: 'đã tạo đề thi mới "Kiểm tra giữa kỳ - Lập trình Web"',
-                    timestamp: new Date().toISOString()
-                },
-                {
-                    id: '2',
-                    type: 'exam_submitted',
-                    userName: 'Trần Thị Bình',
-                    description: 'đã nộp bài thi "JavaScript cơ bản" với điểm 8.5',
-                    timestamp: new Date(Date.now() - 30 * 60000).toISOString()
-                },
-                {
-                    id: '3',
-                    type: 'user_created',
-                    userName: 'Admin',
-                    description: 'đã tạo tài khoản mới cho "Lê Văn Cường"',
-                    timestamp: new Date(Date.now() - 60 * 60000).toISOString()
-                },
-                {
-                    id: '4',
-                    type: 'login',
-                    userName: 'Phạm Thị Dung',
-                    description: 'đã đăng nhập vào hệ thống',
-                    timestamp: new Date(Date.now() - 90 * 60000).toISOString()
-                },
-                {
-                    id: '5',
-                    type: 'exam_created',
-                    userName: 'Hoàng Văn Em',
-                    description: 'đã tạo đề thi mới "SQL nâng cao"',
-                    timestamp: new Date(Date.now() - 120 * 60000).toISOString()
-                }
-            ]
-
-            setActivities(mockActivities)
+            setActivities(data.activities || [])
         } catch (error) {
             console.error('Error loading dashboard data:', error)
         } finally {

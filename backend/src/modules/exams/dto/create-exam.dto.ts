@@ -1,4 +1,6 @@
-import { IsString, IsNotEmpty, IsOptional, IsInt, IsDateString, IsEnum } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsInt, IsDateString, IsEnum, IsArray, ValidateNested } from 'class-validator';
+import { Type } from 'class-transformer';
+import { CreateQuestionDto } from './create-question.dto';
 
 export class CreateExamDto {
   @IsString()
@@ -24,6 +26,10 @@ export class CreateExamDto {
   @IsOptional()
   status?: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
 
+  @IsString()
+  @IsOptional()
+  allowedCourses?: string; // Danh sách lớp (ví dụ: "CSE301,CSE302")
+
   @IsDateString()
   @IsOptional()
   startTime?: string;
@@ -31,4 +37,10 @@ export class CreateExamDto {
   @IsDateString()
   @IsOptional()
   endTime?: string;
+
+  @IsArray()
+  @IsOptional()
+  @ValidateNested({ each: true })
+  @Type(() => CreateQuestionDto)
+  questions?: CreateQuestionDto[];
 }

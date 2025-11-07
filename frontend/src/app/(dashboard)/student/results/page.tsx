@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { FileText, TrendingUp, Award, Calendar } from 'lucide-react'
+import api from '@/lib/api'
 
 interface ExamResult {
   id: string
@@ -55,61 +56,53 @@ export default function StudentResultsPage() {
   const loadResults = async () => {
     try {
       setLoading(true)
-      // TODO: Replace with actual API call
-      // const response = await apiClient.getMyResults()
+      console.log('Loading student results...')
 
-      // Mock data
-      const mockResults: ExamResult[] = [
-        {
-          id: '1',
-          examId: 'exam1',
-          examTitle: 'Kiểm tra giữa kỳ - Lập trình Web',
-          subject: 'Lập trình Web',
-          score: 90,
-          totalQuestions: 30,
-          correctAnswers: 27,
-          completedAt: new Date(Date.now() - 86400000).toISOString(),
-          duration: 60
-        },
-        {
-          id: '2',
-          examId: 'exam2',
-          examTitle: 'Bài tập JavaScript Nâng cao',
-          subject: 'Lập trình Web',
-          score: 85,
-          totalQuestions: 25,
-          correctAnswers: 21,
-          completedAt: new Date(Date.now() - 172800000).toISOString(),
-          duration: 45
-        },
-        {
-          id: '3',
-          examId: 'exam3',
-          examTitle: 'Cơ sở dữ liệu - SQL cơ bản',
-          subject: 'Cơ sở dữ liệu',
-          score: 75,
-          totalQuestions: 40,
-          correctAnswers: 30,
-          completedAt: new Date(Date.now() - 259200000).toISOString(),
-          duration: 90
-        }
-      ]
+      // Call API to get student's attempts
+      const attemptsResponse = await api.getMyAttempts()
+      console.log('Attempts from API:', attemptsResponse)
 
-      setResults(mockResults)
-      setFilteredResults(mockResults)
+      // Transform attempts to ExamResult format
+      const transformedResults: ExamResult[] = attemptsResponse.map((attempt: any) => ({
+        id: attempt.id,
+        examId: attempt.exam.id,
+        examTitle: attempt.exam.title,
+        subject: attempt.exam.subject,
+        score: attempt.score || 0,
+        totalQuestions: attempt.totalQuestions || 0,
+        correctAnswers: attempt.correctAnswers || 0,
+        completedAt: attempt.submittedAt,
+        duration: attempt.timeSpent || 0
+      }))
+
+      console.log('Transformed results:', transformedResults)
+      setResults(transformedResults)
+      setFilteredResults(transformedResults)
 
       // Calculate stats
-      const total = mockResults.length
-      const avg = mockResults.reduce((sum, r) => sum + r.score, 0) / total
-      const highest = Math.max(...mockResults.map(r => r.score))
+      if (transformedResults.length > 0) {
+        const total = transformedResults.length
+        const avg = transformedResults.reduce((sum, r) => sum + r.score, 0) / total
+        const highest = Math.max(...transformedResults.map(r => r.score))
 
-      setStats({
-        totalExams: total,
-        averageScore: Math.round(avg),
-        highestScore: highest
-      })
+        setStats({
+          totalExams: total,
+          averageScore: Math.round(avg),
+          highestScore: highest
+        })
+      } else {
+        setStats({
+          totalExams: 0,
+          averageScore: 0,
+          highestScore: 0
+        })
+      }
     } catch (error) {
       console.error('Failed to load results:', error)
+      // Set empty data on error
+      setResults([])
+      setFilteredResults([])
+      setStats({ totalExams: 0, averageScore: 0, highestScore: 0 })
     } finally {
       setLoading(false)
     }
@@ -223,9 +216,10 @@ export default function StudentResultsPage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Tất cả môn học</SelectItem>
-              <SelectItem value="Lập trình Web">Lập trình Web</SelectItem>
-              <SelectItem value="Cơ sở dữ liệu">Cơ sở dữ liệu</SelectItem>
-              <SelectItem value="Mạng máy tính">Mạng máy tính</SelectItem>
+              {/* Dynamically generate subjects from results */}
+              {Array.from(new Set(results.map(r => r.subject))).map(subject => (
+                <SelectItem key={subject} value={subject}>{subject}</SelectItem>
+              ))}
             </SelectContent>
           </Select>
 

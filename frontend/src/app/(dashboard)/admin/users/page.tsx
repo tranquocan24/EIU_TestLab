@@ -190,81 +190,87 @@ export default function ManageUsersPage() {
             {/* Header */}
             <div className="flex justify-between items-center">
                 <h1 className="text-3xl font-bold text-gray-800">Quản lý tài khoản</h1>
-                <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-                    <DialogTrigger asChild>
-                        <Button>
-                            <PlusCircle className="h-4 w-4 mr-2" />
-                            Thêm tài khoản mới
-                        </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                        <DialogHeader>
-                            <DialogTitle>Thêm tài khoản mới</DialogTitle>
-                        </DialogHeader>
-                        <div className="space-y-4 mt-4">
-                            <div>
-                                <Label htmlFor="username">Username <span className="text-red-500">*</span></Label>
-                                <Input
-                                    id="username"
-                                    placeholder="Nhập username"
-                                    value={formData.username}
-                                    onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                                />
+                <div className="flex gap-3">
+                    <Button variant="outline" onClick={() => router.push('/admin/import')}>
+                        <UserPlus className="h-4 w-4 mr-2" />
+                        Import từ Excel
+                    </Button>
+                    <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+                        <DialogTrigger asChild>
+                            <Button>
+                                <PlusCircle className="h-4 w-4 mr-2" />
+                                Thêm tài khoản mới
+                            </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>Thêm tài khoản mới</DialogTitle>
+                            </DialogHeader>
+                            <div className="space-y-4 mt-4">
+                                <div>
+                                    <Label htmlFor="username">Username <span className="text-red-500">*</span></Label>
+                                    <Input
+                                        id="username"
+                                        placeholder="Nhập username"
+                                        value={formData.username}
+                                        onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                                    />
+                                </div>
+                                <div>
+                                    <Label htmlFor="password">Mật khẩu <span className="text-red-500">*</span></Label>
+                                    <Input
+                                        id="password"
+                                        type="password"
+                                        placeholder="Nhập mật khẩu"
+                                        value={formData.password}
+                                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                                    />
+                                </div>
+                                <div>
+                                    <Label htmlFor="name">Họ tên <span className="text-red-500">*</span></Label>
+                                    <Input
+                                        id="name"
+                                        placeholder="Nhập họ tên"
+                                        value={formData.name}
+                                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                    />
+                                </div>
+                                <div>
+                                    <Label htmlFor="email">Email</Label>
+                                    <Input
+                                        id="email"
+                                        type="email"
+                                        placeholder="Nhập email"
+                                        value={formData.email}
+                                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                    />
+                                </div>
+                                <div>
+                                    <Label htmlFor="role">Vai trò <span className="text-red-500">*</span></Label>
+                                    <Select value={formData.role} onValueChange={(value) => setFormData({ ...formData, role: value })}>
+                                        <SelectTrigger>
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="STUDENT">Học sinh</SelectItem>
+                                            <SelectItem value="TEACHER">Giáo viên</SelectItem>
+                                            <SelectItem value="ADMIN">Quản trị viên</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="flex gap-3 pt-4">
+                                    <Button onClick={handleAddUser} className="flex-1">
+                                        <UserPlus className="h-4 w-4 mr-2" />
+                                        Thêm tài khoản
+                                    </Button>
+                                    <Button variant="outline" onClick={() => setShowAddDialog(false)} className="flex-1">
+                                        Hủy
+                                    </Button>
+                                </div>
                             </div>
-                            <div>
-                                <Label htmlFor="password">Mật khẩu <span className="text-red-500">*</span></Label>
-                                <Input
-                                    id="password"
-                                    type="password"
-                                    placeholder="Nhập mật khẩu"
-                                    value={formData.password}
-                                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                                />
-                            </div>
-                            <div>
-                                <Label htmlFor="name">Họ tên <span className="text-red-500">*</span></Label>
-                                <Input
-                                    id="name"
-                                    placeholder="Nhập họ tên"
-                                    value={formData.name}
-                                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                />
-                            </div>
-                            <div>
-                                <Label htmlFor="email">Email</Label>
-                                <Input
-                                    id="email"
-                                    type="email"
-                                    placeholder="Nhập email"
-                                    value={formData.email}
-                                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                />
-                            </div>
-                            <div>
-                                <Label htmlFor="role">Vai trò <span className="text-red-500">*</span></Label>
-                                <Select value={formData.role} onValueChange={(value) => setFormData({ ...formData, role: value })}>
-                                    <SelectTrigger>
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="STUDENT">Học sinh</SelectItem>
-                                        <SelectItem value="TEACHER">Giáo viên</SelectItem>
-                                        <SelectItem value="ADMIN">Quản trị viên</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <div className="flex gap-3 pt-4">
-                                <Button onClick={handleAddUser} className="flex-1">
-                                    <UserPlus className="h-4 w-4 mr-2" />
-                                    Thêm tài khoản
-                                </Button>
-                                <Button variant="outline" onClick={() => setShowAddDialog(false)} className="flex-1">
-                                    Hủy
-                                </Button>
-                            </div>
-                        </div>
-                    </DialogContent>
-                </Dialog>
+                        </DialogContent>
+                    </Dialog>
+                </div>
             </div>
 
             {/* Statistics */}

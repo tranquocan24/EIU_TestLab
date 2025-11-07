@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Body, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { GetUser } from '../auth/decorators/get-user.decorator';
 import { AttemptsService } from './attempts.service';
@@ -10,8 +10,20 @@ export class AttemptsController {
   constructor(private readonly attemptsService: AttemptsService) { }
 
   @Post('start')
-  startAttempt(@Body() dto: StartAttemptDto, @GetUser('id') userId: string) {
-    return this.attemptsService.startAttempt(dto.examId, userId);
+  async startAttempt(@Body() dto: StartAttemptDto, @GetUser('id') userId: string) {
+    try {
+      console.log('[AttemptsController] startAttempt called:', { dto, userId });
+      const result = await this.attemptsService.startAttempt(dto.examId, userId);
+      console.log('[AttemptsController] startAttempt success');
+      return result;
+    } catch (error) {
+      console.error('[AttemptsController] startAttempt error:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name,
+      });
+      throw error;
+    }
   }
 
   @Put(':id/answer')
@@ -45,5 +57,10 @@ export class AttemptsController {
   @Get('exam/:examId')
   getExamAttempts(@Param('examId') examId: string) {
     return this.attemptsService.getExamAttempts(examId);
+  }
+
+  @Delete(':id')
+  deleteAttempt(@Param('id') id: string, @GetUser('id') userId: string) {
+    return this.attemptsService.deleteAttempt(id, userId);
   }
 }

@@ -37,6 +37,7 @@ model User {
   email     String?  @unique
   name      String
   role      UserRole @default(STUDENT)
+  courses   String?  // Danh sách lớp (ví dụ: "CSE301,CSE302")
   isActive  Boolean  @default(true)
   
   createdAt DateTime @default(now())
@@ -50,13 +51,14 @@ model User {
 }
 
 model Exam {
-  id          String     @id @default(uuid())
-  title       String
-  description String?
-  subject     String
-  duration    Int        // in minutes
-  passingScore Int       @default(60)
-  status      ExamStatus @default(DRAFT)
+  id             String     @id @default(uuid())
+  title          String
+  description    String?
+  subject        String
+  duration       Int        // in minutes
+  passingScore   Int        @default(60)
+  status         ExamStatus @default(DRAFT)
+  allowedCourses String?    // Danh sách lớp được phép làm bài (ví dụ: "CSE301,CSE302")
   
   startTime   DateTime?
   endTime     DateTime?

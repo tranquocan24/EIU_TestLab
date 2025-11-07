@@ -6,6 +6,7 @@ import { UsersModule } from './modules/users/users.module';
 import { ExamsModule } from './modules/exams/exams.module';
 import { QuestionsModule } from './modules/questions/questions.module';
 import { AttemptsModule } from './modules/attempts/attempts.module';
+import { StatsModule } from './modules/stats/stats.module';
 import { AppController } from './app.controller';
 
 @Module({
@@ -19,6 +20,7 @@ import { AppController } from './app.controller';
     ExamsModule,
     QuestionsModule,
     AttemptsModule,
+    StatsModule,
   ],
   controllers: [AppController],
 })

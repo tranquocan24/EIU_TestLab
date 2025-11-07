@@ -145,4 +145,52 @@ export class UsersService {
 
     return { message: 'User deleted successfully', id };
   }
+
+  async importUsers(users: Array<{
+    username: string;
+    password: string;
+    name: string;
+    email?: string;
+    role: UserRole;
+    courses?: string;
+  }>) {
+    const results = {
+      success: 0,
+      failed: 0,
+      errors: [] as string[],
+    };
+
+    for (const userData of users) {
+      try {
+        // Check if user already exists
+        const existing = await this.prisma.user.findUnique({
+          where: { username: userData.username },
+        });
+
+        if (existing) {
+          results.failed++;
+          results.errors.push(`Username "${userData.username}" already exists`);
+          continue;
+        }
+
+        // Hash password
+        const hashedPassword = await bcrypt.hash(userData.password, 10);
+
+        // Create user
+        await this.prisma.user.create({
+          data: {
+            ...userData,
+            password: hashedPassword,
+          },
+        });
+
+        results.success++;
+      } catch (error) {
+        results.failed++;
+        results.errors.push(`Error creating user "${userData.username}": ${error.message}`);
+      }
+    }
+
+    return results;
+  }
 }

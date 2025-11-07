@@ -28,10 +28,12 @@ export default function CreateExamPage() {
 
     // Basic Info
     const [title, setTitle] = useState('')
-    const [subject, setSubject] = useState('')
+    const [selectedCourse, setSelectedCourse] = useState('')
     const [description, setDescription] = useState('')
     const [duration, setDuration] = useState('60')
-    const [selectedClasses, setSelectedClasses] = useState<string[]>([])
+
+    // Teacher's assigned courses
+    const [teacherCourses, setTeacherCourses] = useState<string[]>([])
 
     // Advanced Settings
     const [shuffleQuestions, setShuffleQuestions] = useState(false)
@@ -49,7 +51,18 @@ export default function CreateExamPage() {
             router.push('/login')
             return
         }
-    }, [isAuthenticated, user, router])
+
+        // Parse teacher's courses from user.courses string
+        if (user?.courses) {
+            const coursesArray = user.courses.split(',').map(c => c.trim()).filter(c => c)
+            setTeacherCourses(coursesArray)
+
+            // Auto-select first course if available
+            if (coursesArray.length > 0 && !selectedCourse) {
+                setSelectedCourse(coursesArray[0])
+            }
+        }
+    }, [isAuthenticated, user, router, selectedCourse])
 
     const addQuestion = (type: 'multiple-choice' | 'essay') => {
         const newQuestion: Question = {
@@ -92,9 +105,9 @@ export default function CreateExamPage() {
             setLoading(true)
 
             // Validate required fields
-            if (!title || !subject || !duration) {
-                console.log('Validation failed: Missing required fields', { title, subject, duration })
-                alert('Vui lòng điền đầy đủ thông tin cơ bản (Tên đề thi, Môn học, Thời gian)!')
+            if (!title || !selectedCourse || !duration) {
+                console.log('Validation failed: Missing required fields', { title, selectedCourse, duration })
+                alert('Vui lòng điền đầy đủ thông tin cơ bản (Tên đề thi, Course, Thời gian)!')
                 setLoading(false)
                 return
             }
@@ -111,13 +124,26 @@ export default function CreateExamPage() {
 
             const examData: any = {
                 title,
-                subject,
+                subject: selectedCourse, // Use selected course as subject
                 description: description || undefined,
                 duration: Number.parseInt(duration),
                 status: examStatus,
                 passingScore: 60, // Default passing score
+                allowedCourses: selectedCourse, // Backend expects comma-separated string
                 startTime: startDate ? new Date(startDate).toISOString() : undefined,
                 endTime: endDate ? new Date(endDate).toISOString() : undefined,
+                questions: questions.map((q, index) => ({
+                    questionText: q.content,
+                    questionType: q.type === 'multiple-choice' ? 'MULTIPLE_CHOICE' : 'ESSAY',
+                    points: q.points || 10,
+                    order: index + 1,
+                    options: q.type === 'multiple-choice' && q.options
+                        ? q.options.map((optText, optIndex) => ({
+                            text: optText,
+                            isCorrect: q.correctAnswer === optIndex,
+                        }))
+                        : [],
+                })),
             }
 
             console.log('Creating exam with data:', examData)
@@ -174,19 +200,25 @@ export default function CreateExamPage() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <Label htmlFor="subject">Môn học <span className="text-red-500">*</span></Label>
-                            <Select value={subject} onValueChange={setSubject}>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Chọn môn học" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="Lập trình Web">Lập trình Web</SelectItem>
-                                    <SelectItem value="Cơ sở dữ liệu">Cơ sở dữ liệu</SelectItem>
-                                    <SelectItem value="Mạng máy tính">Mạng máy tính</SelectItem>
-                                    <SelectItem value="Kỹ thuật phần mềm">Kỹ thuật phần mềm</SelectItem>
-                                    <SelectItem value="Hệ điều hành">Hệ điều hành</SelectItem>
-                                </SelectContent>
-                            </Select>
+                            <Label htmlFor="course">Course được phân công <span className="text-red-500">*</span></Label>
+                            {teacherCourses.length > 0 ? (
+                                <Select value={selectedCourse} onValueChange={setSelectedCourse}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Chọn course" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {teacherCourses.map((course) => (
+                                            <SelectItem key={course} value={course}>
+                                                {course}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            ) : (
+                                <div className="p-3 border border-yellow-300 bg-yellow-50 rounded-lg text-sm text-yellow-800">
+                                    ⚠️ Bạn chưa được phân công course nào. Vui lòng liên hệ Admin.
+                                </div>
+                            )}
                         </div>
 
                         <div>
@@ -211,28 +243,6 @@ export default function CreateExamPage() {
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
                         />
-                    </div>
-
-                    <div>
-                        <Label>Lớp học</Label>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2">
-                            {['CIT0001', 'CIT0002', 'CIT0003', 'CIT0004'].map((classCode) => (
-                                <label key={classCode} className="flex items-center gap-2 p-2 border rounded cursor-pointer hover:bg-gray-50">
-                                    <input
-                                        type="checkbox"
-                                        checked={selectedClasses.includes(classCode)}
-                                        onChange={(e) => {
-                                            if (e.target.checked) {
-                                                setSelectedClasses([...selectedClasses, classCode])
-                                            } else {
-                                                setSelectedClasses(selectedClasses.filter(c => c !== classCode))
-                                            }
-                                        }}
-                                    />
-                                    <span className="text-sm">{classCode}</span>
-                                </label>
-                            ))}
-                        </div>
                     </div>
                 </CardContent>
             </Card>

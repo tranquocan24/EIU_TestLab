@@ -1,4 +1,7 @@
-'use client'
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+content = """'use client'
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -46,7 +49,7 @@ export default function TeacherDashboard() {
       const examsData = await api.getExams()
       console.log('Teacher exams:', examsData)
 
-      const sortedExams = [...examsData].sort((a, b) =>
+      const sortedExams = [...examsData].sort((a, b) => 
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       ).slice(0, 5)
 
@@ -274,3 +277,9 @@ export default function TeacherDashboard() {
     </div>
   )
 }
+"""
+
+with open('frontend/src/app/(dashboard)/teacher/page.tsx', 'w', encoding='utf-8', newline='\n') as f:
+    f.write(content)
+
+print("File created successfully!")

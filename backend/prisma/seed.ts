@@ -16,8 +16,8 @@ async function main() {
 
   console.log('✅ Cleared existing data');
 
-  // Create users
-  const hashedPassword = await bcrypt.hash('123456', 10);
+  // Create users với password 12345678
+  const hashedPassword = await bcrypt.hash('12345678', 10);
 
   const admin = await prisma.user.create({
     data: {
@@ -36,56 +36,28 @@ async function main() {
       email: 'teacher1@eiu.edu.vn',
       name: 'Nguyễn Văn An',
       role: 'TEACHER',
+      courses: 'CSE301,CSE302', // Teacher dạy 2 lớp
     },
   });
 
-  const teacher2 = await prisma.user.create({
+  const student1 = await prisma.user.create({
     data: {
-      username: 'teacher2',
+      username: 'student1',
       password: hashedPassword,
-      email: 'teacher2@eiu.edu.vn',
-      name: 'Trần Thị Bình',
-      role: 'TEACHER',
+      email: 'student1@eiu.edu.vn',
+      name: 'Lê Văn Cường',
+      role: 'STUDENT',
+      courses: 'CSE301', // Student học lớp CSE301
     },
   });
-
-  const students = await Promise.all([
-    prisma.user.create({
-      data: {
-        username: 'student1',
-        password: hashedPassword,
-        email: 'student1@eiu.edu.vn',
-        name: 'Lê Văn Cường',
-        role: 'STUDENT',
-      },
-    }),
-    prisma.user.create({
-      data: {
-        username: 'student2',
-        password: hashedPassword,
-        email: 'student2@eiu.edu.vn',
-        name: 'Phạm Thị Dung',
-        role: 'STUDENT',
-      },
-    }),
-    prisma.user.create({
-      data: {
-        username: 'student3',
-        password: hashedPassword,
-        email: 'student3@eiu.edu.vn',
-        name: 'Hoàng Văn Em',
-        role: 'STUDENT',
-      },
-    }),
-  ]);
 
   console.log('✅ Created users:', {
     admin: admin.username,
-    teachers: [teacher1.username, teacher2.username],
-    students: students.map(s => s.username),
+    teacher: teacher1.username,
+    student: student1.username,
   });
 
-  // Create exams
+  // Create exams với allowedCourses
   const exam1 = await prisma.exam.create({
     data: {
       title: 'Bài kiểm tra giữa kỳ - Lập trình Web',
@@ -94,6 +66,7 @@ async function main() {
       duration: 60,
       passingScore: 70,
       status: 'PUBLISHED',
+      allowedCourses: 'CSE301', // Chỉ CSE301 được làm
       startTime: new Date('2025-10-20T08:00:00Z'),
       endTime: new Date('2025-11-30T23:59:59Z'),
       createdById: teacher1.id,
@@ -108,9 +81,10 @@ async function main() {
       duration: 90,
       passingScore: 60,
       status: 'PUBLISHED',
+      allowedCourses: 'CSE302', // Chỉ CSE302
       startTime: new Date('2025-10-25T08:00:00Z'),
       endTime: new Date('2025-12-15T23:59:59Z'),
-      createdById: teacher2.id,
+      createdById: teacher1.id,
     },
   });
 
@@ -122,6 +96,7 @@ async function main() {
       duration: 45,
       passingScore: 65,
       status: 'DRAFT',
+      allowedCourses: 'CSE301,CSE302', // Cả 2 lớp
       createdById: teacher1.id,
     },
   });
@@ -183,49 +158,12 @@ async function main() {
     },
   });
 
-  // Create questions for Exam 2
-  const q4 = await prisma.question.create({
-    data: {
-      question: 'SQL là viết tắt của gì?',
-      type: 'multiple-choice',
-      points: 10,
-      order: 1,
-      examId: exam2.id,
-      options: {
-        create: [
-          { option: 'Structured Query Language', isCorrect: true, order: 1 },
-          { option: 'Simple Question Language', isCorrect: false, order: 2 },
-          { option: 'Server Query Language', isCorrect: false, order: 3 },
-          { option: 'System Quality Language', isCorrect: false, order: 4 },
-        ],
-      },
-    },
-  });
-
-  const q5 = await prisma.question.create({
-    data: {
-      question: 'Câu lệnh nào dùng để lấy dữ liệu từ database?',
-      type: 'multiple-choice',
-      points: 10,
-      order: 2,
-      examId: exam2.id,
-      options: {
-        create: [
-          { option: 'GET', isCorrect: false, order: 1 },
-          { option: 'SELECT', isCorrect: true, order: 2 },
-          { option: 'FETCH', isCorrect: false, order: 3 },
-          { option: 'RETRIEVE', isCorrect: false, order: 4 },
-        ],
-      },
-    },
-  });
-
   console.log('✅ Created questions with options');
 
-  // Create some sample attempts
-  const attempt1 = await prisma.attempt.create({
+  // Create sample attempt for student1
+  await prisma.attempt.create({
     data: {
-      studentId: students[0].id,
+      studentId: student1.id,
       examId: exam1.id,
       status: 'SUBMITTED',
       score: 80,
@@ -238,7 +176,7 @@ async function main() {
             questionId: q1.id,
             selectedOption: (await prisma.questionOption.findFirst({
               where: { questionId: q1.id, isCorrect: true },
-            }))!.id,
+            }))?.id || '',
             isCorrect: true,
             points: 10,
           },
@@ -246,7 +184,7 @@ async function main() {
             questionId: q2.id,
             selectedOption: (await prisma.questionOption.findFirst({
               where: { questionId: q2.id, isCorrect: true },
-            }))!.id,
+            }))?.id || '',
             isCorrect: true,
             points: 10,
           },
@@ -254,7 +192,7 @@ async function main() {
             questionId: q3.id,
             selectedOption: (await prisma.questionOption.findFirst({
               where: { questionId: q3.id, isCorrect: false },
-            }))!.id,
+            }))?.id || '',
             isCorrect: false,
             points: 0,
           },
@@ -267,13 +205,16 @@ async function main() {
 
   console.log('\n🎉 Seeding completed successfully!\n');
   console.log('📊 Summary:');
-  console.log('   - Users: 1 Admin, 2 Teachers, 3 Students');
-  console.log('   - Exams: 3 exams');
-  console.log('   - Questions: 5 questions with options');
-  console.log('   - Attempts: 1 sample attempt');
+  console.log('   - Users: 1 Admin, 1 Teacher, 1 Student');
+  console.log('   - Exams: 3 exams (CSE301, CSE302, CSE301+302)');
+  console.log('   - Questions: 3 questions for exam1');
+  console.log('   - Attempts: 1 sample attempt (student1)');
   console.log('\n🔑 Login credentials:');
-  console.log('   Username: admin, teacher1, teacher2, student1, student2, student3');
-  console.log('   Password: 123456 (for all users)');
+  console.log('   Username: admin, teacher1, student1');
+  console.log('   Password: 12345678 (for all users)');
+  console.log('\n📚 Course assignments:');
+  console.log('   - teacher1: CSE301, CSE302');
+  console.log('   - student1: CSE301');
 }
 
 main()

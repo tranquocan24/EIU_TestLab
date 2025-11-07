@@ -43,12 +43,38 @@ class ApiClient {
     this.client.interceptors.response.use(
       (response) => response,
       (error) => {
+        console.error('API Error:', {
+          url: error.config?.url,
+          method: error.config?.method,
+          status: error.response?.status,
+          statusText: error.response?.statusText,
+          data: error.response?.data,
+          message: error.message
+        });
+
         if (error.response?.status === 401) {
+          console.warn('Unauthorized - Redirecting to login');
           if (typeof window !== 'undefined') {
             localStorage.removeItem('token');
+            localStorage.removeItem('user');
             window.location.href = '/login';
           }
         }
+        
+        // Enhance error message
+        if (error.response?.data?.message) {
+          error.message = error.response.data.message;
+        } else if (error.response?.status) {
+          const statusMessages: { [key: number]: string } = {
+            400: 'Yêu cầu không hợp lệ',
+            401: 'Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại',
+            403: 'Bạn không có quyền thực hiện thao tác này',
+            404: 'Không tìm thấy tài nguyên',
+            500: 'Lỗi máy chủ nội bộ',
+          };
+          error.message = statusMessages[error.response.status] || `Lỗi ${error.response.status}`;
+        }
+        
         return Promise.reject(error);
       }
     );
@@ -113,6 +139,19 @@ class ApiClient {
     return response.data;
   }
 
+  async importUsers(users: Array<{
+    username: string;
+    password: string;
+    name: string;
+    email?: string;
+    role: string;
+    courses?: string;
+  }>): Promise<{ success: number; failed: number; errors: string[] }> {
+    const response: AxiosResponse<{ success: number; failed: number; errors: string[] }> =
+      await this.client.post('/users/import', { users });
+    return response.data;
+  }
+
   // Class endpoints
   async getClasses(): Promise<ApiResponse<Class[]>> {
     const response: AxiosResponse<ApiResponse<Class[]>> = await this.client.get('/classes');
@@ -131,8 +170,8 @@ class ApiClient {
     return response.data;
   }
 
-  async getExamById(id: string): Promise<ApiResponse<Exam>> {
-    const response: AxiosResponse<ApiResponse<Exam>> = await this.client.get(`/exams/${id}`);
+  async getExamById(id: string): Promise<any> {
+    const response = await this.client.get(`/exams/${id}`);
     return response.data;
   }
 
@@ -179,15 +218,23 @@ class ApiClient {
   }
 
   // Exam submission endpoints
-  async startExam(examId: string): Promise<ApiResponse<ExamSubmission>> {
-    const response: AxiosResponse<ApiResponse<ExamSubmission>> =
-      await this.client.post(`/exams/${examId}/start`);
+  async startExam(examId: string): Promise<any> {
+    const response = await this.client.post('/attempts/start', { examId });
     return response.data;
   }
 
-  async submitExam(submissionId: string, answers: Record<string, any>): Promise<ApiResponse<ExamSubmission>> {
-    const response: AxiosResponse<ApiResponse<ExamSubmission>> =
-      await this.client.post(`/submissions/${submissionId}/submit`, { answers });
+  async submitAnswer(attemptId: string, questionId: string, selectedOption: string): Promise<any> {
+    const response = await this.client.put(`/attempts/${attemptId}/answer`, {
+      questionId,
+      selectedOption
+    });
+    return response.data;
+  }
+
+  async submitAttempt(attemptId: string, timeSpent: number): Promise<any> {
+    const response = await this.client.put(`/attempts/${attemptId}/submit`, {
+      timeSpent
+    });
     return response.data;
   }
 
@@ -208,9 +255,40 @@ class ApiClient {
     return response.data;
   }
 
+  // Attempts endpoints
+  async getMyAttempts(): Promise<any[]> {
+    const response = await this.client.get('/attempts/my-attempts');
+    return response.data;
+  }
+
+  async getAttemptDetail(attemptId: string): Promise<any> {
+    const response = await this.client.get(`/attempts/${attemptId}`);
+    return response.data;
+  }
+
+  async getExamAttempts(examId: string): Promise<any[]> {
+    const response = await this.client.get(`/attempts/exam/${examId}`);
+    return response.data;
+  }
+
   // Dashboard/Stats endpoints
-  async getDashboardStats(): Promise<ApiResponse<any>> {
-    const response: AxiosResponse<ApiResponse<any>> = await this.client.get('/dashboard/stats');
+  async getDashboardStats(): Promise<any> {
+    const response = await this.client.get('/stats/dashboard');
+    return response.data;
+  }
+
+  async getLoginStats(days: number = 7): Promise<Array<{ date: string; logins: number }>> {
+    const response = await this.client.get('/stats/login-history', { params: { days } });
+    return response.data;
+  }
+
+  async getExamStatsBySubject(): Promise<Array<{
+    subject: string;
+    totalExams: number;
+    totalSubmissions: number;
+    averageScore: number;
+  }>> {
+    const response = await this.client.get('/stats/exams');
     return response.data;
   }
 

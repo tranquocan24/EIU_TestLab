@@ -1,16 +1,24 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import api from '@/lib/api'
+
+interface Option {
+  id: string
+  text: string
+  isCorrect: boolean
+}
 
 interface Question {
   id: string
-  question: string
-  options: string[]
-  correctAnswer?: number
+  questionText: string
+  options: Option[]
+  points: number
+  order: number
 }
 
 interface Exam {
@@ -26,30 +34,91 @@ export default function ExamTakingPage() {
   const searchParams = useSearchParams()
   const examId = searchParams.get('id')
 
+  console.log('[ExamPage] Mounted with examId:', examId)
+  console.log('[ExamPage] Search params:', searchParams.toString())
+
   const [exam, setExam] = useState<Exam | null>(null)
-  const [answers, setAnswers] = useState<{ [key: string]: number }>({})
+  const [answers, setAnswers] = useState<{ [key: string]: string }>({})
   const [currentQuestion, setCurrentQuestion] = useState(0)
   const [timeRemaining, setTimeRemaining] = useState(0)
   const [showSubmitDialog, setShowSubmitDialog] = useState(false)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
+  const [attemptId, setAttemptId] = useState<string | null>(null)
+  const hasLoadedRef = useRef(false)
 
   useEffect(() => {
-    if (examId) {
+    console.log('[useEffect] examId:', examId, 'hasLoaded:', hasLoadedRef.current)
+    if (examId && !hasLoadedRef.current) {
+      console.log('[useEffect] Calling loadExam')
+      hasLoadedRef.current = true
       loadExam(examId)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [examId])
 
-  const handleSubmit = () => {
-    // Calculate score
-    const totalQuestions = exam?.questions.length || 0
-    const answeredQuestions = Object.keys(answers).length
-    const score = (answeredQuestions / totalQuestions) * 100
+  const handleSubmit = async () => {
+    if (!attemptId) {
+      alert('Lỗi: Không tìm thấy phiên làm bài')
+      return
+    }
 
-    console.log('Submitting exam with answers:', answers)
-    console.log('Score:', score)
+    try {
+      // Calculate time spent (in minutes)
+      const totalTime = (exam?.duration || 0) * 60
+      const timeSpent = Math.floor((totalTime - timeRemaining) / 60)
 
-    // Navigate to results page
-    router.push(`/student/results?examId=${examId}&score=${score}`)
+      console.log('=== SUBMITTING EXAM ===')
+      console.log('Attempt ID:', attemptId)
+      console.log('Time spent:', timeSpent, 'minutes')
+      console.log('Total answers:', Object.keys(answers).length)
+      console.log('Answers:', answers)
+
+      // Submit all answers first
+      let successCount = 0
+      let errorCount = 0
+      
+      for (const [questionId, optionId] of Object.entries(answers)) {
+        try {
+          console.log(`Submitting answer for question ${questionId}: ${optionId}`)
+          await api.submitAnswer(attemptId, questionId, optionId)
+          successCount++
+          console.log(`✓ Answer ${successCount} submitted successfully`)
+        } catch (error: unknown) {
+          errorCount++
+          console.error(`✗ Error submitting answer for question ${questionId}:`, error)
+          if (error && typeof error === 'object' && 'response' in error) {
+            const axiosError = error as { response?: { status?: number; data?: unknown } }
+            console.error('Error details:', {
+              status: axiosError.response?.status,
+              data: axiosError.response?.data
+            })
+          }
+        }
+      }
+
+      console.log(`Answers submitted: ${successCount} success, ${errorCount} failed`)
+
+      // Submit the attempt
+      console.log('Submitting attempt...')
+      const result = await api.submitAttempt(attemptId, timeSpent)
+      console.log('✓ Attempt submitted successfully:', result)
+
+      // Navigate to results page
+      alert('Nộp bài thành công!')
+      router.push(`/student/results`)
+    } catch (error: unknown) {
+      console.error('=== ERROR SUBMITTING EXAM ===')
+      console.error('Error:', error)
+      if (error && typeof error === 'object' && 'response' in error) {
+        const axiosError = error as { response?: { status?: number; data?: unknown; statusText?: string } }
+        console.error('Error details:', {
+          status: axiosError.response?.status,
+          statusText: axiosError.response?.statusText,
+          data: axiosError.response?.data
+        })
+      }
+      alert('Có lỗi khi nộp bài. Vui lòng thử lại.')
+    }
   }
 
   useEffect(() => {
@@ -68,72 +137,81 @@ export default function ExamTakingPage() {
 
   const loadExam = async (id: string) => {
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      console.log('[loadExam] Starting...')
+      setLoading(true)
 
-      const mockExam: Exam = {
-        id,
-        title: 'Kiểm tra giữa kỳ - Lập trình Web',
-        subject: 'Lập trình Web',
-        duration: 90,
-        questions: [
-          {
-            id: '1',
-            question: 'HTML là viết tắt của gì?',
-            options: [
-              'Hyper Text Markup Language',
-              'High Tech Modern Language',
-              'Home Tool Markup Language',
-              'Hyperlinks and Text Markup Language'
-            ]
-          },
-          {
-            id: '2',
-            question: 'CSS được sử dụng để làm gì?',
-            options: [
-              'Tạo cấu trúc trang web',
-              'Tạo kiểu dáng cho trang web',
-              'Lập trình logic cho trang web',
-              'Quản lý cơ sở dữ liệu'
-            ]
-          },
-          {
-            id: '3',
-            question: 'JavaScript là ngôn ngữ lập trình gì?',
-            options: [
-              'Ngôn ngữ biên dịch',
-              'Ngôn ngữ thông dịch',
-              'Ngôn ngữ đánh dấu',
-              'Ngôn ngữ truy vấn'
-            ]
-          },
-          {
-            id: '4',
-            question: 'Thẻ nào dùng để tạo liên kết trong HTML?',
-            options: [
-              '<link>',
-              '<a>',
-              '<href>',
-              '<url>'
-            ]
-          },
-          {
-            id: '5',
-            question: 'React là gì?',
-            options: [
-              'Một framework CSS',
-              'Một thư viện JavaScript để xây dựng UI',
-              'Một ngôn ngữ lập trình',
-              'Một hệ quản trị cơ sở dữ liệu'
-            ]
-          }
-        ]
+      console.log('Loading exam with ID:', id)
+      console.log('Token:', localStorage.getItem('token') ? 'Present' : 'Missing')
+
+      // Load exam from API with timeout
+      console.log('[loadExam] Calling api.getExamById...')
+      const examData = await Promise.race([
+        api.getExamById(id),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Request timeout after 10 seconds')), 10000)
+        )
+      ])
+      console.log('Loaded exam:', examData)
+
+      // Transform to component format
+      const transformedExam: Exam = {
+        id: examData.id,
+        title: examData.title,
+        subject: examData.subject || 'N/A',
+        duration: examData.duration || 60,
+        questions: examData.questions.map((q: any) => ({
+          id: q.id,
+          questionText: q.questionText,
+          options: q.options,
+          points: q.points,
+          order: q.order
+        }))
       }
 
-      setExam(mockExam)
-      setTimeRemaining(mockExam.duration * 60) // Convert to seconds
-    } catch (error) {
+      setExam(transformedExam)
+      setTimeRemaining(transformedExam.duration * 60) // Convert to seconds
+
+      // Start attempt
+      try {
+        console.log('Starting attempt for exam:', id)
+        const attempt = await api.startExam(id)
+        console.log('Started attempt:', attempt)
+        setAttemptId(attempt.id)
+      } catch (error: any) {
+        console.error('Error starting attempt:', error)
+        console.error('Error details:', {
+          status: error.response?.status,
+          statusText: error.response?.statusText,
+          data: error.response?.data,
+          message: error.message
+        })
+        
+        const errorMessage = error.response?.data?.message || error.message || 'Không thể bắt đầu bài thi'
+        alert(`Lỗi: ${errorMessage}`)
+        
+        // Navigate back to exam list
+        router.push('/student/exams')
+        return
+      }
+
+    } catch (error: any) {
       console.error('Error loading exam:', error)
+      console.error('Error details:', {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        message: error.message
+      })
+      
+      const errorMessage = error.response?.data?.message || error.message || 'Không thể tải bài thi. Vui lòng thử lại.'
+      alert(`Lỗi: ${errorMessage}`)
+      
+      // If unauthorized, redirect to login
+      if (error.response?.status === 401) {
+        router.push('/login')
+      } else {
+        router.push('/student/exams')
+      }
     } finally {
       setLoading(false)
     }
@@ -150,10 +228,10 @@ export default function ExamTakingPage() {
     return `${minutes}:${secs.toString().padStart(2, '0')}`
   }
 
-  const handleAnswerSelect = (questionId: string, optionIndex: number) => {
+  const handleAnswerSelect = (questionId: string, optionId: string) => {
     setAnswers({
       ...answers,
-      [questionId]: optionIndex
+      [questionId]: optionId
     })
   }
 
@@ -169,7 +247,22 @@ export default function ExamTakingPage() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Đang tải bài thi...</p>
+          {!examId && (
+            <p className="text-red-600 mt-2 text-sm">
+              Lỗi: Không tìm thấy ID bài thi trong URL
+            </p>
+          )}
         </div>
+      </div>
+    )
+  }
+
+  if (!examId) {
+    return (
+      <div className="text-center py-12">
+        <h2 className="text-2xl font-bold text-gray-800 mb-4">Không tìm thấy bài thi</h2>
+        <p className="text-gray-600 mb-4">URL không chứa ID bài thi</p>
+        <Button onClick={() => router.push('/student/exams')}>Quay lại danh sách</Button>
       </div>
     )
   }
@@ -178,6 +271,28 @@ export default function ExamTakingPage() {
     return (
       <div className="text-center py-12">
         <h2 className="text-2xl font-bold text-gray-800 mb-4">Không tìm thấy bài thi</h2>
+        <Button onClick={() => router.push('/student/exams')}>Quay lại danh sách</Button>
+      </div>
+    )
+  }
+
+  // Check if exam has questions
+  if (!exam.questions || exam.questions.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <h2 className="text-2xl font-bold text-gray-800 mb-4">Bài thi chưa có câu hỏi</h2>
+        <p className="text-gray-600 mb-4">Vui lòng liên hệ giáo viên để biết thêm thông tin.</p>
+        <Button onClick={() => router.push('/student/exams')}>Quay lại danh sách</Button>
+      </div>
+    )
+  }
+
+  // Get current question safely
+  const question = exam.questions[currentQuestion]
+  if (!question) {
+    return (
+      <div className="text-center py-12">
+        <h2 className="text-2xl font-bold text-gray-800 mb-4">Lỗi hiển thị câu hỏi</h2>
         <Button onClick={() => router.push('/student/exams')}>Quay lại danh sách</Button>
       </div>
     )
@@ -230,35 +345,35 @@ export default function ExamTakingPage() {
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-lg text-gray-700 leading-relaxed">
-            {exam.questions[currentQuestion].question}
+            {question.questionText}
           </p>
 
           <div className="space-y-3">
-            {exam.questions[currentQuestion].options.map((option, index) => {
-              const questionId = exam.questions[currentQuestion].id
-              const isSelected = answers[questionId] === index
+            {question.options.map((option) => {
+              const questionId = question.id
+              const isSelected = answers[questionId] === option.id
 
               return (
                 <button
-                  key={`${questionId}-option-${index}`}
-                  onClick={() => handleAnswerSelect(questionId, index)}
+                  key={option.id}
+                  onClick={() => handleAnswerSelect(questionId, option.id)}
                   className={`w-full p-4 text-left border-2 rounded-lg transition-all duration-200 ${isSelected
-                      ? 'border-blue-500 bg-blue-50 shadow-md'
-                      : 'border-gray-200 hover:border-blue-300 hover:bg-gray-50'
+                    ? 'border-blue-500 bg-blue-50 shadow-md'
+                    : 'border-gray-200 hover:border-blue-300 hover:bg-gray-50'
                     }`}
                 >
                   <div className="flex items-center space-x-3">
                     <div
                       className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${isSelected
-                          ? 'border-blue-500 bg-blue-500'
-                          : 'border-gray-300'
+                        ? 'border-blue-500 bg-blue-500'
+                        : 'border-gray-300'
                         }`}
                     >
                       {isSelected && (
                         <div className="w-3 h-3 bg-white rounded-full"></div>
                       )}
                     </div>
-                    <span className="flex-1 text-gray-700">{option}</span>
+                    <span className="flex-1 text-gray-700">{option.text}</span>
                   </div>
                 </button>
               )

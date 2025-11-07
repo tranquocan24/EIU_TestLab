@@ -8,16 +8,21 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { FileText, Search, Eye, Trash2, Archive, RefreshCw } from 'lucide-react'
+import api from '@/lib/api'
 
 interface Exam {
     id: string
     title: string
     subject: string
-    teacher: string
-    status: 'published' | 'draft' | 'archived'
-    questionCount: number
-    submissions: number
+    status: 'PUBLISHED' | 'DRAFT' | 'ARCHIVED'
     createdAt: string
+    createdBy: {
+        name: string
+    }
+    _count?: {
+        questions: number
+        attempts: number
+    }
 }
 
 export default function AdminExamsPage() {
@@ -46,51 +51,8 @@ export default function AdminExamsPage() {
     const loadExams = async () => {
         try {
             setLoading(true)
-            // TODO: Replace with actual API call
-            const mockExams: Exam[] = [
-                {
-                    id: '1',
-                    title: 'Kiểm tra giữa kỳ - Lập trình Web',
-                    subject: 'Lập trình Web',
-                    teacher: 'Nguyễn Văn An',
-                    status: 'published',
-                    questionCount: 30,
-                    submissions: 45,
-                    createdAt: '2025-01-15'
-                },
-                {
-                    id: '2',
-                    title: 'Bài tập JavaScript cơ bản',
-                    subject: 'Lập trình Web',
-                    teacher: 'Giáo Viên',
-                    status: 'published',
-                    questionCount: 20,
-                    submissions: 38,
-                    createdAt: '2025-01-10'
-                },
-                {
-                    id: '3',
-                    title: 'SQL nâng cao',
-                    subject: 'Cơ sở dữ liệu',
-                    teacher: 'Nguyễn Văn An',
-                    status: 'draft',
-                    questionCount: 25,
-                    submissions: 0,
-                    createdAt: '2025-01-20'
-                },
-                {
-                    id: '4',
-                    title: 'Mạng máy tính - Tầng giao vận',
-                    subject: 'Mạng máy tính',
-                    teacher: 'Giáo Viên',
-                    status: 'archived',
-                    questionCount: 40,
-                    submissions: 60,
-                    createdAt: '2024-12-20'
-                }
-            ]
-
-            setExams(mockExams)
+            const data = await api.getExams()
+            setExams(data)
         } catch (error) {
             console.error('Error loading exams:', error)
         } finally {
@@ -106,12 +68,12 @@ export default function AdminExamsPage() {
             filtered = filtered.filter(e =>
                 e.title.toLowerCase().includes(query) ||
                 e.subject.toLowerCase().includes(query) ||
-                e.teacher.toLowerCase().includes(query)
+                e.createdBy.name.toLowerCase().includes(query)
             )
         }
 
         if (statusFilter && statusFilter !== 'all') {
-            filtered = filtered.filter(e => e.status === statusFilter)
+            filtered = filtered.filter(e => e.status === statusFilter.toUpperCase())
         }
 
         if (subjectFilter && subjectFilter !== 'all') {
@@ -123,11 +85,11 @@ export default function AdminExamsPage() {
 
     const getStatusBadge = (status: string) => {
         switch (status) {
-            case 'published':
+            case 'PUBLISHED':
                 return <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">Đã xuất bản</span>
-            case 'draft':
+            case 'DRAFT':
                 return <span className="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-xs font-semibold">Bản nháp</span>
-            case 'archived':
+            case 'ARCHIVED':
                 return <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-semibold">Đã lưu trữ</span>
             default:
                 return null
@@ -145,8 +107,7 @@ export default function AdminExamsPage() {
         }
 
         try {
-            // TODO: Replace with actual API call
-            console.log('Deleting exam:', examId)
+            await api.deleteExam(examId)
             alert('Xóa đề thi thành công!')
             loadExams()
         } catch (error) {
@@ -157,9 +118,9 @@ export default function AdminExamsPage() {
 
     const stats = {
         total: exams.length,
-        published: exams.filter(e => e.status === 'published').length,
-        draft: exams.filter(e => e.status === 'draft').length,
-        archived: exams.filter(e => e.status === 'archived').length
+        published: exams.filter(e => e.status === 'PUBLISHED').length,
+        draft: exams.filter(e => e.status === 'DRAFT').length,
+        archived: exams.filter(e => e.status === 'ARCHIVED').length
     }
 
     if (loading) {
@@ -279,10 +240,10 @@ export default function AdminExamsPage() {
                                         <tr key={exam.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                                             <td className="py-3 px-4 text-gray-800 font-medium">{exam.title}</td>
                                             <td className="py-3 px-4 text-gray-600">{exam.subject}</td>
-                                            <td className="py-3 px-4 text-gray-600">{exam.teacher}</td>
+                                            <td className="py-3 px-4 text-gray-600">{exam.createdBy.name}</td>
                                             <td className="py-3 px-4">{getStatusBadge(exam.status)}</td>
-                                            <td className="py-3 px-4 text-gray-800">{exam.questionCount}</td>
-                                            <td className="py-3 px-4 text-gray-800">{exam.submissions}</td>
+                                            <td className="py-3 px-4 text-gray-800">{exam._count?.questions || 0}</td>
+                                            <td className="py-3 px-4 text-gray-800">{exam._count?.attempts || 0}</td>
                                             <td className="py-3 px-4 text-gray-600">{formatDate(exam.createdAt)}</td>
                                             <td className="py-3 px-4">
                                                 <div className="flex gap-2">

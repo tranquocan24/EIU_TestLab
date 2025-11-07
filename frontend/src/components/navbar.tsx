@@ -74,8 +74,8 @@ export function Navbar() {
                     key={link.href}
                     href={link.href}
                     className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-200 ${isActive
-                        ? 'bg-[#112444] text-white font-semibold'
-                        : 'text-gray-700 hover:bg-gray-100 hover:text-[#112444]'
+                      ? 'bg-[#112444] text-white font-semibold'
+                      : 'text-gray-700 hover:bg-gray-100 hover:text-[#112444]'
                       }`}
                   >
                     <Icon className="h-4 w-4" />
@@ -148,8 +148,8 @@ export function Navbar() {
                   key={link.href}
                   href={link.href}
                   className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 ${isActive
-                      ? 'bg-[#112444] text-white font-semibold'
-                      : 'text-gray-700 hover:bg-gray-100'
+                    ? 'bg-[#112444] text-white font-semibold'
+                    : 'text-gray-700 hover:bg-gray-100'
                     }`}
                   onClick={() => setMobileMenuOpen(false)}
                 >

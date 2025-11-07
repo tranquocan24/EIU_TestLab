@@ -1,7 +1,10 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import api from '@/lib/api'
+import { useAuth } from '@/hooks/useAuth'
 
 interface ExamStats {
   totalExams: number
@@ -17,51 +20,86 @@ interface RecentExam {
   completedAt: string
 }
 
+interface Attempt {
+  id: string
+  exam: {
+    id: string
+    title: string
+    subject: string
+  }
+  score: number
+  submittedAt: string
+}
+
 export default function StudentDashboard() {
+  const router = useRouter()
+  const { user, isAuthenticated } = useAuth()
   const [stats, setStats] = useState<ExamStats>({ totalExams: 0, completedExams: 0, averageScore: 0 })
   const [recentExams, setRecentExams] = useState<RecentExam[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    if (!isAuthenticated || user?.role.toLowerCase() !== 'student') {
+      router.push('/login')
+      return
+    }
     loadDashboardData()
-  }, [])
+  }, [isAuthenticated, user, router])
 
   const loadDashboardData = async () => {
     try {
-      // Simulate API call with mock data
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      setLoading(true)
+      console.log('Loading student dashboard data...')
+
+      // Get all exams available to student
+      const examsResponse = await api.getExams()
+      console.log('Available exams:', examsResponse)
+
+      // Get student's attempts
+      const attemptsResponse = await api.getMyAttempts()
+      console.log('Student attempts:', attemptsResponse)
+
+      const attempts = attemptsResponse as Attempt[]
+
+      // Calculate stats
+      const totalExams = examsResponse.length
+      const completedExams = attempts.length
+
+      let averageScore = 0
+      if (attempts.length > 0) {
+        const totalScore = attempts.reduce((sum: number, attempt: Attempt) => {
+          return sum + (attempt.score || 0)
+        }, 0)
+        averageScore = Math.round((totalScore / attempts.length) * 10) / 10
+      }
 
       setStats({
-        totalExams: 8,
-        completedExams: 5,
-        averageScore: 8.2
+        totalExams,
+        completedExams,
+        averageScore
       })
 
-      setRecentExams([
-        {
-          id: '1',
-          title: 'Kiểm tra giữa kỳ - Lập trình Web',
-          subject: 'Lập trình Web',
-          score: 9,
-          completedAt: '2025-01-05 14:30'
-        },
-        {
-          id: '2',
-          title: 'Bài tập JavaScript Nâng cao',
-          subject: 'Lập trình Web',
-          score: 8.5,
-          completedAt: '2025-01-03 16:15'
-        },
-        {
-          id: '3',
-          title: 'Cơ sở dữ liệu - SQL cơ bản',
-          subject: 'Cơ sở dữ liệu',
-          score: 7,
-          completedAt: '2025-01-01 10:20'
-        }
-      ])
+      // Get recent 3 attempts
+      const recentAttempts = attempts
+        .sort((a: Attempt, b: Attempt) =>
+          new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()
+        )
+        .slice(0, 3)
+        .map((attempt: Attempt) => ({
+          id: attempt.id,
+          title: attempt.exam.title,
+          subject: attempt.exam.subject,
+          score: attempt.score || 0,
+          completedAt: attempt.submittedAt
+        }))
+
+      console.log('Recent exams:', recentAttempts)
+      setRecentExams(recentAttempts)
     } catch (error) {
       console.error('Error loading dashboard data:', error)
+      // Set empty data on error
+      setStats({ totalExams: 0, completedExams: 0, averageScore: 0 })
+      setRecentExams([])
     } finally {
       setLoading(false)
     }

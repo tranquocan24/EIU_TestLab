@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { BarChart as BarChartIcon, Users, FileText, TrendingUp, Download, Calendar } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts'
+import api from '@/lib/api'
 
 interface LoginStats {
     date: string
@@ -42,76 +43,27 @@ export default function AdminStatsPage() {
         loadStats()
     }, [timeRange])
 
-    // Generate realistic login stats based on actual dates
-    const generateLoginStats = (range: string): LoginStats[] => {
-        const today = new Date()
-        const days = range === '7days' ? 7 : range === '30days' ? 30 : range === '90days' ? 90 : 365
-        const stats: LoginStats[] = []
-
-        for (let i = days - 1; i >= 0; i--) {
-            const date = new Date(today)
-            date.setDate(date.getDate() - i)
-
-            // Format date as DD-MM
-            const day = String(date.getDate()).padStart(2, '0')
-            const month = String(date.getMonth() + 1).padStart(2, '0')
-            const dateStr = `${day}-${month}`
-
-            // Generate random logins (30-65 range, higher on weekdays)
-            const dayOfWeek = date.getDay()
-            const baseLogins = dayOfWeek === 0 || dayOfWeek === 6 ? 20 : 40 // Lower on weekends
-            const logins = Math.floor(baseLogins + Math.random() * 25)
-
-            stats.push({ date: dateStr, logins })
-        }
-
-        return stats
-    }
-
     const loadStats = async () => {
         try {
             setLoading(true)
-            // TODO: Replace with actual API call
 
-            // Generate login stats based on actual dates
-            const mockLoginStats: LoginStats[] = generateLoginStats(timeRange)
+            // Parse timeRange to days
+            const daysMap: Record<string, number> = {
+                '7days': 7,
+                '30days': 30,
+                '90days': 90,
+                'year': 365
+            };
+            const days = daysMap[timeRange] || 7;
 
-            // Mock exam stats
-            const mockExamStats: ExamStats[] = [
-                {
-                    subject: 'Lập trình Web',
-                    totalExams: 12,
-                    totalSubmissions: 345,
-                    averageScore: 7.8
-                },
-                {
-                    subject: 'Cơ sở dữ liệu',
-                    totalExams: 8,
-                    totalSubmissions: 256,
-                    averageScore: 8.2
-                },
-                {
-                    subject: 'Mạng máy tính',
-                    totalExams: 10,
-                    totalSubmissions: 298,
-                    averageScore: 7.5
-                },
-                {
-                    subject: 'Lập trình hướng đối tượng',
-                    totalExams: 15,
-                    totalSubmissions: 412,
-                    averageScore: 8.0
-                },
-                {
-                    subject: 'Cấu trúc dữ liệu',
-                    totalExams: 9,
-                    totalSubmissions: 287,
-                    averageScore: 7.9
-                }
-            ]
+            // Load login stats and exam stats from API
+            const [loginData, examData] = await Promise.all([
+                api.getLoginStats(days),
+                api.getExamStatsBySubject()
+            ]);
 
-            setLoginStats(mockLoginStats)
-            setExamStats(mockExamStats)
+            setLoginStats(loginData)
+            setExamStats(examData)
         } catch (error) {
             console.error('Error loading stats:', error)
         } finally {
@@ -254,12 +206,12 @@ export default function AdminStatsPage() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {examStats.map((stat, index) => {
+                                {examStats.map((stat) => {
                                     const maxSubmissions = Math.max(...examStats.map(s => s.totalSubmissions))
                                     const percentage = maxSubmissions > 0 ? (stat.totalSubmissions / maxSubmissions) * 100 : 0
 
                                     return (
-                                        <tr key={index} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                                        <tr key={stat.subject} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                                             <td className="py-3 px-4 text-gray-800 font-medium">{stat.subject}</td>
                                             <td className="py-3 px-4 text-gray-800">{stat.totalExams}</td>
                                             <td className="py-3 px-4 text-gray-800">{stat.totalSubmissions}</td>

@@ -1,13 +1,35 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import api from '@/lib/api'
+import { useAuth } from '@/hooks/useAuth'
 
 interface Exam {
+  id: string
+  title: string
+  subject: string
+  duration: number
+  status: string
+  startTime?: string
+  endTime?: string
+  createdBy: {
+    id: string
+    name: string
+    username: string
+  }
+  _count: {
+    questions: number
+    attempts: number
+  }
+}
+
+interface DisplayExam {
   id: string
   title: string
   subject: string
@@ -18,16 +40,21 @@ interface Exam {
   score?: number
   completedAt?: string
   createdBy: string
+  attemptCount: number
+  startTime?: string
+  endTime?: string
 }
 
 export default function StudentExamList() {
-  const [exams, setExams] = useState<Exam[]>([])
-  const [filteredExams, setFilteredExams] = useState<Exam[]>([])
+  const router = useRouter()
+  const { user } = useAuth()
+  const [exams, setExams] = useState<DisplayExam[]>([])
+  const [filteredExams, setFilteredExams] = useState<DisplayExam[]>([])
   const [loading, setLoading] = useState(true)
   const [subjectFilter, setSubjectFilter] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
-  const [selectedExam, setSelectedExam] = useState<Exam | null>(null)
+  const [selectedExam, setSelectedExam] = useState<DisplayExam | null>(null)
   const [showModal, setShowModal] = useState(false)
 
   useEffect(() => {
@@ -50,66 +77,103 @@ export default function StudentExamList() {
 
   const loadExamList = async () => {
     try {
-      // Simulate API call with mock data
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      setLoading(true)
+      console.log('Loading exams for student...')
 
-      const mockExams: Exam[] = [
-        {
-          id: '1',
-          title: 'Kiểm tra giữa kỳ - Lập trình Web',
-          subject: 'Lập trình Web',
-          duration: 90,
-          questionCount: 25,
-          status: 'available',
-          timeLeft: '3 ngày',
-          createdBy: 'Nguyễn Văn C'
-        },
-        {
-          id: '2',
-          title: 'Bài tập JavaScript Nâng cao',
-          subject: 'Lập trình Web',
-          duration: 60,
-          questionCount: 20,
-          status: 'completed',
-          score: 85,
-          completedAt: '2025-01-03 16:15',
-          createdBy: 'Nguyễn Văn C'
-        },
-        {
-          id: '3',
-          title: 'Cơ sở dữ liệu - SQL cơ bản',
-          subject: 'Cơ sở dữ liệu',
-          duration: 120,
-          questionCount: 30,
-          status: 'completed',
-          score: 70,
-          completedAt: '2025-01-01 10:20',
-          createdBy: 'Trần Thị D'
-        },
-        {
-          id: '4',
-          title: 'Mạng máy tính - TCP/IP',
-          subject: 'Mạng máy tính',
-          duration: 75,
-          questionCount: 15,
-          status: 'available',
-          timeLeft: '1 tuần',
-          createdBy: 'Lê Văn E'
-        },
-        {
-          id: '5',
-          title: 'Kiểm tra cuối kỳ - Lập trình Web',
-          subject: 'Lập trình Web',
-          duration: 150,
-          questionCount: 40,
-          status: 'expired',
-          createdBy: 'Nguyễn Văn C'
+      // Call API to get exams (backend will filter by student's courses)
+      const response = await api.getExams()
+      console.log('Exams from API:', response)
+
+      // Get student's attempts to check completed exams
+      const myAttempts = await api.getMyAttempts()
+      console.log('My attempts:', myAttempts)
+
+      // Create a map of examId -> attempt for quick lookup
+      const attemptMap = new Map(
+        myAttempts.map((attempt: any) => [attempt.exam.id, attempt])
+      )
+
+      // Transform backend data to display format
+      const displayExams: DisplayExam[] = response.map((exam: Exam) => {
+        // Calculate exam status
+        let status: 'available' | 'completed' | 'expired' = 'available'
+        let timeLeft = ''
+
+        const now = new Date()
+
+        // Check if exam has start time and hasn't started yet
+        if (exam.startTime) {
+          const startDate = new Date(exam.startTime)
+          if (startDate > now) {
+            // Exam hasn't started yet
+            const diff = startDate.getTime() - now.getTime()
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24))
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+
+            if (days > 0) {
+              timeLeft = `Bắt đầu sau ${days} ngày`
+            } else if (hours > 0) {
+              timeLeft = `Bắt đầu sau ${hours} giờ`
+            } else {
+              timeLeft = 'Sắp bắt đầu'
+            }
+            status = 'expired' // Use expired status to disable button
+          }
         }
-      ]
 
-      setExams(mockExams)
+        // Check if exam has end time and if it's expired
+        if (status !== 'expired' && exam.endTime) {
+          const endDate = new Date(exam.endTime)
+          if (endDate < now) {
+            status = 'expired'
+            timeLeft = 'Đã hết hạn'
+          } else if (!timeLeft) {
+            // Calculate time left to end
+            const diff = endDate.getTime() - now.getTime()
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24))
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+
+            if (days > 0) {
+              timeLeft = `Còn ${days} ngày`
+            } else if (hours > 0) {
+              timeLeft = `Còn ${hours} giờ`
+            } else {
+              timeLeft = 'Sắp hết hạn'
+            }
+          }
+        } else if (!timeLeft) {
+          // No end time = always available
+          timeLeft = 'Không giới hạn'
+        }
+
+        // Check if student has completed this exam
+        const myAttempt = attemptMap.get(exam.id)
+        if (myAttempt) {
+          status = 'completed'
+        }
+
+        return {
+          id: exam.id,
+          title: exam.title,
+          subject: exam.subject,
+          duration: exam.duration,
+          questionCount: exam._count.questions,
+          status,
+          timeLeft,
+          createdBy: exam.createdBy.name,
+          attemptCount: exam._count.attempts,
+          score: myAttempt?.score,
+          completedAt: myAttempt?.submittedAt,
+          startTime: exam.startTime,
+          endTime: exam.endTime,
+        }
+      })
+
+      console.log('Transformed exams:', displayExams)
+      setExams(displayExams)
     } catch (error) {
       console.error('Error loading exam list:', error)
+      alert('Có lỗi khi tải danh sách bài thi. Vui lòng thử lại!')
     } finally {
       setLoading(false)
     }
@@ -133,7 +197,8 @@ export default function StudentExamList() {
     return colorMap[status as keyof typeof colorMap] || 'bg-gray-100 text-gray-800'
   }
 
-  const formatDateTime = (dateTimeString: string) => {
+  const formatDateTime = (dateTimeString?: string) => {
+    if (!dateTimeString) return ''
     const date = new Date(dateTimeString)
     return date.toLocaleDateString('vi-VN') + ' ' + date.toLocaleTimeString('vi-VN', {
       hour: '2-digit',
@@ -141,7 +206,7 @@ export default function StudentExamList() {
     })
   }
 
-  const handleTakeExam = (exam: Exam) => {
+  const handleTakeExam = (exam: DisplayExam) => {
     setSelectedExam(exam)
     setShowModal(true)
   }
@@ -150,6 +215,7 @@ export default function StudentExamList() {
     if (selectedExam) {
       // Navigate to exam page
       console.log('Starting exam:', selectedExam.id)
+      router.push(`/student/exam?id=${selectedExam.id}`)
       setShowModal(false)
     }
   }
@@ -183,9 +249,10 @@ export default function StudentExamList() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Tất cả môn học</SelectItem>
-                <SelectItem value="Lập trình Web">Lập trình Web</SelectItem>
-                <SelectItem value="Cơ sở dữ liệu">Cơ sở dữ liệu</SelectItem>
-                <SelectItem value="Mạng máy tính">Mạng máy tính</SelectItem>
+                {/* Dynamically generate subjects from exams */}
+                {Array.from(new Set(exams.map(e => e.subject))).map(subject => (
+                  <SelectItem key={subject} value={subject}>{subject}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
 
@@ -326,32 +393,56 @@ export default function StudentExamList() {
 
           {selectedExam && (
             <div className="space-y-4">
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span className="font-medium">Tên bài thi:</span>
-                  <span>{selectedExam.title}</span>
+              <div className="space-y-3">
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-3 rounded-lg border border-blue-200">
+                  <h3 className="font-bold text-blue-900 text-lg mb-1">{selectedExam.title}</h3>
+                  <p className="text-blue-700 font-medium">{selectedExam.subject}</p>
                 </div>
-                <div className="flex justify-between">
-                  <span className="font-medium">Môn học:</span>
-                  <span>{selectedExam.subject}</span>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-gray-50 p-3 rounded-lg">
+                    <p className="text-xs text-gray-500 mb-1">Thời gian làm bài</p>
+                    <p className="font-bold text-gray-800">{selectedExam.duration} phút</p>
+                  </div>
+                  <div className="bg-gray-50 p-3 rounded-lg">
+                    <p className="text-xs text-gray-500 mb-1">Số câu hỏi</p>
+                    <p className="font-bold text-gray-800">{selectedExam.questionCount} câu</p>
+                  </div>
                 </div>
-                <div className="flex justify-between">
-                  <span className="font-medium">Thời gian:</span>
-                  <span>{selectedExam.duration} phút</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="font-medium">Số câu hỏi:</span>
-                  <span>{selectedExam.questionCount} câu</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="font-medium">Điểm tối đa:</span>
-                  <span>{selectedExam.questionCount * 10} điểm</span>
+
+                {(selectedExam.startTime || selectedExam.endTime) && (
+                  <div className="bg-amber-50 p-3 rounded-lg border border-amber-200">
+                    <h4 className="font-semibold text-amber-900 mb-2 flex items-center">
+                      <span className="mr-2">⏰</span> Thời gian thi
+                    </h4>
+                    <div className="space-y-1 text-sm">
+                      {selectedExam.startTime && (
+                        <div className="flex justify-between">
+                          <span className="text-amber-700">Bắt đầu:</span>
+                          <span className="font-medium text-amber-900">{formatDateTime(selectedExam.startTime)}</span>
+                        </div>
+                      )}
+                      {selectedExam.endTime && (
+                        <div className="flex justify-between">
+                          <span className="text-amber-700">Kết thúc:</span>
+                          <span className="font-medium text-amber-900">{formatDateTime(selectedExam.endTime)}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  <p className="text-xs text-gray-500 mb-1">Giảng viên</p>
+                  <p className="font-medium text-gray-800">{selectedExam.createdBy}</p>
                 </div>
               </div>
 
-              <div className="bg-blue-50 p-4 rounded-lg">
-                <h4 className="font-semibold text-gray-800 mb-2">Quy định thi:</h4>
-                <ul className="text-sm text-gray-600 space-y-1">
+              <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                <h4 className="font-semibold text-blue-900 mb-2 flex items-center">
+                  <span className="mr-2">📋</span> Quy định thi
+                </h4>
+                <ul className="text-sm text-blue-800 space-y-1">
                   <li>• Thời gian làm bài có giới hạn, không thể tạm dừng</li>
                   <li>• Mỗi câu hỏi chỉ có thể chọn một đáp án</li>
                   <li>• Có thể xem lại và thay đổi đáp án trước khi nộp bài</li>

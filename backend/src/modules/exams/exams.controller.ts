@@ -12,8 +12,8 @@ export class ExamsController {
   constructor(private readonly examsService: ExamsService) { }
 
   @Get()
-  findAll() {
-    return this.examsService.findAll();
+  findAll(@GetUser() user: any) {
+    return this.examsService.findAll(user.id, user.role, user.courses);
   }
 
   @Get(':id')

@@ -1,4 +1,7 @@
-'use client'
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+content = """'use client'
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -60,12 +63,12 @@ export default function ViewResultsPage() {
         try {
             const examsData = await api.getExams()
             console.log('Loaded teacher exams:', examsData)
-
+            
             const examOptions = examsData.map((exam) => ({
                 id: exam.id,
                 title: exam.title
             }))
-
+            
             setExams(examOptions)
         } catch (error) {
             console.error('Error loading exams:', error)
@@ -77,7 +80,7 @@ export default function ViewResultsPage() {
             setLoading(true)
             const attempts = await api.getExamAttempts(examId)
             console.log('Loaded attempts for exam:', examId, attempts)
-
+            
             const transformedResults = attempts
                 .filter((attempt) => attempt.submittedAt)
                 .map((attempt) => ({
@@ -378,7 +381,7 @@ export default function ViewResultsPage() {
                     )}
                 </>
             )}
-
+            
             {!selectedExam && (
                 <Card>
                     <CardContent className="p-12">
@@ -393,3 +396,9 @@ export default function ViewResultsPage() {
         </div>
     )
 }
+"""
+
+with open('frontend/src/app/(dashboard)/teacher/results/page.tsx', 'w', encoding='utf-8', newline='\n') as f:
+    f.write(content)
+
+print("Teacher results page created successfully!")
