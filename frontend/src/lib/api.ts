@@ -60,7 +60,7 @@ class ApiClient {
             window.location.href = '/login';
           }
         }
-        
+
         // Enhance error message
         if (error.response?.data?.message) {
           error.message = error.response.data.message;
@@ -74,7 +74,7 @@ class ApiClient {
           };
           error.message = statusMessages[error.response.status] || `Lỗi ${error.response.status}`;
         }
-        
+
         return Promise.reject(error);
       }
     );

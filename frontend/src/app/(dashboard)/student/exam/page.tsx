@@ -76,7 +76,7 @@ export default function ExamTakingPage() {
       // Submit all answers first
       let successCount = 0
       let errorCount = 0
-      
+
       for (const [questionId, optionId] of Object.entries(answers)) {
         try {
           console.log(`Submitting answer for question ${questionId}: ${optionId}`)
@@ -147,7 +147,7 @@ export default function ExamTakingPage() {
       console.log('[loadExam] Calling api.getExamById...')
       const examData = await Promise.race([
         api.getExamById(id),
-        new Promise((_, reject) => 
+        new Promise((_, reject) =>
           setTimeout(() => reject(new Error('Request timeout after 10 seconds')), 10000)
         )
       ])
@@ -185,10 +185,10 @@ export default function ExamTakingPage() {
           data: error.response?.data,
           message: error.message
         })
-        
+
         const errorMessage = error.response?.data?.message || error.message || 'Không thể bắt đầu bài thi'
         alert(`Lỗi: ${errorMessage}`)
-        
+
         // Navigate back to exam list
         router.push('/student/exams')
         return
@@ -202,10 +202,10 @@ export default function ExamTakingPage() {
         data: error.response?.data,
         message: error.message
       })
-      
+
       const errorMessage = error.response?.data?.message || error.message || 'Không thể tải bài thi. Vui lòng thử lại.'
       alert(`Lỗi: ${errorMessage}`)
-      
+
       // If unauthorized, redirect to login
       if (error.response?.status === 401) {
         router.push('/login')

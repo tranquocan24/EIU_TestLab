@@ -146,7 +146,7 @@ export class AttemptsService {
     console.log('Attempt ID:', attemptId)
     console.log('User ID:', userId)
     console.log('DTO:', dto)
-    
+
     const attempt = await this.prisma.attempt.findUnique({
       where: { id: attemptId },
       include: {
@@ -248,7 +248,7 @@ export class AttemptsService {
     console.log('Attempt ID:', attemptId)
     console.log('User ID:', userId)
     console.log('Time spent:', timeSpent)
-    
+
     const attempt = await this.prisma.attempt.findUnique({
       where: { id: attemptId },
       include: {
@@ -358,7 +358,7 @@ export class AttemptsService {
     // Calculate stats for each attempt
     return attempts.map(attempt => {
       const correctAnswers = attempt.answers.filter(a => a.isCorrect).length;
-      
+
       return {
         ...attempt,
         totalQuestions: attempt._count.answers, // Use actual answered questions count
