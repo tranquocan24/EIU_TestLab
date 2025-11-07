@@ -139,6 +139,32 @@ export default function ManageExamsPage() {
         }
     }
 
+    const handleDelete = async (examId: string, examTitle: string) => {
+        if (!confirm(`Bạn có chắc chắn muốn xóa đề thi "${examTitle}"?\n\nHành động này không thể hoàn tác!`)) {
+            return
+        }
+
+        try {
+            await api.deleteExam(examId)
+            alert('Xóa đề thi thành công!')
+            loadExams() // Reload list
+        } catch (error) {
+            console.error('Error deleting exam:', error)
+            alert('Không thể xóa đề thi. Vui lòng thử lại!')
+        }
+    }
+
+    const handleDuplicate = async (examId: string) => {
+        try {
+            const exam = await api.getExamById(examId)
+            // TODO: Implement duplicate logic - copy exam with new title
+            alert('Tính năng nhân bản đề thi đang được phát triển!')
+        } catch (error) {
+            console.error('Error duplicating exam:', error)
+            alert('Không thể nhân bản đề thi!')
+        }
+    }
+
     const formatDate = (dateString: string) => {
         const date = new Date(dateString)
         return date.toLocaleDateString('vi-VN')
@@ -345,18 +371,36 @@ export default function ManageExamsPage() {
                                 </div>
 
                                 <div className="flex gap-2 pt-3 border-t border-gray-100">
-                                    <Button variant="outline" size="sm" className="flex-1">
+                                    <Button 
+                                        variant="outline" 
+                                        size="sm" 
+                                        className="flex-1"
+                                        onClick={() => router.push(`/teacher/exams/${exam.id}/results`)}
+                                    >
                                         <Eye className="h-4 w-4 mr-1" />
                                         Xem
                                     </Button>
-                                    <Button variant="outline" size="sm" className="flex-1">
+                                    <Button 
+                                        variant="outline" 
+                                        size="sm" 
+                                        className="flex-1"
+                                        onClick={() => router.push(`/teacher/exams/${exam.id}/edit`)}
+                                    >
                                         <Edit className="h-4 w-4 mr-1" />
                                         Sửa
                                     </Button>
-                                    <Button variant="outline" size="sm">
+                                    <Button 
+                                        variant="outline" 
+                                        size="sm"
+                                        onClick={() => handleDuplicate(exam.id)}
+                                    >
                                         <Copy className="h-4 w-4" />
                                     </Button>
-                                    <Button variant="outline" size="sm">
+                                    <Button 
+                                        variant="outline" 
+                                        size="sm"
+                                        onClick={() => handleDelete(exam.id, exam.title)}
+                                    >
                                         <Trash2 className="h-4 w-4 text-red-600" />
                                     </Button>
                                 </div>

@@ -57,6 +57,7 @@ model Exam {
   subject        String
   duration       Int        // in minutes
   passingScore   Int        @default(60)
+  maxAttempts    Int?       // Số lần được làm lại (null = không giới hạn)
   status         ExamStatus @default(DRAFT)
   allowedCourses String?    // Danh sách lớp được phép làm bài (ví dụ: "CSE301,CSE302")
   
@@ -112,6 +113,7 @@ model Attempt {
   id            String        @id @default(uuid())
   status        AttemptStatus @default(IN_PROGRESS)
   score         Float?
+  attemptNumber Int           @default(1) // Lần làm bài thứ mấy
   startedAt     DateTime      @default(now())
   submittedAt   DateTime?
   timeSpent     Int?          // in seconds
@@ -128,7 +130,6 @@ model Attempt {
   // Relations
   answers       Answer[]
   
-  @@unique([studentId, examId])
   @@map("attempts")
 }
 

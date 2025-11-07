@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useEffect, useState, useCallback } from 'react'
+import { useRouter, useParams } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -21,10 +21,13 @@ interface Question {
     points: number
 }
 
-export default function CreateExamPage() {
+export default function EditExamPage() {
     const router = useRouter()
+    const params = useParams()
+    const examId = params.id as string
     const { user, isAuthenticated } = useAuth()
     const [loading, setLoading] = useState(false)
+    const [loadingExam, setLoadingExam] = useState(true)
 
     // Basic Info
     const [title, setTitle] = useState('')
@@ -47,15 +50,74 @@ export default function CreateExamPage() {
     // Questions
     const [questions, setQuestions] = useState<Question[]>([])
 
+    const loadExamData = useCallback(async () => {
+        try {
+            setLoadingExam(true)
+            const exam = await api.getExamById(examId)
+            
+            // Populate form fields
+            setTitle(exam.title)
+            setSelectedCourse(exam.subject)
+            setDescription(exam.description || '')
+            setDuration(exam.duration.toString())
+            setMaxAttempts(exam.maxAttempts ? exam.maxAttempts.toString() : '')
+            
+            // Convert dates to datetime-local format
+            if (exam.startTime) {
+                const startDateTime = new Date(exam.startTime)
+                setStartDate(startDateTime.toISOString().slice(0, 16))
+            }
+            if (exam.endTime) {
+                const endDateTime = new Date(exam.endTime)
+                setEndDate(endDateTime.toISOString().slice(0, 16))
+            }
+            
+            // Transform questions
+            if (exam.questions && exam.questions.length > 0) {
+                const transformedQuestions = exam.questions.map((q: any) => {
+                    const baseQuestion = {
+                        id: q.id,
+                        type: q.type.toLowerCase().replace('_', '-') as 'multiple-choice' | 'essay',
+                        content: q.questionText || q.content, // Backend returns 'questionText'
+                        points: q.points,
+                    }
+
+                    if (q.type === 'MULTIPLE_CHOICE' && q.options) {
+                        // Transform options from {text: string, isCorrect: boolean}[] to string[]
+                        const optionsArray = q.options.map((opt: any) => opt.text || opt)
+                        // Find correct answer index
+                        const correctIndex = q.options.findIndex((opt: any) => opt.isCorrect)
+                        
+                        return {
+                            ...baseQuestion,
+                            options: optionsArray,
+                            correctAnswer: correctIndex >= 0 ? correctIndex : 0
+                        }
+                    }
+
+                    return baseQuestion
+                })
+                setQuestions(transformedQuestions)
+            }
+            
+            setLoadingExam(false)
+        } catch (error: any) {
+            console.error('Error loading exam:', error)
+            alert('Không thể tải thông tin đề thi: ' + (error.response?.data?.message || error.message))
+            setLoadingExam(false)
+            router.push('/teacher/exams')
+        }
+    }, [examId, router])
+
     useEffect(() => {
-        if (!isAuthenticated || user?.role.toLowerCase() !== 'teacher') {
+        if (!isAuthenticated || user?.role !== 'TEACHER') {
             router.push('/login')
             return
         }
 
         // Parse teacher's courses from user.courses string
         if (user?.courses) {
-            const coursesArray = user.courses.split(',').map(c => c.trim()).filter(c => c)
+            const coursesArray = user.courses.split(',').map(c => c.trim()).filter(Boolean)
             setTeacherCourses(coursesArray)
 
             // Auto-select first course if available
@@ -63,7 +125,10 @@ export default function CreateExamPage() {
                 setSelectedCourse(coursesArray[0])
             }
         }
-    }, [isAuthenticated, user, router, selectedCourse])
+
+        // Load exam data
+        loadExamData()
+    }, [isAuthenticated, user, router, loadExamData, selectedCourse])
 
     const addQuestion = (type: 'multiple-choice' | 'essay') => {
         const newQuestion: Question = {
@@ -148,37 +213,48 @@ export default function CreateExamPage() {
                 })),
             }
 
-            console.log('Creating exam with data:', examData)
+            console.log('Updating exam with data:', examData)
 
-            // Call API to create exam
-            const response = await api.createExam(examData)
+            // Call API to update exam
+            const response = await api.updateExam(examId, examData)
 
             console.log('API response:', response)
 
-            // Redirect immediately after successful creation
-            const successMessage = status === 'draft' ? 'Lưu bản nháp thành công!' : 'Xuất bản đề thi thành công!'
+            // Redirect immediately after successful update
+            const successMessage = status === 'draft' ? 'Cập nhật bản nháp thành công!' : 'Cập nhật đề thi thành công!'
 
             // Store success message in sessionStorage to show on next page
-            sessionStorage.setItem('examCreated', successMessage)
+            sessionStorage.setItem('examUpdated', successMessage)
 
             // Navigate to exams page
             router.push('/teacher/exams')
         } catch (error: any) {
-            console.error('Error creating exam:', error)
+            console.error('Error updating exam:', error)
             console.error('Error details:', error.response?.data)
-            const errorMessage = error.response?.data?.message || 'Có lỗi xảy ra. Vui lòng thử lại!'
+            const errorMessage = error.response?.data?.message || 'Có lỗi xảy ra khi cập nhật đề thi. Vui lòng thử lại!'
             alert(errorMessage)
         } finally {
             setLoading(false)
         }
     }
 
+    if (loadingExam) {
+        return (
+            <div className="flex items-center justify-center min-h-[400px]">
+                <div className="text-center space-y-4">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
+                    <p className="text-gray-600">Đang tải thông tin đề thi...</p>
+                </div>
+            </div>
+        )
+    }
+
     return (
         <div className="space-y-6 animate-fadeInUp max-w-5xl mx-auto">
             {/* Header */}
             <div className="bg-gradient-to-r from-purple-600 to-indigo-700 text-white p-8 rounded-2xl text-center shadow-lg">
-                <h1 className="text-3xl font-bold mb-2">Tạo đề thi mới</h1>
-                <p className="text-purple-100">Tạo đề thi trực tuyến với các câu hỏi trắc nghiệm và tự luận</p>
+                <h1 className="text-3xl font-bold mb-2">Sửa đề thi</h1>
+                <p className="text-purple-100">Chỉnh sửa thông tin và câu hỏi của đề thi</p>
             </div>
 
             {/* Basic Information */}

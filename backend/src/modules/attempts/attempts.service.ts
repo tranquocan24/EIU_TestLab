@@ -26,6 +26,7 @@ export class AttemptsService {
       id: exam?.id,
       title: exam?.title,
       questionCount: exam?.questions?.length || 0,
+      maxAttempts: exam?.maxAttempts,
     });
 
     if (!exam) {
@@ -53,42 +54,56 @@ export class AttemptsService {
       throw new BadRequestException('Exam has ended');
     }
 
-    // Check if user already has an attempt
-    const existingAttempt = await this.prisma.attempt.findUnique({
+    // Check number of attempts
+    const previousAttempts = await this.prisma.attempt.findMany({
       where: {
-        studentId_examId: {
-          studentId: userId,
-          examId,
-        },
+        studentId: userId,
+        examId,
+        status: { in: ['SUBMITTED', 'GRADED'] }
+      },
+      orderBy: {
+        attemptNumber: 'desc'
+      }
+    });
+
+    console.log('[startAttempt] Previous attempts:', previousAttempts.length);
+
+    // Check if max attempts exceeded
+    if (exam.maxAttempts !== null && exam.maxAttempts !== undefined) {
+      if (previousAttempts.length >= exam.maxAttempts) {
+        throw new BadRequestException(`You have reached the maximum number of attempts (${exam.maxAttempts}) for this exam`);
+      }
+    }
+
+    // Check if user has an in-progress attempt
+    const inProgressAttempt = await this.prisma.attempt.findFirst({
+      where: {
+        studentId: userId,
+        examId,
+        status: 'IN_PROGRESS'
       },
     });
 
-    // If already has attempt and it's completed, don't allow retake
-    if (existingAttempt && (existingAttempt.status === 'SUBMITTED' || existingAttempt.status === 'GRADED')) {
-      console.log('[startAttempt] Attempt already completed:', {
-        attemptId: existingAttempt.id,
-        status: existingAttempt.status,
-      });
-      throw new BadRequestException('You have already completed this exam');
+    // If already has in-progress attempt, return it
+    if (inProgressAttempt) {
+      console.log('[startAttempt] Returning existing in-progress attempt:', inProgressAttempt.id);
+      return inProgressAttempt;
     }
 
-    console.log('[startAttempt] Creating or getting attempt...');
+    console.log('[startAttempt] Creating new attempt...');
 
-    // Use upsert to avoid race condition (if multiple requests come at the same time)
-    const attempt = await this.prisma.attempt.upsert({
-      where: {
-        studentId_examId: {
-          studentId: userId,
-          examId,
-        },
-      },
-      update: {
-        // If exists and in progress, just return it (no update needed)
-      },
-      create: {
+    // Calculate next attempt number
+    const nextAttemptNumber = previousAttempts.length > 0 
+      ? previousAttempts[0].attemptNumber + 1 
+      : 1;
+
+    // Create new attempt
+    const attempt = await this.prisma.attempt.create({
+      data: {
         studentId: userId,
         examId,
         status: 'IN_PROGRESS',
+        attemptNumber: nextAttemptNumber,
       },
       include: {
         exam: {

@@ -22,6 +22,10 @@ export class CreateExamDto {
   @IsOptional()
   passingScore?: number;
 
+  @IsInt()
+  @IsOptional()
+  maxAttempts?: number; // Số lượt làm bài tối đa (null = không giới hạn)
+
   @IsEnum(['DRAFT', 'PUBLISHED', 'ARCHIVED'])
   @IsOptional()
   status?: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';

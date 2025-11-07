@@ -16,6 +16,7 @@ interface Exam {
   subject: string
   duration: number
   status: string
+  maxAttempts?: number | null // null = không giới hạn
   startTime?: string
   endTime?: string
   createdBy: {
@@ -36,6 +37,7 @@ interface DisplayExam {
   duration: number
   questionCount: number
   status: 'available' | 'completed' | 'expired'
+  maxAttempts?: number | null
   timeLeft?: string
   score?: number
   completedAt?: string
@@ -148,8 +150,26 @@ export default function StudentExamList() {
 
         // Check if student has completed this exam
         const myAttempt = attemptMap.get(exam.id)
+        
+        // Only mark as completed if:
+        // 1. Student has attempts AND
+        // 2. maxAttempts is not null (not unlimited) AND
+        // 3. Student has reached maxAttempts limit
         if (myAttempt) {
-          status = 'completed'
+          // Get student's attempt count for this exam
+          const studentAttemptsCount = myAttempts.filter(
+            (a: any) => a.exam.id === exam.id && 
+            (a.status === 'SUBMITTED' || a.status === 'GRADED')
+          ).length
+          
+          // Check if max attempts reached (only if maxAttempts is set)
+          if (exam.maxAttempts !== null && exam.maxAttempts !== undefined) {
+            if (studentAttemptsCount >= exam.maxAttempts) {
+              status = 'completed' // Max attempts reached
+            }
+            // else: Can still retake
+          }
+          // else: maxAttempts is null (unlimited), don't mark as completed
         }
 
         return {
@@ -158,6 +178,7 @@ export default function StudentExamList() {
           subject: exam.subject,
           duration: exam.duration,
           questionCount: exam._count.questions,
+          maxAttempts: exam.maxAttempts,
           status,
           timeLeft,
           createdBy: exam.createdBy.name,
