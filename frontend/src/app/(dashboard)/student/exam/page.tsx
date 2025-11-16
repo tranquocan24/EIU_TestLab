@@ -68,7 +68,7 @@ export default function ExamTakingPage() {
   useEffect(() => {
     // Add class to body to hide navbar
     document.body.classList.add('exam-mode')
-    
+
     // Add styles to hide navbar
     const style = document.createElement('style')
     style.id = 'exam-mode-style'
@@ -84,7 +84,7 @@ export default function ExamTakingPage() {
       }
     `
     document.head.appendChild(style)
-    
+
     return () => {
       document.body.classList.remove('exam-mode')
       const existingStyle = document.getElementById('exam-mode-style')
@@ -122,11 +122,11 @@ export default function ExamTakingPage() {
   // Auto-submit function (defined before useEffect to avoid dependency issues)
   const autoSubmitExam = useCallback(async () => {
     if (!attemptId || !exam) return
-    
+
     try {
       const totalTime = (exam.duration || 0) * 60
       const timeSpent = Math.floor((totalTime - timeRemaining) / 60)
-      
+
       // Submit answers
       for (const [questionId, optionId] of Object.entries(answers)) {
         try {
@@ -135,15 +135,15 @@ export default function ExamTakingPage() {
           console.error('Error submitting answer:', error)
         }
       }
-      
+
       // Submit attempt
       await api.submitAttempt(attemptId, timeSpent)
-      
+
       // Exit fullscreen
       if (document.fullscreenElement) {
         await document.exitFullscreen().catch(err => console.error(err))
       }
-      
+
       router.push('/student/results')
     } catch (error) {
       console.error('Error auto-submitting:', error)
@@ -156,7 +156,7 @@ export default function ExamTakingPage() {
 
     // Don't enable anti-cheat automatically - wait for user to start exam
     // This prevents "Permissions check failed" error
-    
+
     // Cleanup on unmount
     return () => {
       if (antiCheatEnabledRef.current) {
@@ -167,7 +167,7 @@ export default function ExamTakingPage() {
 
   const enableAntiCheat = async () => {
     if (antiCheatEnabledRef.current) return
-    
+
     let styleElement: HTMLStyleElement | null = null
 
     try {
@@ -181,10 +181,10 @@ export default function ExamTakingPage() {
       document.addEventListener('copy', preventCopy)
       document.addEventListener('cut', preventCopy)
       document.addEventListener('paste', preventCopy)
-      
+
       // Prevent right click
       document.addEventListener('contextmenu', preventContextMenu)
-      
+
       // Prevent text selection
       styleElement = preventSelection()
 
@@ -207,7 +207,7 @@ export default function ExamTakingPage() {
     document.removeEventListener('cut', preventCopy)
     document.removeEventListener('paste', preventCopy)
     document.removeEventListener('contextmenu', preventContextMenu)
-    
+
     // Remove style (stored in enableAntiCheat scope)
     const styleElements = document.querySelectorAll('style[data-anti-cheat]')
     styleElements.forEach(el => el.remove())
@@ -226,7 +226,7 @@ export default function ExamTakingPage() {
       console.log('- isSubmitting:', isSubmitting)
       console.log('- antiCheatEnabledRef.current:', antiCheatEnabledRef.current)
       console.log('- isHandlingFullscreenChangeRef.current:', isHandlingFullscreenChangeRef.current)
-      
+
       // Prevent multiple simultaneous triggers
       if (isHandlingFullscreenChangeRef.current) {
         console.log('⏭️ Skipping fullscreen change - already handling')
@@ -236,16 +236,16 @@ export default function ExamTakingPage() {
       // Check if user exited fullscreen (simplified condition for debugging)
       if (!document.fullscreenElement && exam && !isSubmitting) {
         isHandlingFullscreenChangeRef.current = true
-        
+
         // Use ref to avoid re-render loop
         fullscreenExitCountRef.current += 1
         const newCount = fullscreenExitCountRef.current
-        
+
         // Update state for UI display
         setFullscreenExitCount(newCount)
-        
+
         console.log(`⚠️ Fullscreen exit count: ${newCount}/3`)
-        
+
         if (newCount >= 3) {
           // Auto submit after 3 warnings
           alert('⚠️ Bạn đã thoát chế độ toàn màn hình 3 lần. Hệ thống sẽ tự động nộp bài của bạn.')
@@ -260,7 +260,7 @@ export default function ExamTakingPage() {
           console.log('📢 Showing fullscreen warning modal')
           setShowFullscreenWarning(true)
         }
-        
+
         // Reset flag after a delay
         setTimeout(() => {
           isHandlingFullscreenChangeRef.current = false
@@ -282,10 +282,10 @@ export default function ExamTakingPage() {
 
   const handleReturnToFullscreen = async () => {
     setShowFullscreenWarning(false)
-    
+
     // Reset the handling flag to allow next detection
     isHandlingFullscreenChangeRef.current = false
-    
+
     try {
       const elem = document.documentElement
       if (elem.requestFullscreen) {
@@ -500,16 +500,16 @@ export default function ExamTakingPage() {
         document.addEventListener('cut', preventCopy)
         document.addEventListener('paste', preventCopy)
         document.addEventListener('contextmenu', preventContextMenu)
-        
+
         const styleElement = preventSelection()
         antiCheatEnabledRef.current = true
-        
+
         console.log('✅ Anti-cheat measures enabled (fullscreen already active)')
       } else {
         // Not in fullscreen - show warning
         console.warn('⚠️ Not in fullscreen mode - user needs to enable it')
         alert('Vui lòng bật chế độ toàn màn hình để tiếp tục làm bài!')
-        
+
         // Try to enable fullscreen
         enableAntiCheat().catch(error => {
           console.error('Failed to enable anti-cheat:', error)
@@ -773,7 +773,7 @@ export default function ExamTakingPage() {
                 Sau {3 - fullscreenExitCount} lần thoát nữa, hệ thống sẽ tự động nộp bài!
               </p>
             </div>
-            
+
             <p className="text-gray-700 mb-4">
               Để đảm bảo tính công bằng trong kỳ thi, bạn cần ở chế độ toàn màn hình trong suốt quá trình làm bài.
             </p>
@@ -783,8 +783,8 @@ export default function ExamTakingPage() {
           </div>
 
           <DialogFooter>
-            <Button 
-              onClick={handleReturnToFullscreen} 
+            <Button
+              onClick={handleReturnToFullscreen}
               className="w-full bg-blue-600 hover:bg-blue-700"
             >
               Quay lại chế độ toàn màn hình

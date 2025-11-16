@@ -240,7 +240,7 @@ export default function StudentExamList() {
         if (elem.requestFullscreen) {
           await elem.requestFullscreen()
         }
-        
+
         // Navigate to exam page
         console.log('Starting exam:', selectedExam.id)
         router.push(`/student/exam?id=${selectedExam.id}`)

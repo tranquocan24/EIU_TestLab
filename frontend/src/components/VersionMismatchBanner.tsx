@@ -13,7 +13,7 @@ export function VersionMismatchBanner() {
 
   // Check version mismatch
   if (typeof window === 'undefined' || !isAuthenticated) return null;
-  
+
   const storedVersion = localStorage.getItem('storage-version');
   if (!storedVersion || storedVersion === CURRENT_VERSION) return null;
 

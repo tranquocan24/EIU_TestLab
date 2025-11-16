@@ -16,11 +16,11 @@ export const useAuthStore = create<AuthState>()(
         try {
           const response = await api.login({ username, password });
           const { user, token } = response.data!;
-          
+
           // Store token in localStorage
           localStorage.setItem('token', token);
           localStorage.setItem('storage-version', STORAGE_VERSION);
-          
+
           set({
             user,
             token,
@@ -65,8 +65,8 @@ export const useAuthStore = create<AuthState>()(
             token: null,
             isAuthenticated: false,
             login: async () => { throw new Error('Not implemented'); },
-            logout: () => {},
-            setUser: () => {},
+            logout: () => { },
+            setUser: () => { },
           };
         }
         return persistedState as AuthState;

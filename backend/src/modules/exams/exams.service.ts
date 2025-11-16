@@ -15,8 +15,8 @@ export class ExamsService {
     // If student, filter by allowedCourses matching student's courses
     if (userRole === 'STUDENT' && userCourses) {
       // Handle both array and string formats
-      const studentCoursesArray = Array.isArray(userCourses) 
-        ? userCourses 
+      const studentCoursesArray = Array.isArray(userCourses)
+        ? userCourses
         : userCourses.split(',').map(c => c.trim());
 
       // Find exams where allowedCourses contains at least one of student's courses

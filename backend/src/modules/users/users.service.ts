@@ -179,8 +179,8 @@ export class UsersService {
         // Convert courses to array if it's a string
         let coursesArray: string[] = [];
         if (userData.courses) {
-          coursesArray = Array.isArray(userData.courses) 
-            ? userData.courses 
+          coursesArray = Array.isArray(userData.courses)
+            ? userData.courses
             : userData.courses.split(',').map(c => c.trim());
         }
 

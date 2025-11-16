@@ -4,7 +4,7 @@ import { CreateMessageDto } from './dto/create-message.dto';
 
 @Injectable()
 export class MessagesService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   // Send message
   async create(senderId: string, createMessageDto: CreateMessageDto) {
