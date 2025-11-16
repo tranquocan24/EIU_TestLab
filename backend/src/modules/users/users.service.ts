@@ -152,7 +152,7 @@ export class UsersService {
     name: string;
     email?: string;
     role: UserRole;
-    courses?: string;
+    courses?: string | string[];
   }>) {
     const results = {
       success: 0,
@@ -176,11 +176,23 @@ export class UsersService {
         // Hash password
         const hashedPassword = await bcrypt.hash(userData.password, 10);
 
+        // Convert courses to array if it's a string
+        let coursesArray: string[] = [];
+        if (userData.courses) {
+          coursesArray = Array.isArray(userData.courses) 
+            ? userData.courses 
+            : userData.courses.split(',').map(c => c.trim());
+        }
+
         // Create user
         await this.prisma.user.create({
           data: {
-            ...userData,
+            username: userData.username,
             password: hashedPassword,
+            name: userData.name,
+            email: userData.email,
+            role: userData.role,
+            courses: coursesArray,
           },
         });
 

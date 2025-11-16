@@ -7,6 +7,8 @@ import { ExamsModule } from './modules/exams/exams.module';
 import { QuestionsModule } from './modules/questions/questions.module';
 import { AttemptsModule } from './modules/attempts/attempts.module';
 import { StatsModule } from './modules/stats/stats.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
+import { MessagesModule } from './modules/messages/messages.module';
 import { AppController } from './app.controller';
 
 @Module({
@@ -21,6 +23,8 @@ import { AppController } from './app.controller';
     QuestionsModule,
     AttemptsModule,
     StatsModule,
+    NotificationsModule,
+    MessagesModule,
   ],
   controllers: [AppController],
 })

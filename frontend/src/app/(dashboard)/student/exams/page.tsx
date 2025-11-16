@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -232,12 +232,23 @@ export default function StudentExamList() {
     setShowModal(true)
   }
 
-  const startExam = () => {
+  const startExam = async () => {
     if (selectedExam) {
-      // Navigate to exam page
-      console.log('Starting exam:', selectedExam.id)
-      router.push(`/student/exam?id=${selectedExam.id}`)
-      setShowModal(false)
+      try {
+        // Enable fullscreen before navigating
+        const elem = document.documentElement
+        if (elem.requestFullscreen) {
+          await elem.requestFullscreen()
+        }
+        
+        // Navigate to exam page
+        console.log('Starting exam:', selectedExam.id)
+        router.push(`/student/exam?id=${selectedExam.id}`)
+        setShowModal(false)
+      } catch (error) {
+        console.error('Failed to enable fullscreen:', error)
+        alert('Không thể bật chế độ toàn màn hình. Vui lòng cho phép trình duyệt vào chế độ toàn màn hình để tiếp tục.')
+      }
     }
   }
 
@@ -459,27 +470,30 @@ export default function StudentExamList() {
                 </div>
               </div>
 
-              <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                <h4 className="font-semibold text-blue-900 mb-2 flex items-center">
-                  <span className="mr-2">📋</span> Quy định thi
+              <div className="bg-amber-50 p-4 rounded-lg border border-amber-200">
+                <h4 className="font-semibold text-amber-900 mb-3 flex items-center text-lg gap-2">
+                  <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                  Lưu ý quan trọng:
                 </h4>
-                <ul className="text-sm text-blue-800 space-y-1">
-                  <li>• Thời gian làm bài có giới hạn, không thể tạm dừng</li>
-                  <li>• Mỗi câu hỏi chỉ có thể chọn một đáp án</li>
-                  <li>• Có thể xem lại và thay đổi đáp án trước khi nộp bài</li>
-                  <li>• Sau khi nộp bài không thể thay đổi</li>
-                  <li>• Không được sử dụng tài liệu bên ngoài</li>
+                <ul className="text-sm text-amber-800 space-y-2">
+                  <li>🔒 Bài thi sẽ tự động chuyển sang chế độ <strong>toàn màn hình</strong></li>
+                  <li>⛔ Không được phép copy nội dung câu hỏi</li>
+                  <li>⚠️ Nếu thoát chế độ toàn màn hình <strong>3 lần</strong>, hệ thống sẽ <strong>tự động nộp bài</strong></li>
+                  <li>⏰ Thời gian làm bài sẽ bắt đầu đếm ngược khi bạn nhấn &quot;Bắt đầu&quot;</li>
+                  <li>💾 Câu trả lời của bạn sẽ được tự động lưu</li>
                 </ul>
               </div>
             </div>
           )}
 
-          <DialogFooter>
+          <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setShowModal(false)}>
               Hủy
             </Button>
-            <Button onClick={startExam} className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700">
-              Bắt đầu thi
+            <Button onClick={startExam} className="bg-green-600 hover:bg-green-700 text-lg px-6">
+              🚀 Bắt đầu làm bài
             </Button>
           </DialogFooter>
         </DialogContent>

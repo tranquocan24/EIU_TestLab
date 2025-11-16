@@ -30,6 +30,14 @@ enum AttemptStatus {
   GRADED
 }
 
+enum NotificationType {
+  EXAM_CREATED
+  EXAM_UPDATED
+  EXAM_REMINDER
+  MESSAGE_RECEIVED
+  SYSTEM
+}
+
 model User {
   id        String   @id @default(uuid())
   username  String   @unique
@@ -37,15 +45,18 @@ model User {
   email     String?  @unique
   name      String
   role      UserRole @default(STUDENT)
-  courses   String?  // Danh sách lớp (ví dụ: "CSE301,CSE302")
+  courses   String[] @default([]) // Danh sách lớp (ví dụ: ["CSE301", "CSE302"])
   isActive  Boolean  @default(true)
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   
   // Relations
-  createdExams Exam[]    @relation("ExamCreator")
-  attempts     Attempt[]
+  createdExams      Exam[]         @relation("ExamCreator")
+  attempts          Attempt[]
+  notifications     Notification[]
+  sentMessages      Message[]      @relation("MessageSender")
+  receivedMessages  Message[]      @relation("MessageReceiver")
   
   @@map("users")
 }
@@ -71,8 +82,9 @@ model Exam {
   updatedAt   DateTime  @updatedAt
   
   // Relations
-  questions   Question[]
-  attempts    Attempt[]
+  questions     Question[]
+  attempts      Attempt[]
+  notifications Notification[]
   
   @@map("exams")
 }
@@ -151,4 +163,45 @@ model Answer {
   
   @@unique([attemptId, questionId])
   @@map("answers")
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  type      NotificationType
+  title     String
+  message   String
+  
+  examId    String?          // Optional: link to exam if notification is about an exam
+  exam      Exam?            @relation(fields: [examId], references: [id], onDelete: Cascade)
+  
+  isRead    Boolean          @default(false)
+  
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  
+  @@map("notifications")
+  @@index([userId, isRead])
+}
+
+model Message {
+  id         String   @id @default(uuid())
+  
+  senderId   String
+  sender     User     @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  
+  receiverId String
+  receiver   User     @relation("MessageReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+  
+  content    String
+  isRead     Boolean  @default(false)
+  
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  
+  @@map("messages")
+  @@index([senderId, receiverId])
+  @@index([receiverId, isRead])
 }

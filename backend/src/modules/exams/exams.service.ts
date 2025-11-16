@@ -4,15 +4,20 @@ import { CreateExamDto, UpdateExamDto } from './dto';
 
 @Injectable()
 export class ExamsService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(
+    private readonly prisma: PrismaService,
+  ) { }
 
-  async findAll(userId?: string, userRole?: string, userCourses?: string) {
+  async findAll(userId?: string, userRole?: string, userCourses?: string | string[]) {
     // Build where condition based on user role
     let whereCondition: any = {};
 
     // If student, filter by allowedCourses matching student's courses
     if (userRole === 'STUDENT' && userCourses) {
-      const studentCoursesArray = userCourses.split(',').map(c => c.trim());
+      // Handle both array and string formats
+      const studentCoursesArray = Array.isArray(userCourses) 
+        ? userCourses 
+        : userCourses.split(',').map(c => c.trim());
 
       // Find exams where allowedCourses contains at least one of student's courses
       whereCondition.OR = studentCoursesArray.map(course => ({
@@ -105,7 +110,8 @@ export class ExamsService {
   async create(createExamDto: CreateExamDto, userId: string) {
     const { questions, ...examData } = createExamDto;
 
-    return this.prisma.exam.create({
+    // Create exam
+    const exam = await this.prisma.exam.create({
       data: {
         ...examData,
         createdById: userId,
@@ -115,7 +121,7 @@ export class ExamsService {
               question: q.questionText,
               type: q.questionType || 'multiple-choice',
               points: q.points || 10,
-              order: q.order !== undefined ? q.order : index + 1,
+              order: q.order ?? index + 1,
               options: {
                 create: q.options.map((opt, optIndex) => ({
                   option: opt.text,
@@ -145,6 +151,47 @@ export class ExamsService {
         },
       },
     });
+
+    // Auto-create notifications for students in allowed courses
+    if (examData.allowedCourses && examData.status === 'PUBLISHED') {
+      try {
+        // Parse allowedCourses (comma-separated string to array)
+        const coursesArray = examData.allowedCourses.split(',').map(c => c.trim());
+
+        // Get all students in these courses
+        const students = await this.prisma.user.findMany({
+          where: {
+            role: 'STUDENT',
+            courses: {
+              hasSome: coursesArray,
+            },
+          },
+          select: {
+            id: true,
+          },
+        });
+
+        // Create notification for each student
+        if (students.length > 0) {
+          await this.prisma.notification.createMany({
+            data: students.map(student => ({
+              userId: student.id,
+              type: 'EXAM_CREATED',
+              title: `Bài kiểm tra mới: ${examData.title}`,
+              message: `${examData.subject} - ${examData.duration} phút`,
+              examId: exam.id,
+            })),
+          });
+
+          console.log(`✅ Created notifications for ${students.length} students`);
+        }
+      } catch (error) {
+        console.error('Error creating notifications:', error);
+        // Don't throw error - exam was created successfully
+      }
+    }
+
+    return exam;
   }
 
   async update(id: string, updateExamDto: UpdateExamDto) {

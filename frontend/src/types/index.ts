@@ -7,7 +7,7 @@ export interface User {
   email?: string;
   isActive?: boolean;
   subject?: string; // For teachers
-  courses?: string; // Comma-separated course codes (e.g., "CSE301,CSE302")
+  courses?: string[]; // Array of course codes (e.g., ["CSE301", "CSE302"])
   createdAt: string;
   updatedAt?: string;
 }
