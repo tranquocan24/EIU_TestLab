@@ -34,8 +34,32 @@ enum NotificationType {
   EXAM_CREATED
   EXAM_UPDATED
   EXAM_REMINDER
+  EXAM_STARTED
+  EXAM_ENDING
+  EXAM_ENDED
   MESSAGE_RECEIVED
+  SUSPICIOUS_ACTIVITY
+  TAB_SWITCH_WARNING
+  SCREEN_SHARING_DETECTED
+  COPY_PASTE_ATTEMPT
+  IP_VIOLATION
+  FINGERPRINT_MISMATCH
   SYSTEM
+  GRADE_PUBLISHED
+  ATTEMPT_SUBMITTED
+}
+
+enum NotificationChannel {
+  IN_APP
+  EMAIL
+  PUSH
+}
+
+enum NotificationPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
 }
 
 model User {
@@ -52,11 +76,12 @@ model User {
   updatedAt DateTime @updatedAt
   
   // Relations
-  createdExams      Exam[]         @relation("ExamCreator")
-  attempts          Attempt[]
-  notifications     Notification[]
-  sentMessages      Message[]      @relation("MessageSender")
-  receivedMessages  Message[]      @relation("MessageReceiver")
+  createdExams             Exam[]                    @relation("ExamCreator")
+  attempts                 Attempt[]
+  notifications            Notification[]
+  notificationPreference   NotificationPreference?
+  sentMessages             Message[]                 @relation("MessageSender")
+  receivedMessages         Message[]                 @relation("MessageReceiver")
   
   @@map("users")
 }
@@ -166,24 +191,107 @@ model Answer {
 }
 
 model Notification {
-  id        String           @id @default(uuid())
+  id        String                @id @default(uuid())
   userId    String
-  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   type      NotificationType
+  priority  NotificationPriority  @default(MEDIUM)
   title     String
   message   String
   
-  examId    String?          // Optional: link to exam if notification is about an exam
-  exam      Exam?            @relation(fields: [examId], references: [id], onDelete: Cascade)
+  // Delivery channels
+  channels  NotificationChannel[] @default([IN_APP])
   
-  isRead    Boolean          @default(false)
+  // Related entities
+  examId    String?               // Optional: link to exam if notification is about an exam
+  exam      Exam?                 @relation(fields: [examId], references: [id], onDelete: Cascade)
   
-  createdAt DateTime         @default(now())
-  updatedAt DateTime         @updatedAt
+  attemptId String?               // Optional: link to attempt
+  
+  // Additional data (JSON field for flexible data storage)
+  metadata  Json?
+  
+  // Status tracking
+  isRead    Boolean               @default(false)
+  readAt    DateTime?
+  
+  // Delivery tracking
+  sentViaEmail Boolean            @default(false)
+  sentViaPush  Boolean            @default(false)
+  emailSentAt  DateTime?
+  pushSentAt   DateTime?
+  
+  createdAt DateTime              @default(now())
+  updatedAt DateTime              @updatedAt
   
   @@map("notifications")
   @@index([userId, isRead])
+  @@index([userId, type])
+  @@index([createdAt])
+}
+
+model NotificationPreference {
+  id                    String                  @id @default(uuid())
+  userId                String                  @unique
+  user                  User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Channel preferences
+  enableInApp           Boolean                 @default(true)
+  enableEmail           Boolean                 @default(true)
+  enablePush            Boolean                 @default(false)
+  
+  // Type preferences (which notification types to receive)
+  examCreated           Boolean                 @default(true)
+  examUpdated           Boolean                 @default(true)
+  examReminder          Boolean                 @default(true)
+  examStarted           Boolean                 @default(true)
+  examEnding            Boolean                 @default(true)
+  examEnded             Boolean                 @default(true)
+  messageReceived       Boolean                 @default(true)
+  suspiciousActivity    Boolean                 @default(true)
+  tabSwitchWarning      Boolean                 @default(true)
+  screenSharingDetected Boolean                 @default(true)
+  copyPasteAttempt      Boolean                 @default(true)
+  ipViolation           Boolean                 @default(true)
+  fingerprintMismatch   Boolean                 @default(true)
+  system                Boolean                 @default(true)
+  gradePublished        Boolean                 @default(true)
+  attemptSubmitted      Boolean                 @default(true)
+  
+  // Email digest preferences
+  emailDigestEnabled    Boolean                 @default(false)
+  emailDigestFrequency  String                  @default("DAILY") // REALTIME, DAILY, WEEKLY
+  
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @updatedAt
+  
+  @@map("notification_preferences")
+}
+
+model NotificationTemplate {
+  id          String               @id @default(uuid())
+  type        NotificationType     @unique
+  
+  // In-app notification template
+  titleTemplate   String
+  messageTemplate String
+  
+  // Email template
+  emailSubject    String?
+  emailBody       String?           // HTML or plain text
+  
+  // Push notification template
+  pushTitle       String?
+  pushBody        String?
+  
+  // Template variables (JSON array of available variables)
+  variables       Json?
+  
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  
+  @@map("notification_templates")
 }
 
 model Message {

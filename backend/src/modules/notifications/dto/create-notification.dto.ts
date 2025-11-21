@@ -1,5 +1,5 @@
-import { IsString, IsOptional, IsEnum } from 'class-validator';
-import { NotificationType } from '@prisma/client';
+import { IsString, IsOptional, IsEnum, IsArray, IsObject } from 'class-validator';
+import { NotificationType, NotificationChannel, NotificationPriority } from '@prisma/client';
 
 export class CreateNotificationDto {
   @IsString()
@@ -8,6 +8,10 @@ export class CreateNotificationDto {
   @IsEnum(NotificationType)
   type: NotificationType;
 
+  @IsOptional()
+  @IsEnum(NotificationPriority)
+  priority?: NotificationPriority;
+
   @IsString()
   title: string;
 
@@ -15,6 +19,19 @@ export class CreateNotificationDto {
   message: string;
 
   @IsOptional()
+  @IsArray()
+  @IsEnum(NotificationChannel, { each: true })
+  channels?: NotificationChannel[];
+
+  @IsOptional()
   @IsString()
   examId?: string;
+
+  @IsOptional()
+  @IsString()
+  attemptId?: string;
+
+  @IsOptional()
+  @IsObject()
+  metadata?: any;
 }

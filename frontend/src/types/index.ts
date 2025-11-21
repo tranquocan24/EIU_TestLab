@@ -167,3 +167,104 @@ export interface ExamState {
   updateTimeLeft: (time: number) => void;
   resetExam: () => void;
 }
+
+// Notification types
+export enum NotificationType {
+  EXAM_CREATED = 'EXAM_CREATED',
+  EXAM_UPDATED = 'EXAM_UPDATED',
+  EXAM_REMINDER = 'EXAM_REMINDER',
+  EXAM_STARTED = 'EXAM_STARTED',
+  EXAM_ENDING = 'EXAM_ENDING',
+  EXAM_ENDED = 'EXAM_ENDED',
+  MESSAGE_RECEIVED = 'MESSAGE_RECEIVED',
+  SUSPICIOUS_ACTIVITY = 'SUSPICIOUS_ACTIVITY',
+  TAB_SWITCH_WARNING = 'TAB_SWITCH_WARNING',
+  SCREEN_SHARING_DETECTED = 'SCREEN_SHARING_DETECTED',
+  COPY_PASTE_ATTEMPT = 'COPY_PASTE_ATTEMPT',
+  IP_VIOLATION = 'IP_VIOLATION',
+  FINGERPRINT_MISMATCH = 'FINGERPRINT_MISMATCH',
+  SYSTEM = 'SYSTEM',
+  GRADE_PUBLISHED = 'GRADE_PUBLISHED',
+  ATTEMPT_SUBMITTED = 'ATTEMPT_SUBMITTED',
+}
+
+export enum NotificationChannel {
+  IN_APP = 'IN_APP',
+  EMAIL = 'EMAIL',
+  PUSH = 'PUSH',
+}
+
+export enum NotificationPriority {
+  LOW = 'LOW',
+  MEDIUM = 'MEDIUM',
+  HIGH = 'HIGH',
+  URGENT = 'URGENT',
+}
+
+export interface Notification {
+  id: string;
+  userId: string;
+  type: NotificationType;
+  priority: NotificationPriority;
+  title: string;
+  message: string;
+  channels: NotificationChannel[];
+  examId?: string;
+  exam?: {
+    id: string;
+    title: string;
+    subject: string;
+  };
+  attemptId?: string;
+  metadata?: Record<string, any>;
+  isRead: boolean;
+  readAt?: string;
+  sentViaEmail: boolean;
+  sentViaPush: boolean;
+  emailSentAt?: string;
+  pushSentAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface NotificationPreference {
+  id: string;
+  userId: string;
+  enableInApp: boolean;
+  enableEmail: boolean;
+  enablePush: boolean;
+  examCreated: boolean;
+  examUpdated: boolean;
+  examReminder: boolean;
+  examStarted: boolean;
+  examEnding: boolean;
+  examEnded: boolean;
+  messageReceived: boolean;
+  suspiciousActivity: boolean;
+  tabSwitchWarning: boolean;
+  screenSharingDetected: boolean;
+  copyPasteAttempt: boolean;
+  ipViolation: boolean;
+  fingerprintMismatch: boolean;
+  system: boolean;
+  gradePublished: boolean;
+  attemptSubmitted: boolean;
+  emailDigestEnabled: boolean;
+  emailDigestFrequency: 'REALTIME' | 'DAILY' | 'WEEKLY';
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface NotificationStats {
+  total: number;
+  unread: number;
+  read: number;
+  byType: Record<NotificationType, number>;
+}
+
+export interface NotificationQueryParams {
+  type?: NotificationType;
+  isRead?: boolean;
+  page?: number;
+  limit?: number;
+}

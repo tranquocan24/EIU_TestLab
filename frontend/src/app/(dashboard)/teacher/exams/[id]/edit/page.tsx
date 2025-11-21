@@ -117,7 +117,9 @@ export default function EditExamPage() {
 
         // Parse teacher's courses from user.courses string
         if (user?.courses) {
-            const coursesArray = user.courses.split(',').map(c => c.trim()).filter(Boolean)
+            const coursesArray = Array.isArray(user.courses)
+                ? user.courses
+                : (typeof user.courses === 'string' ? user.courses.split(',').map(c => c.trim()).filter(Boolean) : [])
             setTeacherCourses(coursesArray)
 
             // Auto-select first course if available

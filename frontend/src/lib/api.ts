@@ -10,7 +10,11 @@ import {
   Class,
   LoginForm,
   ExamForm,
-  QuestionForm
+  QuestionForm,
+  Notification,
+  NotificationPreference,
+  NotificationStats,
+  NotificationQueryParams,
 } from '@/types';
 
 class ApiClient {
@@ -295,6 +299,57 @@ class ApiClient {
   async getExamStats(examId: string): Promise<ApiResponse<any>> {
     const response: AxiosResponse<ApiResponse<any>> =
       await this.client.get(`/dashboard/exams/${examId}/stats`);
+    return response.data;
+  }
+
+  // Notification endpoints
+  async getNotifications(params?: NotificationQueryParams): Promise<PaginatedResponse<Notification>> {
+    const response: AxiosResponse<PaginatedResponse<Notification>> =
+      await this.client.get('/notifications', { params });
+    return response.data;
+  }
+
+  async getUnreadCount(): Promise<number> {
+    const response: AxiosResponse<number> =
+      await this.client.get('/notifications/unread-count');
+    return response.data;
+  }
+
+  async getNotificationStats(): Promise<NotificationStats> {
+    const response: AxiosResponse<NotificationStats> =
+      await this.client.get('/notifications/stats');
+    return response.data;
+  }
+
+  async markNotificationsAsRead(notificationIds?: string[]): Promise<{ count: number }> {
+    const response: AxiosResponse<{ count: number }> =
+      await this.client.post('/notifications/mark-read', { notificationIds });
+    return response.data;
+  }
+
+  async deleteNotification(id: string): Promise<ApiResponse<null>> {
+    const response: AxiosResponse<ApiResponse<null>> =
+      await this.client.delete(`/notifications/${id}`);
+    return response.data;
+  }
+
+  async deleteAllReadNotifications(): Promise<{ count: number }> {
+    const response: AxiosResponse<{ count: number }> =
+      await this.client.delete('/notifications/read/all');
+    return response.data;
+  }
+
+  async getNotificationPreferences(): Promise<NotificationPreference> {
+    const response: AxiosResponse<NotificationPreference> =
+      await this.client.get('/notifications/preferences');
+    return response.data;
+  }
+
+  async updateNotificationPreferences(
+    preferences: Partial<NotificationPreference>
+  ): Promise<NotificationPreference> {
+    const response: AxiosResponse<NotificationPreference> =
+      await this.client.put('/notifications/preferences', preferences);
     return response.data;
   }
 }

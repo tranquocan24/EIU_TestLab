@@ -14,6 +14,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { User, LogOut, Home, FileText, BarChart, PlusCircle, Menu, X } from 'lucide-react'
+import { NotificationBell } from '@/components/notifications/NotificationBell'
 
 export function Navbar() {
   const { user, isAuthenticated, logout } = useAuth()
@@ -93,6 +94,10 @@ export function Navbar() {
                 <span className="hidden sm:inline text-sm text-gray-700">
                   Xin chào, <span className="font-semibold text-[#112444]">{user?.name || user?.username}</span>
                 </span>
+
+                {/* Notification Bell */}
+                <NotificationBell />
+
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" size="icon" className="border-gray-300 hover:bg-gray-100">
