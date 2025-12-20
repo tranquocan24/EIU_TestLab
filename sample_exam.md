@@ -2,10 +2,17 @@
 
 **Môn học:** Lập trình Web  
 **Thời gian:** 90 phút  
-**Số câu hỏi:** 15  
+**Số câu hỏi:** 12  
 **Mô tả:** Đề thi giữa kỳ môn Lập trình Web, bao gồm các kiến thức cơ bản về HTML, CSS, JavaScript và Node.js
 
 ---
+
+<!-- 
+  File mẫu này minh họa cách tạo đề thi bằng Markdown
+  - Hỗ trợ 2 loại câu hỏi: multiple-choice (trắc nghiệm 1 đáp án), text (tự luận)
+  - Xem hướng dẫn chi tiết tại: markdown_guide.md
+  - Encoding: UTF-8 để hỗ trợ tiếng Việt
+-->
 
 ## Câu 1: Trắc nghiệm đơn
 **Loại:** multiple-choice  
@@ -35,22 +42,7 @@ CSS được sử dụng để:
 
 ---
 
-## Câu 3: Trắc nghiệm nhiều lựa chọn
-**Loại:** multiple-select  
-**Điểm:** 2
-
-Những thẻ HTML nào sau đây là thẻ block element?
-- A. div
-- B. span
-- C. p
-- D. h1
-- E. a
-
-**Đáp án:** A,C,D
-
----
-
-## Câu 4: Trắc nghiệm đơn
+## Câu 3: Trắc nghiệm đơn
 **Loại:** multiple-choice  
 **Điểm:** 1
 
@@ -64,7 +56,7 @@ Trong JavaScript, để khai báo một biến, ta sử dụng từ khóa:
 
 ---
 
-## Câu 5: Câu hỏi tự luận
+## Câu 4: Câu hỏi tự luận
 **Loại:** text  
 **Điểm:** 3
 
@@ -77,7 +69,7 @@ Giải thích sự khác biệt giữa var, let và const trong JavaScript. Cho 
 
 ---
 
-## Câu 6: Trắc nghiệm đơn
+## Câu 5: Trắc nghiệm đơn
 **Loại:** multiple-choice  
 **Điểm:** 1
 
@@ -91,22 +83,7 @@ Phương thức HTTP nào được sử dụng để gửi dữ liệu tới ser
 
 ---
 
-## Câu 7: Trắc nghiệm nhiều lựa chọn
-**Loại:** multiple-select  
-**Điểm:** 2
-
-Những selector CSS nào sau đây hợp lệ?
-- A. #header
-- B. .navigation
-- C. div p
-- D. [type="text"]
-- E. ::before
-
-**Đáp án:** A,B,C,D,E
-
----
-
-## Câu 8: Trắc nghiệm đơn
+## Câu 6: Trắc nghiệm đơn
 **Loại:** multiple-choice  
 **Điểm:** 1
 
@@ -120,7 +97,7 @@ Node.js là:
 
 ---
 
-## Câu 9: Câu hỏi tự luận
+## Câu 7: Câu hỏi tự luận
 **Loại:** text  
 **Điểm:** 3
 
@@ -136,7 +113,7 @@ function isPalindrome(str) {
 
 ---
 
-## Câu 10: Trắc nghiệm đơn
+## Câu 8: Trắc nghiệm đơn
 **Loại:** multiple-choice  
 **Điểm:** 1
 
@@ -150,22 +127,7 @@ Trong CSS, để tạo layout responsive, ta thường sử dụng:
 
 ---
 
-## Câu 11: Trắc nghiệm nhiều lựa chọn
-**Loại:** multiple-select  
-**Điểm:** 2
-
-Những event nào sau đây là valid DOM events?
-- A. click
-- B. mouseover
-- C. keydown
-- D. scroll
-- E. resize
-
-**Đáp án:** A,B,C,D,E
-
----
-
-## Câu 12: Trắc nghiệm đơn
+## Câu 9: Trắc nghiệm đơn
 **Loại:** multiple-choice  
 **Điểm:** 1
 
@@ -179,7 +141,7 @@ JSON là viết tắt của:
 
 ---
 
-## Câu 13: Câu hỏi tự luận
+## Câu 10: Câu hỏi tự luận
 **Loại:** text  
 **Điểm:** 4
 
@@ -204,7 +166,7 @@ sayHello('John', sayGoodbye);
 
 ---
 
-## Câu 14: Trắc nghiệm đơn
+## Câu 11: Trắc nghiệm đơn
 **Loại:** multiple-choice  
 **Điểm:** 1
 
@@ -218,7 +180,7 @@ sayHello('John', sayGoodbye);
 
 ---
 
-## Câu 15: Câu hỏi tự luận
+## Câu 12: Câu hỏi tự luận
 **Loại:** text  
 **Điểm:** 3
 
