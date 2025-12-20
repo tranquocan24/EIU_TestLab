@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { formatDistanceToNow } from 'date-fns';
-import { vi } from 'date-fns/locale';
+import { formatDistanceToNow } from "date-fns";
+import { vi } from "date-fns/locale";
 import {
   Bell,
   BookOpen,
@@ -15,9 +15,9 @@ import {
   Shield,
   Award,
   XCircle,
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { Notification, NotificationType, NotificationPriority } from '@/types';
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Notification, NotificationType, NotificationPriority } from "@/types";
 
 interface NotificationItemProps {
   notification: Notification;
@@ -44,13 +44,16 @@ const notificationIcons: Record<NotificationType, React.ReactNode> = {
 };
 
 const priorityColors: Record<NotificationPriority, string> = {
-  [NotificationPriority.LOW]: 'text-gray-500',
-  [NotificationPriority.MEDIUM]: 'text-blue-500',
-  [NotificationPriority.HIGH]: 'text-orange-500',
-  [NotificationPriority.URGENT]: 'text-red-500',
+  [NotificationPriority.LOW]: "text-gray-500",
+  [NotificationPriority.MEDIUM]: "text-blue-500",
+  [NotificationPriority.HIGH]: "text-orange-500",
+  [NotificationPriority.URGENT]: "text-red-500",
 };
 
-export function NotificationItem({ notification, onClick }: NotificationItemProps) {
+export function NotificationItem({
+  notification,
+  onClick,
+}: NotificationItemProps) {
   const icon = notificationIcons[notification.type];
   const iconColor = priorityColors[notification.priority];
 
@@ -58,17 +61,18 @@ export function NotificationItem({ notification, onClick }: NotificationItemProp
     <button
       onClick={onClick}
       className={cn(
-        'w-full flex items-start gap-3 p-4 text-left transition-colors',
-        'hover:bg-accent/50',
-        'border-b border-border last:border-0',
-        !notification.isRead && 'bg-accent/20'
+        "w-full flex items-start gap-3 p-4 text-left transition-colors",
+        "hover:bg-accent/50",
+        "border-b border-border last:border-0",
+        "overflow-hidden",
+        !notification.isRead && "bg-accent/20"
       )}
     >
       {/* Icon */}
       <div
         className={cn(
-          'flex-shrink-0 mt-0.5 p-2 rounded-lg',
-          notification.isRead ? 'bg-muted' : 'bg-primary/10',
+          "flex-shrink-0 mt-0.5 p-2 rounded-lg",
+          notification.isRead ? "bg-muted" : "bg-primary/10",
           iconColor
         )}
       >
@@ -76,12 +80,12 @@ export function NotificationItem({ notification, onClick }: NotificationItemProp
       </div>
 
       {/* Content */}
-      <div className="flex-1 min-w-0 space-y-1">
+      <div className="flex-1 min-w-0 space-y-1 overflow-hidden">
         <div className="flex items-start justify-between gap-2">
           <h4
             className={cn(
-              'text-sm line-clamp-1',
-              notification.isRead ? 'font-medium' : 'font-semibold'
+              "text-sm line-clamp-1 break-words",
+              notification.isRead ? "font-medium" : "font-semibold"
             )}
           >
             {notification.title}
@@ -91,12 +95,12 @@ export function NotificationItem({ notification, onClick }: NotificationItemProp
           )}
         </div>
 
-        <p className="text-sm text-muted-foreground line-clamp-2">
+        <p className="text-sm text-muted-foreground line-clamp-2 break-words">
           {notification.message}
         </p>
 
         {notification.exam && (
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-muted-foreground truncate">
             📚 {notification.exam.subject} - {notification.exam.title}
           </p>
         )}

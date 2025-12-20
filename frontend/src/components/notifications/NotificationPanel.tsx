@@ -1,25 +1,27 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { Settings, Check, Trash2, RefreshCw } from 'lucide-react';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Separator } from '@/components/ui/separator';
-import { useToast } from '@/hooks/use-toast';
-import api from '@/lib/api';
-import { Notification, NotificationType } from '@/types';
-import { NotificationItem } from './NotificationItem';
+import { useState, useEffect } from "react";
+import { Settings, Check, Trash2, RefreshCw } from "lucide-react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Separator } from "@/components/ui/separator";
+import { useToast } from "@/hooks/use-toast";
+import api from "@/lib/api";
+import { Notification, NotificationType } from "@/types";
+import { NotificationItem } from "./NotificationItem";
 
 interface NotificationPanelProps {
   onUnreadCountChange?: (count: number) => void;
 }
 
-export function NotificationPanel({ onUnreadCountChange }: NotificationPanelProps) {
+export function NotificationPanel({
+  onUnreadCountChange,
+}: NotificationPanelProps) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'all' | 'unread'>('all');
+  const [activeTab, setActiveTab] = useState<"all" | "unread">("all");
   const { toast } = useToast();
 
   useEffect(() => {
@@ -30,21 +32,23 @@ export function NotificationPanel({ onUnreadCountChange }: NotificationPanelProp
     try {
       setLoading(true);
       const params = {
-        isRead: activeTab === 'unread' ? false : undefined,
+        isRead: activeTab === "unread" ? false : undefined,
         limit: 50,
       };
       const response = await api.getNotifications(params);
       setNotifications(response.data);
 
       // Update unread count
-      const unreadCount = response.data.filter((n: Notification) => !n.isRead).length;
+      const unreadCount = response.data.filter(
+        (n: Notification) => !n.isRead
+      ).length;
       onUnreadCountChange?.(unreadCount);
     } catch (error) {
-      console.error('Failed to fetch notifications:', error);
+      console.error("Failed to fetch notifications:", error);
       toast({
-        title: 'Lỗi',
-        description: 'Không thể tải thông báo',
-        variant: 'destructive',
+        title: "Lỗi",
+        description: "Không thể tải thông báo",
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
@@ -56,16 +60,16 @@ export function NotificationPanel({ onUnreadCountChange }: NotificationPanelProp
       await api.markNotificationsAsRead(notificationId ? [notificationId] : []);
       await fetchNotifications();
       toast({
-        title: 'Thành công',
+        title: "Thành công",
         description: notificationId
-          ? 'Đã đánh dấu đã đọc'
-          : 'Đã đánh dấu tất cả đã đọc',
+          ? "Đã đánh dấu đã đọc"
+          : "Đã đánh dấu tất cả đã đọc",
       });
     } catch (error) {
       toast({
-        title: 'Lỗi',
-        description: 'Không thể đánh dấu đã đọc',
-        variant: 'destructive',
+        title: "Lỗi",
+        description: "Không thể đánh dấu đã đọc",
+        variant: "destructive",
       });
     }
   };
@@ -75,36 +79,38 @@ export function NotificationPanel({ onUnreadCountChange }: NotificationPanelProp
       await api.deleteAllReadNotifications();
       await fetchNotifications();
       toast({
-        title: 'Thành công',
-        description: 'Đã xóa thông báo đã đọc',
+        title: "Thành công",
+        description: "Đã xóa thông báo đã đọc",
       });
     } catch (error) {
       toast({
-        title: 'Lỗi',
-        description: 'Không thể xóa thông báo',
-        variant: 'destructive',
+        title: "Lỗi",
+        description: "Không thể xóa thông báo",
+        variant: "destructive",
       });
     }
   };
 
-  const unreadCount = notifications.filter(n => !n.isRead).length;
+  const unreadCount = notifications.filter((n) => !n.isRead).length;
 
   return (
-    <div className="flex flex-col h-[500px]">
+    <div className="flex flex-col h-[500px] w-full overflow-hidden">
       {/* Header */}
-      <div className="p-4 border-b">
+      <div className="p-4 border-b flex-shrink-0">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="font-semibold text-lg">Thông báo</h3>
-          <div className="flex items-center gap-2">
+          <h3 className="font-semibold text-lg truncate">Thông báo</h3>
+          <div className="flex items-center gap-2 flex-shrink-0">
             <Button
               variant="ghost"
               size="icon"
               onClick={fetchNotifications}
               disabled={loading}
             >
-              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+              <RefreshCw
+                className={`h-4 w-4 ${loading ? "animate-spin" : ""}`}
+              />
             </Button>
-            <Link href="/dashboard/notifications/settings">
+            <Link href="/dashboard/notifications">
               <Button variant="ghost" size="icon">
                 <Settings className="h-4 w-4" />
               </Button>
@@ -112,21 +118,22 @@ export function NotificationPanel({ onUnreadCountChange }: NotificationPanelProp
           </div>
         </div>
 
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'all' | 'unread')}>
+        <Tabs
+          value={activeTab}
+          onValueChange={(v) => setActiveTab(v as "all" | "unread")}
+        >
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="all">
               Tất cả ({notifications.length})
             </TabsTrigger>
-            <TabsTrigger value="unread">
-              Chưa đọc ({unreadCount})
-            </TabsTrigger>
+            <TabsTrigger value="unread">Chưa đọc ({unreadCount})</TabsTrigger>
           </TabsList>
         </Tabs>
       </div>
 
       {/* Actions */}
       {notifications.length > 0 && (
-        <div className="px-4 py-2 bg-muted/30 flex items-center justify-between">
+        <div className="px-4 py-2 bg-muted/30 flex items-center justify-between flex-shrink-0">
           <Button
             variant="ghost"
             size="sm"
@@ -134,8 +141,8 @@ export function NotificationPanel({ onUnreadCountChange }: NotificationPanelProp
             disabled={unreadCount === 0}
             className="text-xs"
           >
-            <Check className="h-3 w-3 mr-1" />
-            Đọc tất cả
+            <Check className="h-3 w-3 mr-1 flex-shrink-0" />
+            <span className="truncate">Đọc tất cả</span>
           </Button>
           <Button
             variant="ghost"
@@ -144,14 +151,14 @@ export function NotificationPanel({ onUnreadCountChange }: NotificationPanelProp
             disabled={unreadCount === notifications.length}
             className="text-xs text-muted-foreground"
           >
-            <Trash2 className="h-3 w-3 mr-1" />
-            Xóa đã đọc
+            <Trash2 className="h-3 w-3 mr-1 flex-shrink-0" />
+            <span className="truncate">Xóa đã đọc</span>
           </Button>
         </div>
       )}
 
       {/* Notification List */}
-      <ScrollArea className="flex-1">
+      <ScrollArea className="flex-1 overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center h-full">
             <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -163,18 +170,20 @@ export function NotificationPanel({ onUnreadCountChange }: NotificationPanelProp
             </div>
             <p className="text-sm font-medium">Không có thông báo</p>
             <p className="text-xs text-muted-foreground mt-1">
-              {activeTab === 'unread'
-                ? 'Bạn đã đọc hết thông báo'
-                : 'Chưa có thông báo nào'}
+              {activeTab === "unread"
+                ? "Bạn đã đọc hết thông báo"
+                : "Chưa có thông báo nào"}
             </p>
           </div>
         ) : (
-          <div>
+          <div className="divide-y">
             {notifications.map((notification) => (
               <NotificationItem
                 key={notification.id}
                 notification={notification}
-                onClick={() => !notification.isRead && handleMarkAsRead(notification.id)}
+                onClick={() =>
+                  !notification.isRead && handleMarkAsRead(notification.id)
+                }
               />
             ))}
           </div>
@@ -184,8 +193,8 @@ export function NotificationPanel({ onUnreadCountChange }: NotificationPanelProp
       {/* Footer */}
       {notifications.length > 0 && (
         <>
-          <Separator />
-          <div className="p-3 text-center">
+          <Separator className="flex-shrink-0" />
+          <div className="p-3 text-center flex-shrink-0">
             <Link href="/dashboard/notifications">
               <Button variant="ghost" size="sm" className="text-xs w-full">
                 Xem tất cả thông báo
