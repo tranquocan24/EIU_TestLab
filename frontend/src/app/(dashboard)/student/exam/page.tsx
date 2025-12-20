@@ -87,8 +87,9 @@ export default function ExamTakingPage() {
       body.exam-mode > div > header {
         display: none !important;
       }
-      .exam-mode {
-        overflow: hidden;
+      body.exam-mode {
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
       }
     `;
     document.head.appendChild(style);
@@ -545,6 +546,13 @@ export default function ExamTakingPage() {
       ...answers,
       [questionId]: optionId,
     });
+    
+    // Auto-advance to next question after selecting answer (except for last question)
+    if (exam && currentQuestion < exam.questions.length - 1) {
+      setTimeout(() => {
+        setCurrentQuestion(currentQuestion + 1);
+      }, 300); // Small delay for better UX
+    }
   };
 
   const getTimeColor = () => {
@@ -660,31 +668,31 @@ export default function ExamTakingPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 px-2 sm:px-0 pb-6 sm:pb-8 min-h-screen">
       {/* Header */}
-      <div className="bg-gradient-to-r from-[#112444] to-[#1a365d] text-white p-6 rounded-2xl">
-        <div className="flex justify-between items-center">
+      <div className="bg-gradient-to-r from-[#112444] to-[#1a365d] text-white p-4 sm:p-6 rounded-2xl">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-0">
           <div>
-            <h1 className="text-2xl font-bold mb-1">{exam.title}</h1>
-            <p className="text-blue-100">{exam.subject}</p>
+            <h1 className="text-xl sm:text-2xl font-bold mb-1">{exam.title}</h1>
+            <p className="text-sm sm:text-base text-blue-100">{exam.subject}</p>
           </div>
-          <div className="text-right">
-            <div className={`text-4xl font-bold ${getTimeColor()}`}>
+          <div className="text-left sm:text-right">
+            <div className={`text-3xl sm:text-4xl font-bold ${getTimeColor()}`}>
               {formatTime(timeRemaining)}
             </div>
-            <p className="text-sm text-blue-100">Thời gian còn lại</p>
+            <p className="text-xs sm:text-sm text-blue-100">Thời gian còn lại</p>
           </div>
         </div>
       </div>
 
       {/* Progress */}
       <Card>
-        <CardContent className="p-4">
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-sm font-medium text-gray-600">
+        <CardContent className="p-3 sm:p-4">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 sm:gap-0 mb-2">
+            <span className="text-xs sm:text-sm font-medium text-gray-600">
               Câu {currentQuestion + 1} / {exam.questions.length}
             </span>
-            <span className="text-sm font-medium text-gray-600">
+            <span className="text-xs sm:text-sm font-medium text-gray-600">
               Đã trả lời: {Object.keys(answers).length} /{" "}
               {exam.questions.length}
             </span>
@@ -704,18 +712,18 @@ export default function ExamTakingPage() {
 
       {/* Question */}
       <Card>
-        <CardHeader>
-          <CardTitle className="text-lg font-semibold text-gray-800">
+        <CardHeader className="p-4 sm:p-6">
+          <CardTitle className="text-base sm:text-lg font-semibold text-gray-800">
             Câu hỏi {currentQuestion + 1}
             {question.type?.toLowerCase().includes("essay") && (
-              <span className="ml-2 text-sm font-normal text-purple-600 bg-purple-100 px-2 py-1 rounded">
+              <span className="ml-2 text-xs sm:text-sm font-normal text-purple-600 bg-purple-100 px-2 py-1 rounded">
                 Tự luận
               </span>
             )}
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <p className="text-lg text-gray-700 leading-relaxed">
+        <CardContent className="space-y-4 p-4 sm:p-6">
+          <p className="text-base sm:text-lg text-gray-700 leading-relaxed">
             {question.questionText}
           </p>
 
@@ -726,7 +734,7 @@ export default function ExamTakingPage() {
                 Nhập câu trả lời của bạn:
               </label>
               <textarea
-                className="w-full p-4 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all min-h-[200px] resize-y"
+                className="w-full p-3 sm:p-4 text-sm sm:text-base border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all min-h-[150px] sm:min-h-[200px] resize-y"
                 placeholder="Nhập câu trả lời tự luận của bạn tại đây..."
                 value={answers[question.id] || ""}
                 onChange={(e) => {
@@ -741,7 +749,7 @@ export default function ExamTakingPage() {
             </div>
           ) : (
             /* Multiple choice question - show options */
-            <div className="space-y-3">
+            <div className="space-y-2 sm:space-y-3">
               {question.options.map((option) => {
                 const questionId = question.id;
                 const isSelected = answers[questionId] === option.id;
@@ -750,7 +758,7 @@ export default function ExamTakingPage() {
                   <button
                     key={option.id}
                     onClick={() => handleAnswerSelect(questionId, option.id)}
-                    className={`w-full p-4 text-left border-2 rounded-lg transition-all duration-200 ${
+                    className={`w-full p-3 sm:p-4 text-left border-2 rounded-lg transition-all duration-200 ${
                       isSelected
                         ? "border-blue-500 bg-blue-50 shadow-md"
                         : "border-gray-200 hover:border-blue-300 hover:bg-gray-50"
@@ -758,17 +766,17 @@ export default function ExamTakingPage() {
                   >
                     <div className="flex items-center space-x-3">
                       <div
-                        className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                        className={`w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0 rounded-full border-2 flex items-center justify-center ${
                           isSelected
                             ? "border-blue-500 bg-blue-500"
                             : "border-gray-300"
                         }`}
                       >
                         {isSelected && (
-                          <div className="w-3 h-3 bg-white rounded-full"></div>
+                          <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-white rounded-full"></div>
                         )}
                       </div>
-                      <span className="flex-1 text-gray-700">
+                      <span className="flex-1 text-sm sm:text-base text-gray-700">
                         {option.text}
                       </span>
                     </div>
@@ -781,47 +789,86 @@ export default function ExamTakingPage() {
       </Card>
 
       {/* Navigation */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col gap-4 sm:gap-0 sm:flex-row sm:justify-between sm:items-center">
+        {/* Previous/Next buttons for mobile - shown at top */}
+        <div className="flex justify-between items-center sm:hidden">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCurrentQuestion(Math.max(0, currentQuestion - 1))}
+            disabled={currentQuestion === 0}
+          >
+            ← Câu trước
+          </Button>
+          
+          {currentQuestion === exam.questions.length - 1 ? (
+            <Button
+              size="sm"
+              onClick={() => setShowSubmitDialog(true)}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              Nộp bài
+            </Button>
+          ) : (
+            <Button
+              size="sm"
+              onClick={() =>
+                setCurrentQuestion(
+                  Math.min(exam.questions.length - 1, currentQuestion + 1)
+                )
+              }
+            >
+              Câu tiếp →
+            </Button>
+          )}
+        </div>
+
+        {/* Desktop - Previous button */}
         <Button
           variant="outline"
           onClick={() => setCurrentQuestion(Math.max(0, currentQuestion - 1))}
           disabled={currentQuestion === 0}
+          className="hidden sm:inline-flex"
         >
           ← Câu trước
         </Button>
 
-        <div className="flex space-x-2">
-          {exam.questions.map((question, index) => {
-            const isAnswered = answers[question.id] !== undefined;
-            const isCurrent = currentQuestion === index;
+        {/* Question number indicators - scrollable on mobile */}
+        <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+          <div className="flex space-x-2 min-w-max sm:min-w-0">
+            {exam.questions.map((question, index) => {
+              const isAnswered = answers[question.id] !== undefined;
+              const isCurrent = currentQuestion === index;
 
-            let buttonClass =
-              "w-10 h-10 rounded-full font-medium transition-all ";
-            if (isCurrent) {
-              buttonClass += "bg-blue-600 text-white";
-            } else if (isAnswered) {
-              buttonClass +=
-                "bg-green-100 text-green-700 border border-green-300";
-            } else {
-              buttonClass += "bg-gray-100 text-gray-600 border border-gray-300";
-            }
+              let buttonClass =
+                "w-10 h-10 flex-shrink-0 rounded-full font-medium transition-all ";
+              if (isCurrent) {
+                buttonClass += "bg-blue-600 text-white";
+              } else if (isAnswered) {
+                buttonClass +=
+                  "bg-green-100 text-green-700 border border-green-300";
+              } else {
+                buttonClass += "bg-gray-100 text-gray-600 border border-gray-300";
+              }
 
-            return (
-              <button
-                key={question.id}
-                onClick={() => setCurrentQuestion(index)}
-                className={buttonClass}
-              >
-                {index + 1}
-              </button>
-            );
-          })}
+              return (
+                <button
+                  key={question.id}
+                  onClick={() => setCurrentQuestion(index)}
+                  className={buttonClass}
+                >
+                  {index + 1}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
+        {/* Desktop - Next/Submit button */}
         {currentQuestion === exam.questions.length - 1 ? (
           <Button
             onClick={() => setShowSubmitDialog(true)}
-            className="bg-green-600 hover:bg-green-700"
+            className="bg-green-600 hover:bg-green-700 hidden sm:inline-flex"
           >
             Nộp bài
           </Button>
@@ -832,6 +879,7 @@ export default function ExamTakingPage() {
                 Math.min(exam.questions.length - 1, currentQuestion + 1)
               )
             }
+            className="hidden sm:inline-flex"
           >
             Câu tiếp →
           </Button>
