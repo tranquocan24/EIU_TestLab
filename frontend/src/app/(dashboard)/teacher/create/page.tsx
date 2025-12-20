@@ -9,8 +9,10 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Label } from '@/components/ui/label'
-import { PlusCircle, Trash2, Save, Send, FileText, Upload } from 'lucide-react'
+import { PlusCircle, Trash2, Save, Send, FileText, Upload, FileDown } from 'lucide-react'
 import api from '@/lib/api'
+import { MarkdownImportModal } from '@/components/forms/MarkdownImportModal'
+import { toast } from 'sonner'
 
 interface Question {
     id: string
@@ -46,6 +48,9 @@ export default function CreateExamPage() {
 
     // Questions
     const [questions, setQuestions] = useState<Question[]>([])
+
+    // Markdown Import Modal
+    const [isImportModalOpen, setIsImportModalOpen] = useState(false)
 
     useEffect(() => {
         if (!isAuthenticated || user?.role.toLowerCase() !== 'teacher') {
@@ -100,6 +105,101 @@ export default function CreateExamPage() {
             }
             return q
         }))
+    }
+
+    const handleImportMarkdown = (parsedExam: any) => {
+        try {
+            console.log('Parsed exam data:', parsedExam) // Debug log
+
+            // Auto-fill basic information
+            setTitle(parsedExam.title || '')
+            setDescription(parsedExam.description || '')
+            setDuration(parsedExam.duration?.toString() || '60')
+
+            // Set subject/course if it matches teacher's courses
+            if (parsedExam.subject && teacherCourses.includes(parsedExam.subject)) {
+                setSelectedCourse(parsedExam.subject)
+            }
+
+            // Convert imported questions to the format used by the form
+            const importedQuestions: Question[] = parsedExam.questions
+                .filter((q: any) => {
+                    // Only support multiple-choice and text questions
+                    const type = (q.questionType || '').toLowerCase().replace(/_/g, '-')
+                    return type === 'multiple-choice' || type === 'text'
+                })
+                .map((q: any, index: number) => {
+                    const baseQuestion = {
+                        id: `imported-${Date.now()}-${index}`,
+                        content: q.questionText || '',
+                        points: q.points || 1,
+                    }
+
+                    console.log('Processing question:', q) // Debug log
+
+                    // Map question types - only multiple-choice and text
+                    const questionType = (q.questionType || '').toLowerCase().replace(/_/g, '-')
+                    
+                    if (questionType === 'multiple-choice') {
+                        // Extract options and find correct answer
+                        let options: string[] = []
+                        let correctIndex = 0
+                        
+                        if (q.options && Array.isArray(q.options)) {
+                            options = q.options.map((opt: any, idx: number) => {
+                                // Find the correct answer by isCorrect flag
+                                if (opt.isCorrect === true) {
+                                    correctIndex = idx
+                                }
+                                
+                                // Handle both { text: "..." } and { optionText: "..." } and plain strings
+                                if (typeof opt === 'string') return opt
+                                if (opt.text) return opt.text
+                                if (opt.optionText) return opt.optionText
+                                return String(opt)
+                            })
+                        }
+
+                        console.log('Question:', q.questionText)
+                        console.log('Options:', options)
+                        console.log('Correct index found:', correctIndex)
+                        console.log('Correct answer:', options[correctIndex])
+
+                        return {
+                            ...baseQuestion,
+                            type: 'multiple-choice' as const,
+                            options: options.length > 0 ? options : ['', '', '', ''],
+                            correctAnswer: correctIndex,
+                        }
+                    } else {
+                        // Text/Essay question - DON'T include sample answer in content
+                        return {
+                            ...baseQuestion,
+                            type: 'essay' as const,
+                        }
+                    }
+                })
+
+            setQuestions(importedQuestions)
+
+            // Show success message
+            toast.success(`Đã import thành công ${importedQuestions.length} câu hỏi!`, {
+                description: 'Bạn có thể chỉnh sửa thông tin trước khi lưu đề thi.',
+            })
+
+            // Show warning if some questions were filtered out
+            const filteredCount = parsedExam.questions.length - importedQuestions.length
+            if (filteredCount > 0) {
+                toast.warning(`${filteredCount} câu hỏi không được import`, {
+                    description: 'Chỉ hỗ trợ câu hỏi trắc nghiệm 1 đáp án và tự luận.',
+                })
+            }
+        } catch (error) {
+            console.error('Error importing markdown:', error)
+            toast.error('Có lỗi xảy ra khi import dữ liệu', {
+                description: 'Vui lòng thử lại hoặc kiểm tra định dạng file.',
+            })
+        }
     }
 
     const handleSubmit = async (status: 'draft' | 'published') => {
@@ -178,8 +278,19 @@ export default function CreateExamPage() {
     return (
         <div className="space-y-6 animate-fadeInUp max-w-5xl mx-auto">
             {/* Header */}
-            <div className="bg-gradient-to-r from-purple-600 to-indigo-700 text-white p-8 rounded-2xl text-center shadow-lg">
-                <h1 className="text-3xl font-bold mb-2">Tạo đề thi mới</h1>
+            <div className="bg-gradient-to-r from-purple-600 to-indigo-700 text-white p-8 rounded-2xl shadow-lg">
+                <div className="flex justify-between items-center mb-2">
+                    <h1 className="text-3xl font-bold">Tạo đề thi mới</h1>
+                    <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => setIsImportModalOpen(true)}
+                        className="bg-white/20 hover:bg-white/30 text-white border-white/30"
+                    >
+                        <FileDown className="h-4 w-4 mr-2" />
+                        Import từ Markdown
+                    </Button>
+                </div>
                 <p className="text-purple-100">Tạo đề thi trực tuyến với các câu hỏi trắc nghiệm và tự luận</p>
             </div>
 
@@ -449,6 +560,13 @@ export default function CreateExamPage() {
                     Xuất bản
                 </Button>
             </div>
+
+            {/* Markdown Import Modal */}
+            <MarkdownImportModal
+                open={isImportModalOpen}
+                onOpenChange={setIsImportModalOpen}
+                onImport={handleImportMarkdown}
+            />
         </div>
     )
 }

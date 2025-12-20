@@ -4,7 +4,7 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { GetUser } from '../auth/decorators/get-user.decorator';
 import { ExamsService } from './exams.service';
-import { CreateExamDto, UpdateExamDto } from './dto';
+import { CreateExamDto, UpdateExamDto, ImportMarkdownDto } from './dto';
 
 @Controller('exams')
 @UseGuards(JwtAuthGuard)
@@ -26,6 +26,13 @@ export class ExamsController {
   @Roles('TEACHER', 'ADMIN')
   create(@Body() createExamDto: CreateExamDto, @GetUser('id') userId: string) {
     return this.examsService.create(createExamDto, userId);
+  }
+
+  @Post('import-markdown')
+  @UseGuards(RolesGuard)
+  @Roles('TEACHER', 'ADMIN')
+  importMarkdown(@Body() importMarkdownDto: ImportMarkdownDto) {
+    return this.examsService.parseMarkdown(importMarkdownDto.markdownContent);
   }
 
   @Put(':id')
