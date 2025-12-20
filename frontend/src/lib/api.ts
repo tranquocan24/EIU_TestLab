@@ -227,10 +227,11 @@ class ApiClient {
     return response.data;
   }
 
-  async submitAnswer(attemptId: string, questionId: string, selectedOption: string): Promise<any> {
+  async submitAnswer(attemptId: string, questionId: string, selectedOption: string, answerText?: string): Promise<any> {
     const response = await this.client.put(`/attempts/${attemptId}/answer`, {
       questionId,
-      selectedOption
+      selectedOption: selectedOption || undefined,
+      answerText: answerText || undefined
     });
     return response.data;
   }

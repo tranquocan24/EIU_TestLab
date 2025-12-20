@@ -7,15 +7,18 @@ export class QuestionsService {
   constructor(private readonly prisma: PrismaService) { }
 
   async create(createQuestionDto: CreateQuestionDto) {
-    const { options, ...questionData } = createQuestionDto;
+    const { options, examId, ...questionData } = createQuestionDto;
 
     return this.prisma.question.create({
       data: {
         ...questionData,
+        exam: {
+          connect: { id: examId },
+        },
         options: {
           create: options,
         },
-      },
+      } as any,
       include: {
         options: true,
       },
@@ -45,7 +48,7 @@ export class QuestionsService {
       throw new NotFoundException(`Question with ID ${id} not found`);
     }
 
-    const { options, ...questionData } = updateQuestionDto;
+    const { options, examId, ...questionData } = updateQuestionDto;
 
     // If options are provided, delete old ones and create new ones
     if (options) {
@@ -58,12 +61,17 @@ export class QuestionsService {
       where: { id },
       data: {
         ...questionData,
+        ...(examId && {
+          exam: {
+            connect: { id: examId },
+          },
+        }),
         ...(options && {
           options: {
             create: options,
           },
         }),
-      },
+      } as any,
       include: {
         options: true,
       },

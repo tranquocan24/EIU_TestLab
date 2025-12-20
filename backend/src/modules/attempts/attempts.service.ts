@@ -301,7 +301,7 @@ export class AttemptsService {
     // Calculate total score
     const totalPoints = attempt.answers.reduce((sum, answer) => sum + answer.points, 0);
     const maxPoints = attempt.exam.questions.reduce((sum, q) => sum + q.points, 0);
-    const score = maxPoints > 0 ? (totalPoints / maxPoints) * 100 : 0;
+    const score = maxPoints > 0 ? Math.round((totalPoints / maxPoints) * 100 * 100) / 100 : 0; // Round to 2 decimal places
 
     console.log('[submitAttempt] Score calculation:', {
       totalPoints,

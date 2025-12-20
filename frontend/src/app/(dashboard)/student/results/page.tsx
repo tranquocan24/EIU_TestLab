@@ -1,155 +1,165 @@
-'use client'
+"use client";
 
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { useAuth } from '@/hooks/useAuth'
-import { Card } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { FileText, TrendingUp, Award, Calendar } from 'lucide-react'
-import api from '@/lib/api'
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/hooks/useAuth";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { FileText, TrendingUp, Award, Calendar } from "lucide-react";
+import api from "@/lib/api";
 
 interface ExamResult {
-  id: string
-  examId: string
-  examTitle: string
-  subject: string
-  score: number
-  totalQuestions: number
-  correctAnswers: number
-  completedAt: string
-  duration: number
+  id: string;
+  examId: string;
+  examTitle: string;
+  subject: string;
+  score: number;
+  totalQuestions: number;
+  correctAnswers: number;
+  completedAt: string;
+  duration: number;
 }
 
 export default function StudentResultsPage() {
-  const router = useRouter()
-  const { user, isAuthenticated } = useAuth()
-  const [results, setResults] = useState<ExamResult[]>([])
-  const [filteredResults, setFilteredResults] = useState<ExamResult[]>([])
-  const [loading, setLoading] = useState(true)
+  const router = useRouter();
+  const { user, isAuthenticated } = useAuth();
+  const [results, setResults] = useState<ExamResult[]>([]);
+  const [filteredResults, setFilteredResults] = useState<ExamResult[]>([]);
+  const [loading, setLoading] = useState(true);
 
   // Filters
-  const [subjectFilter, setSubjectFilter] = useState('all')
-  const [searchTerm, setSearchTerm] = useState('')
+  const [subjectFilter, setSubjectFilter] = useState("all");
+  const [searchTerm, setSearchTerm] = useState("");
 
   // Stats
   const [stats, setStats] = useState({
     totalExams: 0,
     averageScore: 0,
-    highestScore: 0
-  })
+    highestScore: 0,
+  });
 
   useEffect(() => {
-    if (!isAuthenticated || user?.role.toLowerCase() !== 'student') {
-      router.push('/login')
-      return
+    if (!isAuthenticated || user?.role.toLowerCase() !== "student") {
+      router.push("/login");
+      return;
     }
 
-    loadResults()
-  }, [isAuthenticated, user, router])
+    loadResults();
+  }, [isAuthenticated, user, router]);
 
   useEffect(() => {
-    filterResults()
-  }, [results, subjectFilter, searchTerm])
+    filterResults();
+  }, [results, subjectFilter, searchTerm]);
 
   const loadResults = async () => {
     try {
-      setLoading(true)
-      console.log('Loading student results...')
+      setLoading(true);
+      console.log("Loading student results...");
 
       // Call API to get student's attempts
-      const attemptsResponse = await api.getMyAttempts()
-      console.log('Attempts from API:', attemptsResponse)
+      const attemptsResponse = await api.getMyAttempts();
+      console.log("Attempts from API:", attemptsResponse);
 
       // Transform attempts to ExamResult format
-      const transformedResults: ExamResult[] = attemptsResponse.map((attempt: any) => ({
-        id: attempt.id,
-        examId: attempt.exam.id,
-        examTitle: attempt.exam.title,
-        subject: attempt.exam.subject,
-        score: attempt.score || 0,
-        totalQuestions: attempt.totalQuestions || 0,
-        correctAnswers: attempt.correctAnswers || 0,
-        completedAt: attempt.submittedAt,
-        duration: attempt.timeSpent || 0
-      }))
+      const transformedResults: ExamResult[] = attemptsResponse.map(
+        (attempt: any) => ({
+          id: attempt.id,
+          examId: attempt.exam.id,
+          examTitle: attempt.exam.title,
+          subject: attempt.exam.subject,
+          score: attempt.score || 0,
+          totalQuestions: attempt.totalQuestions || 0,
+          correctAnswers: attempt.correctAnswers || 0,
+          completedAt: attempt.submittedAt,
+          duration: attempt.timeSpent || 0,
+        })
+      );
 
-      console.log('Transformed results:', transformedResults)
-      setResults(transformedResults)
-      setFilteredResults(transformedResults)
+      console.log("Transformed results:", transformedResults);
+      setResults(transformedResults);
+      setFilteredResults(transformedResults);
 
       // Calculate stats
       if (transformedResults.length > 0) {
-        const total = transformedResults.length
-        const avg = transformedResults.reduce((sum, r) => sum + r.score, 0) / total
-        const highest = Math.max(...transformedResults.map(r => r.score))
+        const total = transformedResults.length;
+        const avg =
+          transformedResults.reduce((sum, r) => sum + r.score, 0) / total;
+        const highest = Math.max(...transformedResults.map((r) => r.score));
 
         setStats({
           totalExams: total,
           averageScore: Math.round(avg),
-          highestScore: highest
-        })
+          highestScore: highest,
+        });
       } else {
         setStats({
           totalExams: 0,
           averageScore: 0,
-          highestScore: 0
-        })
+          highestScore: 0,
+        });
       }
     } catch (error) {
-      console.error('Failed to load results:', error)
+      console.error("Failed to load results:", error);
       // Set empty data on error
-      setResults([])
-      setFilteredResults([])
-      setStats({ totalExams: 0, averageScore: 0, highestScore: 0 })
+      setResults([]);
+      setFilteredResults([]);
+      setStats({ totalExams: 0, averageScore: 0, highestScore: 0 });
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const filterResults = () => {
-    let filtered = [...results]
+    let filtered = [...results];
 
-    if (subjectFilter && subjectFilter !== 'all') {
-      filtered = filtered.filter(result => result.subject === subjectFilter)
+    if (subjectFilter && subjectFilter !== "all") {
+      filtered = filtered.filter((result) => result.subject === subjectFilter);
     }
 
     if (searchTerm) {
-      const search = searchTerm.toLowerCase()
-      filtered = filtered.filter(result =>
-        result.examTitle.toLowerCase().includes(search) ||
-        result.subject.toLowerCase().includes(search)
-      )
+      const search = searchTerm.toLowerCase();
+      filtered = filtered.filter(
+        (result) =>
+          result.examTitle.toLowerCase().includes(search) ||
+          result.subject.toLowerCase().includes(search)
+      );
     }
 
-    setFilteredResults(filtered)
-  }
+    setFilteredResults(filtered);
+  };
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    return date.toLocaleDateString('vi-VN', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
-  }
+    const date = new Date(dateString);
+    return date.toLocaleDateString("vi-VN", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
 
   const getScoreColor = (score: number) => {
-    if (score >= 80) return 'text-green-600 bg-green-50 border-green-200'
-    if (score >= 60) return 'text-yellow-600 bg-yellow-50 border-yellow-200'
-    return 'text-red-600 bg-red-50 border-red-200'
-  }
+    if (score >= 80) return "text-green-600 bg-green-50 border-green-200";
+    if (score >= 60) return "text-yellow-600 bg-yellow-50 border-yellow-200";
+    return "text-red-600 bg-red-50 border-red-200";
+  };
 
   const getScoreBadge = (score: number) => {
-    if (score >= 90) return { text: 'Xuất sắc', color: 'bg-green-500' }
-    if (score >= 80) return { text: 'Giỏi', color: 'bg-blue-500' }
-    if (score >= 70) return { text: 'Khá', color: 'bg-yellow-500' }
-    if (score >= 60) return { text: 'Trung bình', color: 'bg-orange-500' }
-    return { text: 'Yếu', color: 'bg-red-500' }
-  }
+    if (score >= 90) return { text: "Xuất sắc", color: "bg-green-500" };
+    if (score >= 80) return { text: "Giỏi", color: "bg-blue-500" };
+    if (score >= 70) return { text: "Khá", color: "bg-yellow-500" };
+    if (score >= 60) return { text: "Trung bình", color: "bg-orange-500" };
+    return { text: "Yếu", color: "bg-red-500" };
+  };
 
   if (loading) {
     return (
@@ -157,7 +167,7 @@ export default function StudentResultsPage() {
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#112444] mb-4"></div>
         <p className="text-gray-600">Đang tải kết quả...</p>
       </div>
-    )
+    );
   }
 
   return (
@@ -165,7 +175,9 @@ export default function StudentResultsPage() {
       {/* Header */}
       <div className="bg-gradient-to-r from-[#112444] to-[#1a365d] text-white rounded-2xl p-8 text-center shadow-lg">
         <h2 className="text-3xl font-bold mb-2">Kết quả của tôi</h2>
-        <p className="text-blue-100 text-lg">Xem lại các bài thi đã hoàn thành</p>
+        <p className="text-blue-100 text-lg">
+          Xem lại các bài thi đã hoàn thành
+        </p>
       </div>
 
       {/* Stats */}
@@ -176,8 +188,12 @@ export default function StudentResultsPage() {
               <FileText className="h-8 w-8 text-blue-600" />
             </div>
             <div>
-              <div className="text-3xl font-bold text-blue-600">{stats.totalExams}</div>
-              <div className="text-sm text-gray-600 font-medium">Bài thi đã làm</div>
+              <div className="text-3xl font-bold text-blue-600">
+                {stats.totalExams}
+              </div>
+              <div className="text-sm text-gray-600 font-medium">
+                Bài thi đã làm
+              </div>
             </div>
           </div>
         </Card>
@@ -188,8 +204,12 @@ export default function StudentResultsPage() {
               <TrendingUp className="h-8 w-8 text-purple-600" />
             </div>
             <div>
-              <div className="text-3xl font-bold text-purple-600">{stats.averageScore}%</div>
-              <div className="text-sm text-gray-600 font-medium">Điểm trung bình</div>
+              <div className="text-3xl font-bold text-purple-600">
+                {stats.averageScore}%
+              </div>
+              <div className="text-sm text-gray-600 font-medium">
+                Điểm trung bình
+              </div>
             </div>
           </div>
         </Card>
@@ -200,8 +220,12 @@ export default function StudentResultsPage() {
               <Award className="h-8 w-8 text-green-600" />
             </div>
             <div>
-              <div className="text-3xl font-bold text-green-600">{stats.highestScore}%</div>
-              <div className="text-sm text-gray-600 font-medium">Điểm cao nhất</div>
+              <div className="text-3xl font-bold text-green-600">
+                {stats.highestScore}%
+              </div>
+              <div className="text-sm text-gray-600 font-medium">
+                Điểm cao nhất
+              </div>
             </div>
           </div>
         </Card>
@@ -210,16 +234,23 @@ export default function StudentResultsPage() {
       {/* Filters */}
       <Card className="p-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Select value={subjectFilter || 'all'} onValueChange={setSubjectFilter}>
+          <Select
+            value={subjectFilter || "all"}
+            onValueChange={setSubjectFilter}
+          >
             <SelectTrigger>
               <SelectValue placeholder="Tất cả môn học" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Tất cả môn học</SelectItem>
               {/* Dynamically generate subjects from results */}
-              {Array.from(new Set(results.map(r => r.subject))).map(subject => (
-                <SelectItem key={subject} value={subject}>{subject}</SelectItem>
-              ))}
+              {Array.from(new Set(results.map((r) => r.subject))).map(
+                (subject) => (
+                  <SelectItem key={subject} value={subject}>
+                    {subject}
+                  </SelectItem>
+                )
+              )}
             </SelectContent>
           </Select>
 
@@ -235,7 +266,7 @@ export default function StudentResultsPage() {
       {filteredResults.length > 0 ? (
         <div className="space-y-4">
           {filteredResults.map((result) => {
-            const badge = getScoreBadge(result.score)
+            const badge = getScoreBadge(result.score);
             return (
               <Card
                 key={result.id}
@@ -248,11 +279,15 @@ export default function StudentResultsPage() {
                       <h3 className="text-lg font-bold text-gray-800 flex-1">
                         {result.examTitle}
                       </h3>
-                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${badge.color} text-white`}>
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-semibold ${badge.color} text-white`}
+                      >
                         {badge.text}
                       </span>
                     </div>
-                    <p className="text-blue-600 font-medium mb-3">{result.subject}</p>
+                    <p className="text-blue-600 font-medium mb-3">
+                      {result.subject}
+                    </p>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm text-gray-600">
                       <div className="flex items-center gap-2">
                         <FileText className="h-4 w-4" />
@@ -264,29 +299,51 @@ export default function StudentResultsPage() {
                       </div>
                       <div className="flex items-center gap-2">
                         <Award className="h-4 w-4" />
-                        <span>{result.correctAnswers}/{result.totalQuestions} đúng</span>
+                        <span>
+                          {result.correctAnswers}/{result.totalQuestions} đúng
+                        </span>
                       </div>
                       <div className="flex items-center gap-2">
                         <TrendingUp className="h-4 w-4" />
-                        <span>{((result.correctAnswers / result.totalQuestions) * 100).toFixed(0)}% chính xác</span>
+                        <span>
+                          {(
+                            (result.correctAnswers / result.totalQuestions) *
+                            100
+                          ).toFixed(0)}
+                          % chính xác
+                        </span>
                       </div>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-4">
-                    <Card className={`p-6 text-center min-w-[120px] border-2 ${getScoreColor(result.score)}`}>
-                      <div className={`text-4xl font-bold mb-1 ${result.score >= 80 ? 'text-green-600' : result.score >= 60 ? 'text-yellow-600' : 'text-red-600'}`}>
-                        {result.score}%
+                    <Card
+                      className={`p-6 text-center min-w-[120px] border-2 ${getScoreColor(
+                        result.score
+                      )}`}
+                    >
+                      <div
+                        className={`text-4xl font-bold mb-1 ${
+                          result.score >= 80
+                            ? "text-green-600"
+                            : result.score >= 60
+                            ? "text-yellow-600"
+                            : "text-red-600"
+                        }`}
+                      >
+                        {Math.round(result.score * 100) / 100}%
                       </div>
-                      <div className="text-xs text-gray-600 font-medium">Điểm số</div>
+                      <div className="text-xs text-gray-600 font-medium">
+                        Điểm số
+                      </div>
                     </Card>
 
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={(e) => {
-                        e.stopPropagation()
-                        router.push(`/student/results/${result.id}`)
+                        e.stopPropagation();
+                        router.push(`/student/results/${result.id}`);
                       }}
                     >
                       Chi tiết
@@ -294,18 +351,21 @@ export default function StudentResultsPage() {
                   </div>
                 </div>
               </Card>
-            )
+            );
           })}
         </div>
       ) : (
         <Card className="p-12 text-center">
           <FileText className="h-24 w-24 mx-auto mb-4 text-gray-300" />
-          <h3 className="text-xl font-semibold text-gray-700 mb-2">Chưa có kết quả nào</h3>
+          <h3 className="text-xl font-semibold text-gray-700 mb-2">
+            Chưa có kết quả nào
+          </h3>
           <p className="text-gray-500 mb-6">
-            Bạn chưa hoàn thành bài thi nào. Hãy vào danh sách bài thi để bắt đầu!
+            Bạn chưa hoàn thành bài thi nào. Hãy vào danh sách bài thi để bắt
+            đầu!
           </p>
           <Button
-            onClick={() => router.push('/student/exams')}
+            onClick={() => router.push("/student/exams")}
             className="bg-gradient-to-r from-[#112444] to-[#1a365d]"
           >
             Xem danh sách bài thi
@@ -313,5 +373,5 @@ export default function StudentResultsPage() {
         </Card>
       )}
     </div>
-  )
+  );
 }

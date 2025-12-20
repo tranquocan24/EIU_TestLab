@@ -119,7 +119,7 @@ export class ExamsService {
           ? {
             create: questions.map((q, index) => ({
               question: q.questionText,
-              type: q.questionType || 'multiple-choice',
+              type: (q.questionType || 'multiple-choice'),
               points: q.points || 10,
               order: q.order ?? index + 1,
               options: {
@@ -132,7 +132,7 @@ export class ExamsService {
             })),
           }
           : undefined,
-      },
+      } as any,
       include: {
         createdBy: {
           select: {
@@ -201,9 +201,59 @@ export class ExamsService {
       throw new NotFoundException(`Exam with ID ${id} not found`);
     }
 
+    const { questions, ...examData } = updateExamDto;
+
+    // If questions are provided, delete old ones and create new ones
+    if (questions && questions.length > 0) {
+      // First, get all question IDs for this exam
+      const existingQuestions = await this.prisma.question.findMany({
+        where: { examId: id },
+        select: { id: true },
+      });
+      const questionIds = existingQuestions.map(q => q.id);
+
+      // Delete all answers that reference these questions
+      if (questionIds.length > 0) {
+        await this.prisma.answer.deleteMany({
+          where: { questionId: { in: questionIds } },
+        });
+
+        // Delete all question options
+        await this.prisma.questionOption.deleteMany({
+          where: { questionId: { in: questionIds } },
+        });
+      }
+
+      // Now delete all existing questions for this exam
+      await this.prisma.question.deleteMany({
+        where: { examId: id },
+      });
+
+      // Create new questions with options
+      for (let index = 0; index < questions.length; index++) {
+        const q = questions[index];
+        await this.prisma.question.create({
+          data: {
+            question: q.questionText,
+            type: q.questionType || 'multiple-choice',
+            points: q.points || 10,
+            order: q.order ?? index + 1,
+            examId: id,
+            options: {
+              create: q.options.map((opt, optIndex) => ({
+                option: opt.text,
+                isCorrect: opt.isCorrect,
+                order: optIndex + 1,
+              })),
+            },
+          } as any,
+        });
+      }
+    }
+
     return this.prisma.exam.update({
       where: { id },
-      data: updateExamDto,
+      data: examData as any,
       include: {
         createdBy: {
           select: {
@@ -211,6 +261,14 @@ export class ExamsService {
             name: true,
             username: true,
           },
+        },
+        questions: {
+          include: {
+            options: {
+              orderBy: { order: 'asc' },
+            },
+          },
+          orderBy: { order: 'asc' },
         },
       },
     });
