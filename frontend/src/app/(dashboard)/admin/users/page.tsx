@@ -18,6 +18,7 @@ interface User {
     name: string
     role: 'STUDENT' | 'TEACHER' | 'ADMIN'
     email?: string
+    courses?: string[]
     createdAt: string
 }
 
@@ -37,7 +38,8 @@ export default function ManageUsersPage() {
         password: '',
         name: '',
         role: 'STUDENT',
-        email: ''
+        email: '',
+        courses: ''
     })
 
     useEffect(() => {
@@ -120,6 +122,7 @@ export default function ManageUsersPage() {
                 name: formData.name,
                 role: formData.role as 'STUDENT' | 'TEACHER' | 'ADMIN',
                 email: formData.email || undefined,
+                courses: formData.courses || undefined,
             })
 
             // Update state with new user from backend
@@ -133,7 +136,8 @@ export default function ManageUsersPage() {
                 password: '',
                 name: '',
                 role: 'STUDENT',
-                email: ''
+                email: '',
+                courses: ''
             })
             setShowAddDialog(false)
 
@@ -246,6 +250,18 @@ export default function ManageUsersPage() {
                                     />
                                 </div>
                                 <div>
+                                    <Label htmlFor="courses">Lớp học (cho sinh viên) <span className="text-gray-400 text-xs">- Phân tách bằng dấu phẩy</span></Label>
+                                    <Input
+                                        id="courses"
+                                        placeholder="Ví dụ: CSE301, CSE302"
+                                        value={formData.courses}
+                                        onChange={(e) => setFormData({ ...formData, courses: e.target.value })}
+                                    />
+                                    <p className="text-xs text-gray-500 mt-1">
+                                        Chỉ sinh viên ở các lớp này mới xem được bài thi được phân quyền cho lớp tương ứng
+                                    </p>
+                                </div>
+                                <div>
                                     <Label htmlFor="role">Vai trò <span className="text-red-500">*</span></Label>
                                     <Select value={formData.role} onValueChange={(value) => setFormData({ ...formData, role: value })}>
                                         <SelectTrigger>
@@ -345,6 +361,7 @@ export default function ManageUsersPage() {
                                         <th className="text-left py-3 px-4 font-semibold text-gray-700">Họ tên</th>
                                         <th className="text-left py-3 px-4 font-semibold text-gray-700">Vai trò</th>
                                         <th className="text-left py-3 px-4 font-semibold text-gray-700">Email</th>
+                                        <th className="text-left py-3 px-4 font-semibold text-gray-700">Lớp học</th>
                                         <th className="text-left py-3 px-4 font-semibold text-gray-700">Ngày tạo</th>
                                         <th className="text-left py-3 px-4 font-semibold text-gray-700">Thao tác</th>
                                     </tr>
@@ -356,6 +373,17 @@ export default function ManageUsersPage() {
                                             <td className="py-3 px-4 text-gray-800">{u.name}</td>
                                             <td className="py-3 px-4">{getRoleBadge(u.role)}</td>
                                             <td className="py-3 px-4 text-gray-600">{u.email || '-'}</td>
+                                            <td className="py-3 px-4 text-gray-600">
+                                                {u.courses && u.courses.length > 0 ? (
+                                                    <div className="flex flex-wrap gap-1">
+                                                        {u.courses.map((course, idx) => (
+                                                            <span key={idx} className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded text-xs">
+                                                                {course}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                ) : '-'}
+                                            </td>
                                             <td className="py-3 px-4 text-gray-600">{formatDate(u.createdAt)}</td>
                                             <td className="py-3 px-4">
                                                 <div className="flex gap-2">
