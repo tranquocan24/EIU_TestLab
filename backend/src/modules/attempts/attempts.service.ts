@@ -336,6 +336,29 @@ export class AttemptsService {
 
     console.log('[submitAttempt] ✓ Attempt submitted successfully')
     console.log('Final score:', updatedAttempt.score)
+
+    // Create notification for the teacher who created the exam
+    try {
+      const student = await this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { name: true, username: true },
+      });
+
+      await this.prisma.notification.create({
+        data: {
+          userId: attempt.exam.createdById,
+          type: 'ATTEMPT_SUBMITTED',
+          title: `Học sinh đã nộp bài: ${attempt.exam.title}`,
+          message: `${student?.name || student?.username || 'Học sinh'} đã hoàn thành bài kiểm tra - Điểm: ${score.toFixed(1)}%`,
+          examId: attempt.exam.id,
+        },
+      });
+      console.log(`✅ Created notification for teacher about student submission`);
+    } catch (error) {
+      console.error('Error creating teacher notification:', error);
+      // Don't throw error - attempt was submitted successfully
+    }
+
     return updatedAttempt;
   }
 

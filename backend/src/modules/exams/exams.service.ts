@@ -191,6 +191,25 @@ export class ExamsService {
       }
     }
 
+    // Create notification for the teacher who created the exam
+    try {
+      await this.prisma.notification.create({
+        data: {
+          userId: userId,
+          type: 'EXAM_CREATED',
+          title: `Đã tạo bài kiểm tra: ${examData.title}`,
+          message: examData.status === 'PUBLISHED' 
+            ? `Bài kiểm tra đã được xuất bản - ${examData.subject}` 
+            : `Bài kiểm tra đang ở trạng thái nháp - ${examData.subject}`,
+          examId: exam.id,
+        },
+      });
+      console.log(`✅ Created notification for teacher`);
+    } catch (error) {
+      console.error('Error creating teacher notification:', error);
+      // Don't throw error - exam was created successfully
+    }
+
     return exam;
   }
 
