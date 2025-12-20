@@ -196,6 +196,13 @@ class ApiClient {
     return response.data;
   }
 
+  async importMarkdownExam(markdownContent: string): Promise<any> {
+    const response = await this.client.post('/exams/import-markdown', { 
+      markdownContent 
+    });
+    return response.data;
+  }
+
   // Question endpoints
   async getQuestions(examId: string): Promise<ApiResponse<Question[]>> {
     const response: AxiosResponse<ApiResponse<Question[]>> =

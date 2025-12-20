@@ -1,11 +1,13 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '@/common/prisma/prisma.service';
 import { CreateExamDto, UpdateExamDto } from './dto';
+import { MarkdownParserService } from './markdown-parser.service';
 
 @Injectable()
 export class ExamsService {
   constructor(
     private readonly prisma: PrismaService,
+    private readonly markdownParser: MarkdownParserService,
   ) { }
 
   async findAll(userId?: string, userRole?: string, userCourses?: string | string[]) {
@@ -243,5 +245,43 @@ export class ExamsService {
     }
 
     return this.prisma.exam.delete({ where: { id } });
+  }
+
+  /**
+   * Parse markdown content and return exam data for preview (not saved to DB)
+   */
+  async parseMarkdown(markdownContent: string) {
+    return this.markdownParser.parseMarkdownToExam(markdownContent);
+  }
+
+  /**
+   * Import exam from markdown and save to database
+   */
+  async importFromMarkdown(markdownContent: string, userId: string) {
+    // Parse markdown to exam data
+    const parsedExam = this.markdownParser.parseMarkdownToExam(markdownContent);
+
+    // Transform to CreateExamDto format
+    const createExamDto: CreateExamDto = {
+      title: parsedExam.title,
+      subject: parsedExam.subject,
+      duration: parsedExam.duration,
+      description: parsedExam.description,
+      status: 'DRAFT', // Default to draft when importing
+      questions: parsedExam.questions.map((q) => ({
+        questionText: q.questionText,
+        questionType: q.questionType,
+        points: q.points,
+        order: q.order,
+        options: q.options.map((opt) => ({
+          text: opt.text,
+          isCorrect: opt.isCorrect,
+          order: opt.order,
+        })),
+      })),
+    };
+
+    // Save to database using existing create method
+    return this.create(createExamDto, userId);
   }
 }
