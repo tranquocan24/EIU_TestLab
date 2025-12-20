@@ -217,7 +217,16 @@ export class AttemptsService {
     let isCorrect = false;
     let points = 0;
 
-    if (dto.selectedOption) {
+    // Check question type - only auto-grade multiple choice questions
+    const isEssayQuestion = question.type?.toLowerCase().includes('essay') || question.type?.toLowerCase().includes('text');
+    
+    if (isEssayQuestion) {
+      // Essay questions need manual grading - don't auto-score
+      console.log('[submitAnswer] Essay question - will require manual grading')
+      isCorrect = false; // Will be set by teacher
+      points = 0; // Will be set by teacher
+    } else if (dto.selectedOption) {
+      // Multiple choice - auto grade
       const selectedOpt = question.options.find((opt) => opt.id === dto.selectedOption);
       console.log('[submitAnswer] Selected option:', dto.selectedOption)
       console.log('[submitAnswer] Found option:', selectedOpt)
@@ -227,7 +236,7 @@ export class AttemptsService {
       }
     }
 
-    console.log('[submitAnswer] Answer evaluation:', { isCorrect, points })
+    console.log('[submitAnswer] Answer evaluation:', { isCorrect, points, isEssay: isEssayQuestion })
 
     // Upsert answer
     console.log('[submitAnswer] Upserting answer...')
@@ -298,27 +307,38 @@ export class AttemptsService {
       throw new BadRequestException('This attempt has already been submitted');
     }
 
-    // Calculate total score
+    // Check if exam has essay questions that need manual grading
+    const hasEssayQuestions = attempt.exam.questions.some(
+      q => q.type?.toLowerCase().includes('essay') || q.type?.toLowerCase().includes('text')
+    );
+
+    // Calculate total score (only from auto-graded questions)
     const totalPoints = attempt.answers.reduce((sum, answer) => sum + answer.points, 0);
     const maxPoints = attempt.exam.questions.reduce((sum, q) => sum + q.points, 0);
-    const score = maxPoints > 0 ? Math.round((totalPoints / maxPoints) * 100 * 100) / 100 : 0; // Round to 2 decimal places
+    
+    // Only calculate score if no essay questions, otherwise set null (will be calculated after manual grading)
+    const score = hasEssayQuestions 
+      ? null 
+      : (maxPoints > 0 ? Math.round((totalPoints / maxPoints) * 100 * 100) / 100 : 0);
 
     console.log('[submitAttempt] Score calculation:', {
       totalPoints,
       maxPoints,
       score,
-      percentage: `${score.toFixed(2)}%`
+      hasEssayQuestions,
+      status: hasEssayQuestions ? 'Needs manual grading' : 'Auto-graded',
+      percentage: score !== null ? `${score.toFixed(2)}%` : 'Pending'
     })
 
-    // Update attempt
+    // Update attempt - keep as SUBMITTED if has essay questions (needs manual grading)
     console.log('[submitAttempt] Updating attempt status to SUBMITTED...')
     const updatedAttempt = await this.prisma.attempt.update({
       where: { id: attemptId },
       data: {
-        status: 'SUBMITTED',
+        status: 'SUBMITTED', // Always SUBMITTED - will be changed to GRADED after teacher grades
         submittedAt: new Date(),
         timeSpent,
-        score,
+        score, // null if has essay questions
       },
       include: {
         exam: true,
@@ -492,4 +512,164 @@ export class AttemptsService {
 
     return { message: 'Attempt deleted successfully' };
   }
+
+  // Grade essay answer (for teachers)
+  async gradeEssayAnswer(attemptId: string, questionId: string, points: number, teacherId: string) {
+    console.log('[gradeEssayAnswer] Starting...', { attemptId, questionId, points, teacherId });
+
+    // Get attempt with exam info
+    const attempt = await this.prisma.attempt.findUnique({
+      where: { id: attemptId },
+      include: {
+        exam: {
+          include: {
+            questions: true,
+          },
+        },
+        answers: {
+          include: {
+            question: true,
+          },
+        },
+      },
+    });
+
+    if (!attempt) {
+      throw new NotFoundException(`Attempt with ID ${attemptId} not found`);
+    }
+
+    // Verify teacher owns this exam
+    if (attempt.exam.createdById !== teacherId) {
+      throw new ForbiddenException('You can only grade attempts for your own exams');
+    }
+
+    // Find the question
+    const question = attempt.exam.questions.find(q => q.id === questionId);
+    if (!question) {
+      throw new NotFoundException(`Question with ID ${questionId} not found in this exam`);
+    }
+
+    // Validate points don't exceed question max points
+    if (points > question.points) {
+      throw new BadRequestException(`Points (${points}) cannot exceed question max points (${question.points})`);
+    }
+
+    // Update the answer
+    const answer = await this.prisma.answer.update({
+      where: {
+        attemptId_questionId: {
+          attemptId,
+          questionId,
+        },
+      },
+      data: {
+        points,
+        isCorrect: points > 0, // Consider correct if got any points
+      },
+    });
+
+    console.log('[gradeEssayAnswer] Answer graded successfully');
+
+    // Check if all essay questions have been graded
+    const allAnswers = await this.prisma.answer.findMany({
+      where: { attemptId },
+      include: {
+        question: true,
+      },
+    });
+
+    const essayQuestions = allAnswers.filter(
+      a => a.question.type?.toLowerCase().includes('essay') || a.question.type?.toLowerCase().includes('text')
+    );
+
+    const allEssaysGraded = essayQuestions.every(a => a.points !== null && a.points !== undefined);
+
+    console.log('[gradeEssayAnswer] Grading status:', {
+      totalEssays: essayQuestions.length,
+      graded: essayQuestions.filter(a => a.points > 0).length,
+      allGraded: allEssaysGraded
+    });
+
+    // If all essays are graded, calculate final score and update status to GRADED
+    if (allEssaysGraded) {
+      const totalPoints = allAnswers.reduce((sum, ans) => sum + (ans.points || 0), 0);
+      const maxPoints = attempt.exam.questions.reduce((sum, q) => sum + q.points, 0);
+      const finalScore = maxPoints > 0 ? Math.round((totalPoints / maxPoints) * 100 * 100) / 100 : 0;
+
+      await this.prisma.attempt.update({
+        where: { id: attemptId },
+        data: {
+          status: 'GRADED',
+          score: finalScore,
+        },
+      });
+
+      console.log('[gradeEssayAnswer] All essays graded. Final score:', finalScore);
+    }
+
+    return {
+      success: true,
+      message: 'Essay answer graded successfully',
+      data: answer,
+      allGraded: allEssaysGraded,
+    };
+  }
+
+  // Get attempts that need grading (have essay questions)
+  async getAttemptsNeedingGrading(teacherId: string) {
+    console.log('[getAttemptsNeedingGrading] Teacher ID:', teacherId);
+
+    // Get teacher's exams
+    const teacherExams = await this.prisma.exam.findMany({
+      where: { createdById: teacherId },
+      select: { id: true },
+    });
+
+    const examIds = teacherExams.map(e => e.id);
+
+    // Get SUBMITTED attempts for teacher's exams
+    const attempts = await this.prisma.attempt.findMany({
+      where: {
+        examId: { in: examIds },
+        status: 'SUBMITTED', // Only submitted, not graded yet
+      },
+      include: {
+        student: {
+          select: {
+            id: true,
+            name: true,
+            username: true,
+          },
+        },
+        exam: {
+          select: {
+            id: true,
+            title: true,
+            subject: true,
+          },
+        },
+        answers: {
+          include: {
+            question: true,
+          },
+        },
+      },
+      orderBy: {
+        submittedAt: 'desc',
+      },
+    });
+
+    // Filter to only attempts with essay questions
+    const attemptsWithEssays = attempts.filter(attempt =>
+      attempt.answers.some(
+        ans => ans.question.type?.toLowerCase().includes('essay') ||
+          ans.question.type?.toLowerCase().includes('text')
+      )
+    );
+
+    console.log('[getAttemptsNeedingGrading] Found attempts:', attemptsWithEssays.length);
+
+    return attemptsWithEssays;
+  }
 }
+

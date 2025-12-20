@@ -266,7 +266,13 @@ export default function StudentResultsPage() {
       {filteredResults.length > 0 ? (
         <div className="space-y-4">
           {filteredResults.map((result) => {
-            const badge = getScoreBadge(result.score);
+            const badge =
+              result.score !== null
+                ? getScoreBadge(result.score)
+                : { text: "Đang chấm", color: "bg-purple-500" };
+            const isPending =
+              result.score === null || result.score === undefined;
+
             return (
               <Card
                 key={result.id}
@@ -297,46 +303,71 @@ export default function StudentResultsPage() {
                         <Calendar className="h-4 w-4" />
                         <span>{formatDate(result.completedAt)}</span>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Award className="h-4 w-4" />
-                        <span>
-                          {result.correctAnswers}/{result.totalQuestions} đúng
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <TrendingUp className="h-4 w-4" />
-                        <span>
-                          {(
-                            (result.correctAnswers / result.totalQuestions) *
-                            100
-                          ).toFixed(0)}
-                          % chính xác
-                        </span>
-                      </div>
+                      {!isPending && (
+                        <>
+                          <div className="flex items-center gap-2">
+                            <Award className="h-4 w-4" />
+                            <span>
+                              {result.correctAnswers}/{result.totalQuestions}{" "}
+                              đúng
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <TrendingUp className="h-4 w-4" />
+                            <span>
+                              {(
+                                (result.correctAnswers /
+                                  result.totalQuestions) *
+                                100
+                              ).toFixed(0)}
+                              % chính xác
+                            </span>
+                          </div>
+                        </>
+                      )}
+                      {isPending && (
+                        <div className="col-span-2 flex items-center gap-2 text-purple-600">
+                          <span className="animate-pulse">⏳</span>
+                          <span>
+                            Bài thi có câu tự luận đang được giáo viên chấm điểm
+                          </span>
+                        </div>
+                      )}
                     </div>
                   </div>
 
                   <div className="flex items-center gap-4">
-                    <Card
-                      className={`p-6 text-center min-w-[120px] border-2 ${getScoreColor(
-                        result.score
-                      )}`}
-                    >
-                      <div
-                        className={`text-4xl font-bold mb-1 ${
-                          result.score >= 80
-                            ? "text-green-600"
-                            : result.score >= 60
-                            ? "text-yellow-600"
-                            : "text-red-600"
-                        }`}
+                    {isPending ? (
+                      <Card className="p-6 text-center min-w-[120px] border-2 border-purple-200 bg-purple-50">
+                        <div className="text-2xl font-bold mb-1 text-purple-600">
+                          Đang chấm
+                        </div>
+                        <div className="text-xs text-gray-600 font-medium">
+                          Chờ giáo viên
+                        </div>
+                      </Card>
+                    ) : (
+                      <Card
+                        className={`p-6 text-center min-w-[120px] border-2 ${getScoreColor(
+                          result.score
+                        )}`}
                       >
-                        {Math.round(result.score * 100) / 100}%
-                      </div>
-                      <div className="text-xs text-gray-600 font-medium">
-                        Điểm số
-                      </div>
-                    </Card>
+                        <div
+                          className={`text-4xl font-bold mb-1 ${
+                            result.score >= 80
+                              ? "text-green-600"
+                              : result.score >= 60
+                              ? "text-yellow-600"
+                              : "text-red-600"
+                          }`}
+                        >
+                          {Math.round(result.score * 100) / 100}%
+                        </div>
+                        <div className="text-xs text-gray-600 font-medium">
+                          Điểm số
+                        </div>
+                      </Card>
+                    )}
 
                     <Button
                       variant="outline"

@@ -286,6 +286,19 @@ class ApiClient {
     return response.data;
   }
 
+  // Essay grading endpoints (for teachers)
+  async getAttemptsNeedingGrading(): Promise<any[]> {
+    const response = await this.client.get('/attempts/grading/pending');
+    return response.data;
+  }
+
+  async gradeEssayAnswer(attemptId: string, questionId: string, points: number): Promise<any> {
+    const response = await this.client.put(`/attempts/${attemptId}/grade/${questionId}`, {
+      points
+    });
+    return response.data;
+  }
+
   // Dashboard/Stats endpoints
   async getDashboardStats(): Promise<any> {
     const response = await this.client.get('/stats/dashboard');

@@ -546,9 +546,13 @@ export default function ExamTakingPage() {
       ...answers,
       [questionId]: optionId,
     });
-    
+
     // Auto-advance to next question after selecting answer (except for last question)
-    if (exam && currentQuestion < exam.questions.length - 1) {
+    // Only for multiple choice, not for essay questions
+    const currentQ = exam?.questions[currentQuestion];
+    const isEssay = currentQ?.type?.toLowerCase().includes("essay");
+
+    if (exam && currentQuestion < exam.questions.length - 1 && !isEssay) {
       setTimeout(() => {
         setCurrentQuestion(currentQuestion + 1);
       }, 300); // Small delay for better UX
@@ -680,7 +684,9 @@ export default function ExamTakingPage() {
             <div className={`text-3xl sm:text-4xl font-bold ${getTimeColor()}`}>
               {formatTime(timeRemaining)}
             </div>
-            <p className="text-xs sm:text-sm text-blue-100">Thời gian còn lại</p>
+            <p className="text-xs sm:text-sm text-blue-100">
+              Thời gian còn lại
+            </p>
           </div>
         </div>
       </div>
@@ -729,13 +735,28 @@ export default function ExamTakingPage() {
 
           {/* Essay question - show textarea */}
           {question.type?.toLowerCase().includes("essay") ? (
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-600">
-                Nhập câu trả lời của bạn:
-              </label>
+            <div className="space-y-3 bg-purple-50 p-4 sm:p-6 rounded-lg border-2 border-purple-200">
+              <div className="flex items-center gap-2 mb-2">
+                <svg
+                  className="w-5 h-5 text-purple-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                  />
+                </svg>
+                <label className="text-base font-semibold text-purple-700">
+                  Nhập câu trả lời của bạn:
+                </label>
+              </div>
               <textarea
-                className="w-full p-3 sm:p-4 text-sm sm:text-base border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all min-h-[150px] sm:min-h-[200px] resize-y"
-                placeholder="Nhập câu trả lời tự luận của bạn tại đây..."
+                className="w-full p-4 text-base border-2 border-purple-300 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all min-h-[200px] sm:min-h-[250px] resize-y bg-white shadow-sm"
+                placeholder="Nhập câu trả lời tự luận của bạn tại đây...&#10;&#10;Gợi ý: Hãy trình bày câu trả lời rõ ràng, mạch lạc và đầy đủ."
                 value={answers[question.id] || ""}
                 onChange={(e) => {
                   const newAnswers = { ...answers };
@@ -743,9 +764,33 @@ export default function ExamTakingPage() {
                   setAnswers(newAnswers);
                 }}
               />
-              <p className="text-xs text-gray-500">
-                * Câu trả lời tự luận sẽ được giáo viên chấm điểm thủ công
-              </p>
+              <div className="flex items-start gap-2 bg-purple-100 p-3 rounded-md">
+                <svg
+                  className="w-5 h-5 text-purple-600 mt-0.5 flex-shrink-0"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                <div className="text-sm text-purple-700">
+                  <p className="font-medium">Lưu ý:</p>
+                  <p className="mt-1">
+                    Câu trả lời tự luận sẽ được giáo viên chấm điểm thủ công.
+                    Hãy trình bày đầy đủ và rõ ràng.
+                  </p>
+                  <p className="mt-1 text-xs text-purple-600">
+                    Đã nhập:{" "}
+                    <span className="font-semibold">
+                      {(answers[question.id] || "").length}
+                    </span>{" "}
+                    ký tự
+                  </p>
+                </div>
+              </div>
             </div>
           ) : (
             /* Multiple choice question - show options */
@@ -800,7 +845,7 @@ export default function ExamTakingPage() {
           >
             ← Câu trước
           </Button>
-          
+
           {currentQuestion === exam.questions.length - 1 ? (
             <Button
               size="sm"
@@ -848,7 +893,8 @@ export default function ExamTakingPage() {
                 buttonClass +=
                   "bg-green-100 text-green-700 border border-green-300";
               } else {
-                buttonClass += "bg-gray-100 text-gray-600 border border-gray-300";
+                buttonClass +=
+                  "bg-gray-100 text-gray-600 border border-gray-300";
               }
 
               return (
