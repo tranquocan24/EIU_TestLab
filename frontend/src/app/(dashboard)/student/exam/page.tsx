@@ -468,7 +468,8 @@ export default function ExamTakingPage() {
         questions: examData.questions.map((q: any) => ({
           id: q.id,
           questionText: q.questionText,
-          options: q.options,
+          type: q.type || "MULTIPLE_CHOICE",
+          options: q.options || [],
           points: q.points,
           order: q.order,
         })),

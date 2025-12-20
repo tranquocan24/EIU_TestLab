@@ -21,7 +21,7 @@ interface ExamResult {
   examId: string;
   examTitle: string;
   subject: string;
-  score: number;
+  score: number | null;
   totalQuestions: number;
   correctAnswers: number;
   completedAt: string;
@@ -75,7 +75,10 @@ export default function StudentResultsPage() {
           examId: attempt.exam.id,
           examTitle: attempt.exam.title,
           subject: attempt.exam.subject,
-          score: attempt.score || 0,
+          score:
+            attempt.score !== null && attempt.score !== undefined
+              ? attempt.score
+              : null,
           totalQuestions: attempt.totalQuestions || 0,
           correctAnswers: attempt.correctAnswers || 0,
           completedAt: attempt.submittedAt,
@@ -89,16 +92,29 @@ export default function StudentResultsPage() {
 
       // Calculate stats
       if (transformedResults.length > 0) {
-        const total = transformedResults.length;
-        const avg =
-          transformedResults.reduce((sum, r) => sum + r.score, 0) / total;
-        const highest = Math.max(...transformedResults.map((r) => r.score));
+        // Only include graded exams in stats
+        const gradedResults = transformedResults.filter(
+          (r) => r.score !== null && r.score !== undefined
+        );
 
-        setStats({
-          totalExams: total,
-          averageScore: Math.round(avg),
-          highestScore: highest,
-        });
+        if (gradedResults.length > 0) {
+          const total = gradedResults.length;
+          const avg =
+            gradedResults.reduce((sum, r) => sum + r.score, 0) / total;
+          const highest = Math.max(...gradedResults.map((r) => r.score));
+
+          setStats({
+            totalExams: transformedResults.length, // Total includes pending
+            averageScore: Math.round(avg),
+            highestScore: highest,
+          });
+        } else {
+          setStats({
+            totalExams: transformedResults.length,
+            averageScore: 0,
+            highestScore: 0,
+          });
+        }
       } else {
         setStats({
           totalExams: 0,

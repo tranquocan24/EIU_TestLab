@@ -89,17 +89,36 @@ export default function TeacherGradingPage() {
 
     try {
       await api.gradeEssayAnswer(attemptId, questionId, points);
-      alert("Chấm điểm thành công!");
 
       // Reload data
       await loadAttemptsNeedingGrading();
 
-      // If viewing this attempt, reload it
+      // Check if all essay questions in this attempt have been graded
       if (selectedAttempt?.id === attemptId) {
         const updatedAttempt = attempts.find((a) => a.id === attemptId);
         if (updatedAttempt) {
-          setSelectedAttempt(updatedAttempt);
+          const essayQuestions = getEssayQuestions(updatedAttempt);
+          const allGraded = essayQuestions.every((ans) => ans.points > 0);
+
+          if (allGraded) {
+            alert(
+              "Chấm điểm thành công! Đã chấm xong tất cả câu tự luận của bài thi này."
+            );
+            // Close the grading panel and return to teacher dashboard
+            setSelectedAttempt(null);
+            router.push("/teacher");
+          } else {
+            alert("Chấm điểm thành công!");
+            setSelectedAttempt(updatedAttempt);
+          }
+        } else {
+          // Attempt no longer needs grading, return to teacher dashboard
+          alert("Chấm điểm thành công! Bài thi này đã hoàn thành.");
+          setSelectedAttempt(null);
+          router.push("/teacher");
         }
+      } else {
+        alert("Chấm điểm thành công!");
       }
     } catch (error: any) {
       console.error("Error grading answer:", error);
