@@ -307,7 +307,7 @@ export default function AdminExamsPage() {
                       <td className="py-3 px-4 text-gray-600">
                         {exam.createdBy.name}
                       </td>
-                      <td className="py-3 px-4">
+                      <td className="py-3 px-4 whitespace-nowrap">
                         {getStatusBadge(exam.status)}
                       </td>
                       <td className="py-3 px-4 text-gray-800">
