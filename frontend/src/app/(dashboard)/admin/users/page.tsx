@@ -18,6 +18,7 @@ interface User {
     name: string
     role: 'STUDENT' | 'TEACHER' | 'ADMIN'
     email?: string
+    courses?: string[]
     createdAt: string
 }
 
@@ -30,6 +31,8 @@ export default function ManageUsersPage() {
     const [searchQuery, setSearchQuery] = useState('')
     const [roleFilter, setRoleFilter] = useState('all')
     const [showAddDialog, setShowAddDialog] = useState(false)
+    const [showEditDialog, setShowEditDialog] = useState(false)
+    const [selectedUser, setSelectedUser] = useState<User | null>(null)
 
     // Form state
     const [formData, setFormData] = useState({
@@ -37,7 +40,17 @@ export default function ManageUsersPage() {
         password: '',
         name: '',
         role: 'STUDENT',
-        email: ''
+        email: '',
+        courses: ''
+    })
+
+    // Edit form state
+    const [editFormData, setEditFormData] = useState({
+        name: '',
+        email: '',
+        role: 'STUDENT',
+        courses: '',
+        password: ''
     })
 
     useEffect(() => {
@@ -120,6 +133,7 @@ export default function ManageUsersPage() {
                 name: formData.name,
                 role: formData.role as 'STUDENT' | 'TEACHER' | 'ADMIN',
                 email: formData.email || undefined,
+                courses: formData.courses || undefined,
             })
 
             // Update state with new user from backend
@@ -133,7 +147,8 @@ export default function ManageUsersPage() {
                 password: '',
                 name: '',
                 role: 'STUDENT',
-                email: ''
+                email: '',
+                courses: ''
             })
             setShowAddDialog(false)
 
@@ -142,6 +157,59 @@ export default function ManageUsersPage() {
             console.error('Error adding user:', error)
             const errorMessage = error.response?.data?.message || 'Có lỗi xảy ra. Vui lòng thử lại!'
             alert(errorMessage)
+        }
+    }
+
+    const handleEditUser = (user: User) => {
+        setSelectedUser(user)
+        setEditFormData({
+            name: user.name,
+            email: user.email || '',
+            role: user.role,
+            courses: user.courses ? user.courses.join(', ') : '',
+            password: ''
+        })
+        setShowEditDialog(true)
+    }
+
+    const handleUpdateUser = async () => {
+        if (!selectedUser) return
+
+        try {
+            if (!editFormData.name) {
+                alert('Vui lòng điền họ tên!')
+                return
+            }
+
+            const updateData: any = {
+                name: editFormData.name,
+                email: editFormData.email || undefined,
+                role: editFormData.role as 'STUDENT' | 'TEACHER' | 'ADMIN',
+                courses: editFormData.courses || undefined,
+            }
+
+            // Only include password if it's provided
+            if (editFormData.password) {
+                updateData.password = editFormData.password
+            }
+
+            await api.updateUser(selectedUser.id, updateData)
+
+            // Update user in list
+            setUsers(prevUsers =>
+                prevUsers.map(u =>
+                    u.id === selectedUser.id
+                        ? { ...u, ...updateData, courses: editFormData.courses ? editFormData.courses.split(',').map(c => c.trim()) : [] }
+                        : u
+                )
+            )
+
+            setShowEditDialog(false)
+            setSelectedUser(null)
+            alert('Cập nhật người dùng thành công!')
+        } catch (error: any) {
+            console.error('Error updating user:', error)
+            alert(error.response?.data?.message || 'Có lỗi xảy ra. Vui lòng thử lại!')
         }
     }
 
@@ -246,6 +314,18 @@ export default function ManageUsersPage() {
                                     />
                                 </div>
                                 <div>
+                                    <Label htmlFor="courses">Lớp học (cho sinh viên) <span className="text-gray-400 text-xs">- Phân tách bằng dấu phẩy</span></Label>
+                                    <Input
+                                        id="courses"
+                                        placeholder="Ví dụ: CSE301, CSE302"
+                                        value={formData.courses}
+                                        onChange={(e) => setFormData({ ...formData, courses: e.target.value })}
+                                    />
+                                    <p className="text-xs text-gray-500 mt-1">
+                                        Chỉ sinh viên ở các lớp này mới xem được bài thi được phân quyền cho lớp tương ứng
+                                    </p>
+                                </div>
+                                <div>
                                     <Label htmlFor="role">Vai trò <span className="text-red-500">*</span></Label>
                                     <Select value={formData.role} onValueChange={(value) => setFormData({ ...formData, role: value })}>
                                         <SelectTrigger>
@@ -264,6 +344,87 @@ export default function ManageUsersPage() {
                                         Thêm tài khoản
                                     </Button>
                                     <Button variant="outline" onClick={() => setShowAddDialog(false)} className="flex-1">
+                                        Hủy
+                                    </Button>
+                                </div>
+                            </div>
+                        </DialogContent>
+                    </Dialog>
+
+                    {/* Edit User Dialog */}
+                    <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>Chỉnh sửa tài khoản</DialogTitle>
+                            </DialogHeader>
+                            <div className="space-y-4 mt-4">
+                                <div>
+                                    <Label htmlFor="edit-username">Username</Label>
+                                    <Input
+                                        id="edit-username"
+                                        value={selectedUser?.username || ''}
+                                        disabled
+                                        className="bg-gray-100"
+                                    />
+                                    <p className="text-xs text-gray-500 mt-1">Username không thể thay đổi</p>
+                                </div>
+                                <div>
+                                    <Label htmlFor="edit-name">Họ tên <span className="text-red-500">*</span></Label>
+                                    <Input
+                                        id="edit-name"
+                                        placeholder="Nhập họ tên"
+                                        value={editFormData.name}
+                                        onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                                    />
+                                </div>
+                                <div>
+                                    <Label htmlFor="edit-email">Email</Label>
+                                    <Input
+                                        id="edit-email"
+                                        type="email"
+                                        placeholder="Nhập email"
+                                        value={editFormData.email}
+                                        onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })}
+                                    />
+                                </div>
+                                <div>
+                                    <Label htmlFor="edit-courses">Lớp học <span className="text-gray-400 text-xs">- Phân tách bằng dấu phẩy</span></Label>
+                                    <Input
+                                        id="edit-courses"
+                                        placeholder="Ví dụ: CSE301, CSE302"
+                                        value={editFormData.courses}
+                                        onChange={(e) => setEditFormData({ ...editFormData, courses: e.target.value })}
+                                    />
+                                </div>
+                                <div>
+                                    <Label htmlFor="edit-role">Vai trò <span className="text-red-500">*</span></Label>
+                                    <Select value={editFormData.role} onValueChange={(value) => setEditFormData({ ...editFormData, role: value })}>
+                                        <SelectTrigger>
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="STUDENT">Học sinh</SelectItem>
+                                            <SelectItem value="TEACHER">Giáo viên</SelectItem>
+                                            <SelectItem value="ADMIN">Quản trị viên</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div>
+                                    <Label htmlFor="edit-password">Mật khẩu mới <span className="text-gray-400 text-xs">- Để trống nếu không đổi</span></Label>
+                                    <Input
+                                        id="edit-password"
+                                        type="password"
+                                        placeholder="Nhập mật khẩu mới (tùy chọn)"
+                                        value={editFormData.password}
+                                        onChange={(e) => setEditFormData({ ...editFormData, password: e.target.value })}
+                                    />
+                                </div>
+                                <div className="flex gap-3 pt-4">
+                                    <Button onClick={handleUpdateUser} className="flex-1">
+                                        <Edit className="h-4 w-4 mr-2" />
+                                        Cập nhật
+                                    </Button>
+                                    <Button variant="outline" onClick={() => setShowEditDialog(false)} className="flex-1">
                                         Hủy
                                     </Button>
                                 </div>
@@ -345,6 +506,7 @@ export default function ManageUsersPage() {
                                         <th className="text-left py-3 px-4 font-semibold text-gray-700">Họ tên</th>
                                         <th className="text-left py-3 px-4 font-semibold text-gray-700">Vai trò</th>
                                         <th className="text-left py-3 px-4 font-semibold text-gray-700">Email</th>
+                                        <th className="text-left py-3 px-4 font-semibold text-gray-700">Lớp học</th>
                                         <th className="text-left py-3 px-4 font-semibold text-gray-700">Ngày tạo</th>
                                         <th className="text-left py-3 px-4 font-semibold text-gray-700">Thao tác</th>
                                     </tr>
@@ -356,10 +518,21 @@ export default function ManageUsersPage() {
                                             <td className="py-3 px-4 text-gray-800">{u.name}</td>
                                             <td className="py-3 px-4">{getRoleBadge(u.role)}</td>
                                             <td className="py-3 px-4 text-gray-600">{u.email || '-'}</td>
+                                            <td className="py-3 px-4 text-gray-600">
+                                                {u.courses && u.courses.length > 0 ? (
+                                                    <div className="flex flex-wrap gap-1">
+                                                        {u.courses.map((course, idx) => (
+                                                            <span key={idx} className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded text-xs">
+                                                                {course}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                ) : '-'}
+                                            </td>
                                             <td className="py-3 px-4 text-gray-600">{formatDate(u.createdAt)}</td>
                                             <td className="py-3 px-4">
                                                 <div className="flex gap-2">
-                                                    <Button variant="outline" size="sm">
+                                                    <Button variant="outline" size="sm" onClick={() => handleEditUser(u)}>
                                                         <Edit className="h-4 w-4" />
                                                     </Button>
                                                     <Button variant="outline" size="sm" onClick={() => handleDeleteUser(u.id)}>
