@@ -425,7 +425,7 @@ export class AttemptsService {
     });
   }
 
-  async getAttempt(id: string, userId: string) {
+  async getAttempt(id: string, userId: string, userRole?: string) {
     const attempt = await this.prisma.attempt.findUnique({
       where: { id },
       include: {
@@ -455,6 +455,7 @@ export class AttemptsService {
             id: true,
             name: true,
             username: true,
+            courses: true,
           },
         },
       },
@@ -464,8 +465,14 @@ export class AttemptsService {
       throw new NotFoundException(`Attempt with ID ${id} not found`);
     }
 
-    if (attempt.studentId !== userId) {
-      throw new ForbiddenException('You can only view your own attempt');
+    // Allow students to view their own attempts
+    // Allow teachers to view attempts for exams they created
+    const isStudent = attempt.studentId === userId;
+    const isTeacherOwner = userRole === 'TEACHER' && attempt.exam.createdById === userId;
+    const isAdmin = userRole === 'ADMIN';
+
+    if (!isStudent && !isTeacherOwner && !isAdmin) {
+      throw new ForbiddenException('You do not have permission to view this attempt');
     }
 
     // Transform data to ensure frontend compatibility

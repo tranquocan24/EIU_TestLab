@@ -70,58 +70,57 @@ export default function TeacherGradingPage() {
     }
   };
 
-  const handleGradeAnswer = async (
-    attemptId: string,
-    questionId: string,
-    maxPoints: number
-  ) => {
-    const points = gradingPoints[questionId];
+  const handleGradeAllAnswers = async () => {
+    if (!selectedAttempt) return;
 
-    if (points === undefined || points === null) {
-      alert("Vui lòng nhập điểm!");
+    const essayQuestions = getEssayQuestions(selectedAttempt);
+
+    // Validate all inputs
+    const missingPoints: string[] = [];
+    const invalidPoints: string[] = [];
+
+    essayQuestions.forEach((answer, index) => {
+      const points = gradingPoints[answer.question.id];
+
+      if (points === undefined || points === null || points === "") {
+        missingPoints.push(`Câu ${index + 1}`);
+      } else if (points < 0 || points > answer.question.points) {
+        invalidPoints.push(`Câu ${index + 1} (0-${answer.question.points})`);
+      }
+    });
+
+    if (missingPoints.length > 0) {
+      alert(`Vui lòng nhập điểm cho: ${missingPoints.join(", ")}`);
       return;
     }
 
-    if (points < 0 || points > maxPoints) {
-      alert(`Điểm phải từ 0 đến ${maxPoints}!`);
+    if (invalidPoints.length > 0) {
+      alert(`Điểm không hợp lệ cho: ${invalidPoints.join(", ")}`);
       return;
     }
 
     try {
-      await api.gradeEssayAnswer(attemptId, questionId, points);
-
-      // Reload data
-      await loadAttemptsNeedingGrading();
-
-      // Check if all essay questions in this attempt have been graded
-      if (selectedAttempt?.id === attemptId) {
-        const updatedAttempt = attempts.find((a) => a.id === attemptId);
-        if (updatedAttempt) {
-          const essayQuestions = getEssayQuestions(updatedAttempt);
-          const allGraded = essayQuestions.every((ans) => ans.points > 0);
-
-          if (allGraded) {
-            alert(
-              "Chấm điểm thành công! Đã chấm xong tất cả câu tự luận của bài thi này."
-            );
-            // Close the grading panel and return to teacher dashboard
-            setSelectedAttempt(null);
-            router.push("/teacher");
-          } else {
-            alert("Chấm điểm thành công!");
-            setSelectedAttempt(updatedAttempt);
-          }
-        } else {
-          // Attempt no longer needs grading, return to teacher dashboard
-          alert("Chấm điểm thành công! Bài thi này đã hoàn thành.");
-          setSelectedAttempt(null);
-          router.push("/teacher");
-        }
-      } else {
-        alert("Chấm điểm thành công!");
+      // Grade all essay questions
+      for (const answer of essayQuestions) {
+        const points = gradingPoints[answer.question.id];
+        await api.gradeEssayAnswer(
+          selectedAttempt.id,
+          answer.question.id,
+          points
+        );
       }
+
+      alert(
+        "Chấm điểm thành công! Đã chấm xong tất cả câu tự luận của bài thi này."
+      );
+
+      // Close the grading panel and return to teacher dashboard
+      setSelectedAttempt(null);
+      setGradingPoints({});
+      await loadAttemptsNeedingGrading();
+      router.push("/teacher");
     } catch (error: any) {
-      console.error("Error grading answer:", error);
+      console.error("Error grading answers:", error);
       const errorMessage =
         error.response?.data?.message || "Không thể chấm điểm!";
       alert(errorMessage);
@@ -249,47 +248,30 @@ export default function TeacherGradingPage() {
                   </div>
                 </div>
 
-                {/* Grading Section */}
+                {/* Grading Input */}
                 <div className="pt-4 border-t">
-                  <div className="flex items-end gap-4">
-                    <div className="flex-1">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Nhập điểm (tối đa {answer.question.points}):
-                      </label>
-                      <Input
-                        type="number"
-                        min="0"
-                        max={answer.question.points}
-                        step="0.5"
-                        placeholder={`0 - ${answer.question.points}`}
-                        value={
-                          gradingPoints[answer.question.id] ??
-                          answer.points ??
-                          ""
-                        }
-                        onChange={(e) => {
-                          const value = parseFloat(e.target.value);
-                          setGradingPoints({
-                            ...gradingPoints,
-                            [answer.question.id]: value,
-                          });
-                        }}
-                        className="w-full"
-                      />
-                    </div>
-                    <Button
-                      onClick={() =>
-                        handleGradeAnswer(
-                          selectedAttempt.id,
-                          answer.question.id,
-                          answer.question.points
-                        )
-                      }
-                      className="bg-red-600 hover:bg-red-700 text-white"
-                    >
-                      {answer.points > 0 ? "Cập nhật điểm" : "Chấm điểm"}
-                    </Button>
-                  </div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Nhập điểm (tối đa {answer.question.points}):
+                  </label>
+                  <Input
+                    type="number"
+                    min="0"
+                    max={answer.question.points}
+                    step="0.5"
+                    placeholder={`0 - ${answer.question.points}`}
+                    value={
+                      gradingPoints[answer.question.id] ?? answer.points ?? ""
+                    }
+                    onChange={(e) => {
+                      const value =
+                        e.target.value === "" ? "" : parseFloat(e.target.value);
+                      setGradingPoints({
+                        ...gradingPoints,
+                        [answer.question.id]: value,
+                      });
+                    }}
+                    className="w-full max-w-xs"
+                  />
                 </div>
               </CardContent>
             </Card>
@@ -319,6 +301,23 @@ export default function TeacherGradingPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Grade All Button */}
+        <div className="flex justify-center gap-4 pt-4">
+          <Button
+            variant="outline"
+            onClick={() => setSelectedAttempt(null)}
+            className="min-w-[200px]"
+          >
+            Quay lại
+          </Button>
+          <Button
+            onClick={handleGradeAllAnswers}
+            className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white min-w-[200px] text-lg py-6"
+          >
+            ✓ Chấm tất cả câu tự luận
+          </Button>
+        </div>
       </div>
     );
   }

@@ -209,7 +209,40 @@ export default function ViewResultsPage() {
       : null;
 
   const handleExportResults = () => {
-    alert("Excel export feature is under development!");
+    if (!selectedExam || filteredResults.length === 0) {
+      alert("Please select an exam with results to export");
+      return;
+    }
+
+    const selectedExamTitle =
+      exams.find((e) => e.id === selectedExam)?.title || "exam";
+    const headers = [
+      "No.",
+      "Student ID",
+      "Name",
+      "Class",
+      "Score",
+      "Time (min)",
+      "Submitted",
+    ];
+    const rows = filteredResults.map((result, index) => [
+      index + 1,
+      result.studentId,
+      result.studentName,
+      result.className,
+      result.score.toFixed(1),
+      result.timeSpent,
+      formatDateTime(result.submittedAt),
+    ]);
+
+    const csv = [headers, ...rows].map((row) => row.join(",")).join("\n");
+    const blob = new Blob(["\uFEFF" + csv], {
+      type: "text/csv;charset=utf-8;",
+    });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `${selectedExamTitle}_results.csv`;
+    link.click();
   };
 
   const handleViewResult = (attemptId: string) => {
@@ -234,7 +267,7 @@ export default function ViewResultsPage() {
         <div className="flex gap-3">
           <Button variant="outline" onClick={handleExportResults}>
             <Download className="h-4 w-4 mr-2" />
-            Export Excel
+            Export CSV
           </Button>
           <Button
             variant="outline"

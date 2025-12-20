@@ -52,8 +52,8 @@ export class AttemptsController {
   }
 
   @Get(':id')
-  getAttempt(@Param('id') id: string, @GetUser('id') userId: string) {
-    return this.attemptsService.getAttempt(id, userId);
+  getAttempt(@Param('id') id: string, @GetUser() user: any) {
+    return this.attemptsService.getAttempt(id, user.id, user.role);
   }
 
   @Get('exam/:examId')
