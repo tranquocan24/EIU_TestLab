@@ -84,7 +84,7 @@ export function NotificationItem({
         <div className="flex items-start justify-between gap-2">
           <h4
             className={cn(
-              "text-sm line-clamp-1 break-words",
+              "text-sm line-clamp-1 break-words overflow-hidden overflow-wrap-anywhere",
               notification.isRead ? "font-medium" : "font-semibold"
             )}
           >
@@ -95,13 +95,16 @@ export function NotificationItem({
           )}
         </div>
 
-        <p className="text-sm text-muted-foreground line-clamp-2 break-words">
+        <p className="text-sm text-muted-foreground line-clamp-2 break-words overflow-hidden overflow-wrap-anywhere">
           {notification.message}
         </p>
 
         {notification.exam && (
-          <p className="text-xs text-muted-foreground truncate">
-            📚 {notification.exam.subject} - {notification.exam.title}
+          <p className="text-xs text-muted-foreground truncate overflow-hidden">
+            📚{" "}
+            <span className="break-all">
+              {notification.exam.subject} - {notification.exam.title}
+            </span>
           </p>
         )}
 

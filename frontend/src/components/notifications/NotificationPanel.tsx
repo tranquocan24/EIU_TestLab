@@ -94,7 +94,7 @@ export function NotificationPanel({
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
   return (
-    <div className="flex flex-col h-[500px] w-full overflow-hidden">
+    <div className="flex flex-col h-[500px] w-full max-w-[400px] overflow-hidden">
       {/* Header */}
       <div className="p-4 border-b flex-shrink-0">
         <div className="flex items-center justify-between mb-3">
