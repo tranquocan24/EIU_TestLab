@@ -80,6 +80,8 @@ export class NotificationsService {
     const { type, isRead, page = 1, limit = 20 } = query;
     const skip = (page - 1) * limit;
 
+    console.log('🔍 Finding notifications for userId:', userId, 'query:', query);
+
     const where: any = { userId };
     if (type) where.type = type;
     if (isRead !== undefined) where.isRead = isRead;
@@ -104,6 +106,8 @@ export class NotificationsService {
       }),
       this.prisma.notification.count({ where }),
     ]);
+
+    console.log('📊 Found notifications:', notifications.length, 'total:', total);
 
     return {
       data: notifications,
