@@ -78,10 +78,17 @@ export function NotificationListener({ onNewNotification }: NotificationListener
   );
 
   useEffect(() => {
-    // Connect socket when component mounts
+    // Only connect if user is authenticated
     if (typeof window !== 'undefined') {
       const token = localStorage.getItem('token');
-      if (token && !socket.connected) {
+      
+      // Don't connect if no token (user not logged in)
+      if (!token) {
+        return;
+      }
+      
+      // Connect socket with authentication
+      if (!socket.connected) {
         socket.auth = { token };
         socket.connect();
       }
@@ -93,6 +100,10 @@ export function NotificationListener({ onNewNotification }: NotificationListener
     // Cleanup on unmount
     return () => {
       socket.off('notification:new', handleNewNotification);
+      // Disconnect socket when user logs out or component unmounts
+      if (typeof window !== 'undefined' && !localStorage.getItem('token')) {
+        socket.disconnect();
+      }
     };
   }, [handleNewNotification]);
 

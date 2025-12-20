@@ -15,6 +15,7 @@ export class UsersService {
         email: true,
         name: true,
         role: true,
+        courses: true,
         isActive: true,
         createdAt: true,
       },
@@ -30,6 +31,7 @@ export class UsersService {
         email: true,
         name: true,
         role: true,
+        courses: true,
         isActive: true,
         createdAt: true,
       },
@@ -48,6 +50,7 @@ export class UsersService {
     email: string;
     name: string;
     role: UserRole;
+    courses?: string | string[];
   }) {
     // Kiểm tra username đã tồn tại chưa
     const existingUser = await this.prisma.user.findUnique({
@@ -70,10 +73,19 @@ export class UsersService {
     // Hash password
     const hashedPassword = await bcrypt.hash(data.password, 10);
 
+    // Convert courses to array if it's a string
+    let coursesArray: string[] = [];
+    if (data.courses) {
+      coursesArray = Array.isArray(data.courses)
+        ? data.courses
+        : data.courses.split(',').map(c => c.trim());
+    }
+
     return this.prisma.user.create({
       data: {
         ...data,
         password: hashedPassword,
+        courses: coursesArray,
       },
       select: {
         id: true,
@@ -81,6 +93,7 @@ export class UsersService {
         email: true,
         name: true,
         role: true,
+        courses: true,
         isActive: true,
         createdAt: true,
       },
@@ -93,6 +106,7 @@ export class UsersService {
     role?: UserRole;
     isActive?: boolean;
     password?: string;
+    courses?: string | string[];
   }) {
     // Kiểm tra user có tồn tại không
     const user = await this.prisma.user.findUnique({ where: { id } });
@@ -116,6 +130,13 @@ export class UsersService {
       updateData.password = await bcrypt.hash(data.password, 10);
     }
 
+    // Convert courses to array if it's a string
+    if (data.courses) {
+      updateData.courses = Array.isArray(data.courses)
+        ? data.courses
+        : data.courses.split(',').map(c => c.trim());
+    }
+
     return this.prisma.user.update({
       where: { id },
       data: updateData,
@@ -125,6 +146,7 @@ export class UsersService {
         email: true,
         name: true,
         role: true,
+        courses: true,
         isActive: true,
         createdAt: true,
       },
