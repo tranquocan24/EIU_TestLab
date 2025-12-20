@@ -107,12 +107,14 @@ export default function AdminExamsPage() {
         }
 
         try {
-            await api.deleteExam(examId)
-            alert('Xóa đề thi thành công!')
-            loadExams()
-        } catch (error) {
+            const result = await api.deleteExam(examId)
+            console.log('Delete result:', result)
+            alert(result.message || 'Xóa đề thi thành công!')
+            await loadExams()
+        } catch (error: any) {
             console.error('Error deleting exam:', error)
-            alert('Có lỗi xảy ra. Vui lòng thử lại!')
+            const errorMessage = error.response?.data?.message || error.message || 'Có lỗi xảy ra. Vui lòng thử lại!'
+            alert(errorMessage)
         }
     }
 

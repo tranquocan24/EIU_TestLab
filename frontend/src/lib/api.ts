@@ -192,8 +192,18 @@ class ApiClient {
   }
 
   async deleteExam(id: string): Promise<ApiResponse<null>> {
-    const response: AxiosResponse<ApiResponse<null>> = await this.client.delete(`/exams/${id}`);
-    return response.data;
+    try {
+      const response: AxiosResponse<ApiResponse<null>> = await this.client.delete(`/exams/${id}`);
+      console.log('Delete exam response:', response.data);
+      return response.data;
+    } catch (error: any) {
+      console.error('Delete exam error details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      });
+      throw error;
+    }
   }
 
   // Question endpoints

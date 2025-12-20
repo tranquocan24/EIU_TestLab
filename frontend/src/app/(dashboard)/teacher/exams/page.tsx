@@ -145,12 +145,14 @@ export default function ManageExamsPage() {
         }
 
         try {
-            await api.deleteExam(examId)
-            alert('Xóa đề thi thành công!')
-            loadExams() // Reload list
-        } catch (error) {
+            const result = await api.deleteExam(examId)
+            console.log('Delete result:', result)
+            alert(result.message || 'Xóa đề thi thành công!')
+            await loadExams() // Reload list
+        } catch (error: any) {
             console.error('Error deleting exam:', error)
-            alert('Không thể xóa đề thi. Vui lòng thử lại!')
+            const errorMessage = error.response?.data?.message || error.message || 'Không thể xóa đề thi. Vui lòng thử lại!'
+            alert(errorMessage)
         }
     }
 

@@ -281,6 +281,12 @@ export class ExamsService {
       throw new NotFoundException(`Exam with ID ${id} not found`);
     }
 
-    return this.prisma.exam.delete({ where: { id } });
+    await this.prisma.exam.delete({ where: { id } });
+
+    return {
+      success: true,
+      message: 'Exam deleted successfully',
+      data: null,
+    };
   }
 }
