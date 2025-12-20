@@ -415,7 +415,7 @@ export default function StudentExamList() {
 
       {/* Exam Modal */}
       <Dialog open={showModal} onOpenChange={setShowModal}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Xác nhận bắt đầu bài thi</DialogTitle>
             <DialogDescription>
@@ -424,30 +424,30 @@ export default function StudentExamList() {
           </DialogHeader>
 
           {selectedExam && (
-            <div className="space-y-4">
-              <div className="space-y-3">
+            <div className="space-y-3">
+              <div className="space-y-2">
                 <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-3 rounded-lg border border-blue-200">
-                  <h3 className="font-bold text-blue-900 text-lg mb-1">{selectedExam.title}</h3>
-                  <p className="text-blue-700 font-medium">{selectedExam.subject}</p>
+                  <h3 className="font-bold text-blue-900 text-base mb-1">{selectedExam.title}</h3>
+                  <p className="text-blue-700 text-sm font-medium">{selectedExam.subject}</p>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-gray-50 p-3 rounded-lg">
-                    <p className="text-xs text-gray-500 mb-1">Thời gian làm bài</p>
-                    <p className="font-bold text-gray-800">{selectedExam.duration} phút</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="bg-gray-50 p-2 rounded-lg">
+                    <p className="text-xs text-gray-500 mb-1">Thời gian</p>
+                    <p className="font-bold text-gray-800 text-sm">{selectedExam.duration} phút</p>
                   </div>
-                  <div className="bg-gray-50 p-3 rounded-lg">
+                  <div className="bg-gray-50 p-2 rounded-lg">
                     <p className="text-xs text-gray-500 mb-1">Số câu hỏi</p>
-                    <p className="font-bold text-gray-800">{selectedExam.questionCount} câu</p>
+                    <p className="font-bold text-gray-800 text-sm">{selectedExam.questionCount} câu</p>
                   </div>
                 </div>
 
                 {(selectedExam.startTime || selectedExam.endTime) && (
-                  <div className="bg-amber-50 p-3 rounded-lg border border-amber-200">
-                    <h4 className="font-semibold text-amber-900 mb-2 flex items-center">
-                      <span className="mr-2">⏰</span> Thời gian thi
+                  <div className="bg-amber-50 p-2 rounded-lg border border-amber-200">
+                    <h4 className="font-semibold text-amber-900 text-xs mb-1 flex items-center">
+                      <span className="mr-1">⏰</span> Thời gian thi
                     </h4>
-                    <div className="space-y-1 text-sm">
+                    <div className="space-y-0.5 text-xs">
                       {selectedExam.startTime && (
                         <div className="flex justify-between">
                           <span className="text-amber-700">Bắt đầu:</span>
@@ -463,36 +463,30 @@ export default function StudentExamList() {
                     </div>
                   </div>
                 )}
-
-                <div className="bg-gray-50 p-3 rounded-lg">
-                  <p className="text-xs text-gray-500 mb-1">Giảng viên</p>
-                  <p className="font-medium text-gray-800">{selectedExam.createdBy}</p>
-                </div>
               </div>
 
-              <div className="bg-amber-50 p-4 rounded-lg border border-amber-200">
-                <h4 className="font-semibold text-amber-900 mb-3 flex items-center text-lg gap-2">
-                  <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 20 20">
+              <div className="bg-amber-50 p-3 rounded-lg border border-amber-200">
+                <h4 className="font-semibold text-amber-900 mb-2 flex items-center text-sm gap-1">
+                  <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                   </svg>
                   Lưu ý quan trọng:
                 </h4>
-                <ul className="text-sm text-amber-800 space-y-2">
-                  <li>🔒 Bài thi sẽ tự động chuyển sang chế độ <strong>toàn màn hình</strong></li>
-                  <li>⛔ Không được phép copy nội dung câu hỏi</li>
-                  <li>⚠️ Nếu thoát chế độ toàn màn hình <strong>3 lần</strong>, hệ thống sẽ <strong>tự động nộp bài</strong></li>
-                  <li>⏰ Thời gian làm bài sẽ bắt đầu đếm ngược khi bạn nhấn &quot;Bắt đầu&quot;</li>
-                  <li>💾 Câu trả lời của bạn sẽ được tự động lưu</li>
+                <ul className="text-xs text-amber-800 space-y-1">
+                  <li>🔒 Chế độ <strong>toàn màn hình</strong></li>
+                  <li>⛔ Không copy câu hỏi</li>
+                  <li>⚠️ Thoát toàn màn hình <strong>3 lần</strong> = <strong>nộp bài</strong></li>
+                  <li>💾 Tự động lưu câu trả lời</li>
                 </ul>
               </div>
             </div>
           )}
 
-          <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setShowModal(false)}>
+          <DialogFooter className="gap-2 pt-2">
+            <Button variant="outline" onClick={() => setShowModal(false)} size="sm">
               Hủy
             </Button>
-            <Button onClick={startExam} className="bg-green-600 hover:bg-green-700 text-lg px-6">
+            <Button onClick={startExam} className="bg-green-600 hover:bg-green-700" size="sm">
               🚀 Bắt đầu làm bài
             </Button>
           </DialogFooter>
