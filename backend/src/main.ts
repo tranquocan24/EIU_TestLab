@@ -5,10 +5,12 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Enable CORS
+  // Enable CORS for both HTTP and WebSocket
   app.enableCors({
     origin: process.env.FRONTEND_URL || 'http://localhost:3000',
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
   });
 
   // Global validation pipe
@@ -24,6 +26,7 @@ async function bootstrap() {
   await app.listen(port);
 
   console.log(`🚀 Server is running on: http://localhost:${port}`);
+  console.log(`📡 WebSocket server ready for connections`);
 }
 
 bootstrap();

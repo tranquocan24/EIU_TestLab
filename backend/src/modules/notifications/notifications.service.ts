@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { EmailService } from './email.service';
+import { NotificationsGateway } from './notifications.gateway';
 import { CreateNotificationDto } from './dto/create-notification.dto';
 import { QueryNotificationsDto } from './dto/query-notifications.dto';
 import { MarkReadDto } from './dto/mark-read.dto';
@@ -12,6 +13,7 @@ export class NotificationsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly emailService: EmailService,
+    private readonly notificationsGateway: NotificationsGateway,
   ) { }
 
   // Create notification with enhanced features
@@ -40,6 +42,13 @@ export class NotificationsService {
         },
       },
     });
+
+    // Send real-time notification via WebSocket
+    this.notificationsGateway.sendToUser(
+      parseInt(notification.userId),
+      'notification',
+      notification,
+    );
 
     // Send email notification if EMAIL channel is enabled
     if (channels.includes(NotificationChannel.EMAIL) && notification.user.email) {

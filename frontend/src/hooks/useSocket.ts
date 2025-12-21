@@ -21,12 +21,14 @@ export const useSocket = () => {
       return;
     }
 
-    // Initialize socket connection
-    const socket = io(process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3001', {
+    // Initialize socket connection - connects to NestJS backend
+    const socket = io(process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:4000', {
       auth: {
         token,
       },
-      transports: ['websocket'],
+      transports: ['websocket', 'polling'],
+      reconnection: true,
+      reconnectionAttempts: 5,
     });
 
     socketRef.current = socket;

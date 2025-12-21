@@ -1,11 +1,11 @@
 import { io } from 'socket.io-client';
 
-// Socket.IO client configuration
-const socket = io(process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3001', {
+// Socket.IO client configuration - connects to NestJS backend
+const socket = io(process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:4000', {
   autoConnect: false, // Don't auto-connect, wait for user authentication
   transports: ['websocket', 'polling'],
   reconnection: true,
-  reconnectionAttempts: 3,
+  reconnectionAttempts: 5,
   reconnectionDelay: 2000,
   timeout: 10000,
 });
@@ -15,16 +15,23 @@ socket.on('connect', () => {
   console.log('✅ Connected to notification server');
 });
 
-socket.on('disconnect', () => {
-  console.log('❌ Disconnected from notification server');
+socket.on('disconnect', (reason) => {
+  console.log('❌ Disconnected from notification server:', reason);
 });
 
 socket.on('connect_error', (error) => {
-  // Only log in development mode and if user is authenticated
-  if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined' && localStorage.getItem('token')) {
-    console.warn('⚠️ Notification server unavailable (this is normal if WebSocket server is not running)');
+  // Only log in development mode and if we actually tried to connect
+  if (process.env.NODE_ENV === 'development') {
+    // Check if user is authenticated before logging error
+    if (typeof window !== 'undefined' && localStorage.getItem('token')) {
+      console.warn('⚠️ Socket connection error:', error.message);
+    }
   }
-  // Silently fail - don't show errors to user
+  // Silently fail for unauthenticated users
+});
+
+socket.on('connected', (data) => {
+  console.log('📡 Server welcome:', data);
 });
 
 export default socket;

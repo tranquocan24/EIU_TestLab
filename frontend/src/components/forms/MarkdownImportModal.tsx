@@ -1,6 +1,6 @@
-'use client'
+"use client";
 
-import { useState, useRef } from 'react'
+import { useState, useRef } from "react";
 import {
   Dialog,
   DialogContent,
@@ -8,157 +8,174 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { Textarea } from '@/components/ui/textarea'
-import { Label } from '@/components/ui/label'
-import { Alert } from '@/components/ui/alert'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { Badge } from '@/components/ui/badge'
-import { Separator } from '@/components/ui/separator'
-import { FileUp, FileText, Eye, Download, AlertCircle, CheckCircle2 } from 'lucide-react'
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Alert } from "@/components/ui/alert";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import {
+  FileUp,
+  FileText,
+  Eye,
+  Download,
+  AlertCircle,
+  CheckCircle2,
+} from "lucide-react";
 
 interface Question {
-  questionOrder: number
-  questionType: 'multiple-choice' | 'multiple-select' | 'text'
-  questionText: string
-  points: number
-  options?: Array<{ optionOrder: number; optionText: string }>
-  correctAnswer: any
-  explanation?: string
+  questionOrder: number;
+  questionType: "multiple-choice" | "multiple-select" | "text";
+  questionText: string;
+  points: number;
+  options?: Array<{ optionOrder: number; optionText: string }>;
+  correctAnswer: any;
+  explanation?: string;
 }
 
 interface ParsedExam {
-  title: string
-  subject: string
-  duration: number
-  description?: string
-  questions: Question[]
+  title: string;
+  subject: string;
+  duration: number;
+  description?: string;
+  questions: Question[];
 }
 
 interface MarkdownImportModalProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  onImport: (examData: ParsedExam) => void
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onImport: (examData: ParsedExam) => void;
 }
 
-export function MarkdownImportModal({ open, onOpenChange, onImport }: MarkdownImportModalProps) {
-  const [markdownContent, setMarkdownContent] = useState('')
-  const [parsedExam, setParsedExam] = useState<ParsedExam | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
-  const fileInputRef = useRef<HTMLInputElement>(null)
+export function MarkdownImportModal({
+  open,
+  onOpenChange,
+  onImport,
+}: MarkdownImportModalProps) {
+  const [markdownContent, setMarkdownContent] = useState("");
+  const [parsedExam, setParsedExam] = useState<ParsedExam | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-    if (!file.name.endsWith('.md')) {
-      setError('Vui lòng chọn file có định dạng .md')
-      return
+    if (!file.name.endsWith(".md")) {
+      setError("Vui lòng chọn file có định dạng .md");
+      return;
     }
 
-    const reader = new FileReader()
+    const reader = new FileReader();
     reader.onload = (event) => {
-      const content = event.target?.result as string
-      setMarkdownContent(content)
-      setError('')
-      setSuccess('File đã được tải lên thành công!')
-      setTimeout(() => setSuccess(''), 3000)
-    }
+      const content = event.target?.result as string;
+      setMarkdownContent(content);
+      setError("");
+      setSuccess("File đã được tải lên thành công!");
+      setTimeout(() => setSuccess(""), 3000);
+    };
     reader.onerror = () => {
-      setError('Không thể đọc file. Vui lòng thử lại.')
-    }
-    reader.readAsText(file, 'UTF-8')
-  }
+      setError("Không thể đọc file. Vui lòng thử lại.");
+    };
+    reader.readAsText(file, "UTF-8");
+  };
 
   const handlePreview = async () => {
     if (!markdownContent.trim()) {
-      setError('Vui lòng nhập nội dung markdown hoặc tải file lên')
-      return
+      setError("Vui lòng nhập nội dung markdown hoặc tải file lên");
+      return;
     }
 
-    setIsLoading(true)
-    setError('')
-    setParsedExam(null)
+    setIsLoading(true);
+    setError("");
+    setParsedExam(null);
 
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/exams/import-markdown`,
+        `${
+          process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"
+        }/exams/import-markdown`,
         {
-          method: 'POST',
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
           body: JSON.stringify({ markdownContent }),
         }
-      )
+      );
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}))
-        throw new Error(errorData.message || `HTTP error! status: ${response.status}`)
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(
+          errorData.message || `HTTP error! status: ${response.status}`
+        );
       }
 
-      const data = await response.json()
-      setParsedExam(data)
-      setSuccess('Preview đã được tạo thành công!')
-      setTimeout(() => setSuccess(''), 3000)
+      const data = await response.json();
+      setParsedExam(data);
+      setSuccess("Preview đã được tạo thành công!");
+      setTimeout(() => setSuccess(""), 3000);
     } catch (err: any) {
-      console.error('Preview error:', err)
-      setError(err.message || 'Không thể parse markdown. Vui lòng kiểm tra định dạng.')
+      console.error("Preview error:", err);
+      setError(
+        err.message || "Không thể parse markdown. Vui lòng kiểm tra định dạng."
+      );
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleImport = () => {
     if (!parsedExam) {
-      setError('Vui lòng preview trước khi import')
-      return
+      setError("Vui lòng preview trước khi import");
+      return;
     }
 
-    onImport(parsedExam)
-    handleClose()
-  }
+    onImport(parsedExam);
+    handleClose();
+  };
 
   const handleClose = () => {
-    setMarkdownContent('')
-    setParsedExam(null)
-    setError('')
-    setSuccess('')
+    setMarkdownContent("");
+    setParsedExam(null);
+    setError("");
+    setSuccess("");
     if (fileInputRef.current) {
-      fileInputRef.current.value = ''
+      fileInputRef.current.value = "";
     }
-    onOpenChange(false)
-  }
+    onOpenChange(false);
+  };
 
   const getQuestionTypeLabel = (type: string) => {
     switch (type) {
-      case 'multiple-choice':
-        return 'Trắc nghiệm đơn'
-      case 'multiple-select':
-        return 'Trắc nghiệm nhiều lựa chọn'
-      case 'text':
-        return 'Tự luận'
+      case "multiple-choice":
+        return "Trắc nghiệm đơn";
+      case "multiple-select":
+        return "Trắc nghiệm nhiều lựa chọn";
+      case "text":
+        return "Tự luận";
       default:
-        return type
+        return type;
     }
-  }
+  };
 
   const getQuestionTypeBadgeColor = (type: string) => {
     switch (type) {
-      case 'multiple-choice':
-        return 'bg-blue-100 text-blue-800'
-      case 'multiple-select':
-        return 'bg-purple-100 text-purple-800'
-      case 'text':
-        return 'bg-green-100 text-green-800'
+      case "multiple-choice":
+        return "bg-blue-100 text-blue-800";
+      case "multiple-select":
+        return "bg-purple-100 text-purple-800";
+      case "text":
+        return "bg-green-100 text-green-800";
       default:
-        return 'bg-gray-100 text-gray-800'
+        return "bg-gray-100 text-gray-800";
     }
-  }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -168,7 +185,7 @@ export function MarkdownImportModal({ open, onOpenChange, onImport }: MarkdownIm
             Import Đề Thi từ Markdown
           </DialogTitle>
           <DialogDescription>
-            Tải file .md hoặc paste nội dung markdown để import đề thi.{' '}
+            Tải file .md hoặc paste nội dung markdown để import đề thi.{" "}
             <a
               href="/markdown_guide.md"
               target="_blank"
@@ -201,7 +218,10 @@ export function MarkdownImportModal({ open, onOpenChange, onImport }: MarkdownIm
             <div className="space-y-4 flex-1 overflow-auto">
               {/* File Upload */}
               <div className="space-y-2">
-                <Label htmlFor="file-upload" className="text-sm font-medium text-gray-700">
+                <Label
+                  htmlFor="file-upload"
+                  className="text-sm font-medium text-gray-700"
+                >
                   Tải file Markdown
                 </Label>
                 <div className="flex items-center gap-2">
@@ -233,7 +253,10 @@ export function MarkdownImportModal({ open, onOpenChange, onImport }: MarkdownIm
 
               {/* Text Input */}
               <div className="space-y-2 flex-1 flex flex-col">
-                <Label htmlFor="markdown-content" className="text-sm font-medium text-gray-700">
+                <Label
+                  htmlFor="markdown-content"
+                  className="text-sm font-medium text-gray-700"
+                >
                   Paste nội dung Markdown
                 </Label>
                 <Textarea
@@ -276,28 +299,44 @@ export function MarkdownImportModal({ open, onOpenChange, onImport }: MarkdownIm
                       {parsedExam.title}
                     </h3>
                     {parsedExam.description && (
-                      <p className="text-sm text-gray-600">{parsedExam.description}</p>
+                      <p className="text-sm text-gray-600">
+                        {parsedExam.description}
+                      </p>
                     )}
                   </div>
                   <div className="flex flex-wrap gap-4 text-sm">
                     <div className="flex items-center gap-2">
-                      <span className="font-medium text-gray-700">Môn học:</span>
-                      <span className="text-gray-900">{parsedExam.subject}</span>
+                      <span className="font-medium text-gray-700">
+                        Môn học:
+                      </span>
+                      <span className="text-gray-900">
+                        {parsedExam.subject}
+                      </span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="font-medium text-gray-700">Thời gian:</span>
-                      <span className="text-gray-900">{parsedExam.duration} phút</span>
+                      <span className="font-medium text-gray-700">
+                        Thời gian:
+                      </span>
+                      <span className="text-gray-900">
+                        {parsedExam.duration} phút
+                      </span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="font-medium text-gray-700">Số câu hỏi:</span>
-                      <span className="text-gray-900">{parsedExam.questions.length}</span>
+                      <span className="font-medium text-gray-700">
+                        Số câu hỏi:
+                      </span>
+                      <span className="text-gray-900">
+                        {parsedExam.questions.length}
+                      </span>
                     </div>
                   </div>
                 </div>
 
                 {/* Questions List */}
                 <div className="space-y-4">
-                  <h4 className="text-md font-semibold text-[#112444]">Danh sách câu hỏi:</h4>
+                  <h4 className="text-md font-semibold text-[#112444]">
+                    Danh sách câu hỏi:
+                  </h4>
                   {parsedExam.questions.map((question, index) => (
                     <div
                       key={index}
@@ -310,7 +349,9 @@ export function MarkdownImportModal({ open, onOpenChange, onImport }: MarkdownIm
                               Câu {question.questionOrder}:
                             </span>
                             <Badge
-                              className={getQuestionTypeBadgeColor(question.questionType)}
+                              className={getQuestionTypeBadgeColor(
+                                question.questionType
+                              )}
                             >
                               {getQuestionTypeLabel(question.questionType)}
                             </Badge>
@@ -318,33 +359,41 @@ export function MarkdownImportModal({ open, onOpenChange, onImport }: MarkdownIm
                               {question.points} điểm
                             </Badge>
                           </div>
-                          <p className="text-sm text-gray-800 mb-3">{question.questionText}</p>
+                          <p className="text-sm text-gray-800 mb-3">
+                            {question.questionText}
+                          </p>
 
                           {/* Options for multiple choice/select */}
                           {question.options && question.options.length > 0 && (
                             <div className="space-y-1 ml-4">
                               {question.options.map((option, optIndex) => {
                                 const isCorrect =
-                                  question.questionType === 'multiple-choice'
-                                    ? question.correctAnswer === option.optionText
+                                  question.questionType === "multiple-choice"
+                                    ? question.correctAnswer ===
+                                      option.optionText
                                     : Array.isArray(question.correctAnswer) &&
-                                      question.correctAnswer.includes(option.optionText)
+                                      question.correctAnswer.includes(
+                                        option.optionText
+                                      );
 
                                 return (
                                   <div
                                     key={optIndex}
                                     className={`text-sm px-2 py-1 rounded ${
                                       isCorrect
-                                        ? 'bg-green-50 text-green-800 font-medium'
-                                        : 'text-gray-600'
+                                        ? "bg-green-50 text-green-800 font-medium"
+                                        : "text-gray-600"
                                     }`}
                                   >
-                                    {String.fromCharCode(65 + optIndex)}. {option.optionText}
+                                    {String.fromCharCode(65 + optIndex)}.{" "}
+                                    {option.optionText}
                                     {isCorrect && (
-                                      <span className="ml-2 text-green-600">✓</span>
+                                      <span className="ml-2 text-green-600">
+                                        ✓
+                                      </span>
                                     )}
                                   </div>
-                                )
+                                );
                               })}
                             </div>
                           )}
@@ -352,7 +401,8 @@ export function MarkdownImportModal({ open, onOpenChange, onImport }: MarkdownIm
                           {/* Explanation */}
                           {question.explanation && (
                             <div className="mt-2 text-xs text-gray-600 italic bg-blue-50 px-2 py-1 rounded">
-                              <strong>Giải thích:</strong> {question.explanation}
+                              <strong>Giải thích:</strong>{" "}
+                              {question.explanation}
                             </div>
                           )}
                         </div>
@@ -381,8 +431,8 @@ export function MarkdownImportModal({ open, onOpenChange, onImport }: MarkdownIm
                 type="button"
                 variant="outline"
                 onClick={() => {
-                  setParsedExam(null)
-                  setError('')
+                  setParsedExam(null);
+                  setError("");
                 }}
                 className="w-full sm:w-auto"
               >
@@ -402,5 +452,5 @@ export function MarkdownImportModal({ open, onOpenChange, onImport }: MarkdownIm
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
