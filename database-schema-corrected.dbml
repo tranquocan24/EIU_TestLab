@@ -1,0 +1,205 @@
+// EIU TestLab Database Schema (Corrected - No Messages)
+// This schema reflects the actual Prisma schema implementation
+
+Table users {
+  id uuid [pk, default: `uuid()`]
+  username varchar(255) [unique, not null]
+  password varchar(255) [not null, note: 'Hashed with bcrypt']
+  email varchar(255) [unique, null]
+  name varchar(255) [not null]
+  role enum('ADMIN', 'TEACHER', 'STUDENT') [not null, default: 'STUDENT']
+  courses text[] [default: '{}', note: 'Array of enrolled course codes']
+  isActive boolean [not null, default: true]
+  createdAt timestamp [not null, default: `now()`]
+  updatedAt timestamp [not null]
+  
+  indexes {
+    (username) [unique]
+    (email) [unique]
+    (role)
+  }
+}
+
+Table exams {
+  id uuid [pk, default: `uuid()`]
+  title varchar(255) [not null]
+  description text [null]
+  subject varchar(100) [not null]
+  duration int [not null, note: 'Duration in minutes']
+  passingScore int [not null, default: 60, note: 'Minimum passing percentage']
+  maxAttempts int [null, note: 'Max attempts allowed, NULL = unlimited']
+  status enum('DRAFT', 'PUBLISHED', 'ARCHIVED') [not null, default: 'DRAFT']
+  allowedCourses varchar(500) [null, note: 'Comma-separated course codes']
+  startTime timestamp [null]
+  endTime timestamp [null]
+  createdById uuid [not null, ref: > users.id]
+  createdAt timestamp [not null, default: `now()`]
+  updatedAt timestamp [not null]
+  
+  indexes {
+    (createdById)
+    (status)
+    (startTime, endTime)
+  }
+}
+
+Table questions {
+  id uuid [pk, default: `uuid()`]
+  question text [not null]
+  type varchar(50) [not null, default: 'multiple-choice', note: 'multiple-choice, true-false, essay']
+  points int [not null, default: 10]
+  order int [not null, default: 0]
+  examId uuid [not null, ref: > exams.id, delete: cascade]
+  createdAt timestamp [not null, default: `now()`]
+  updatedAt timestamp [not null]
+  
+  indexes {
+    (examId)
+    (examId, order)
+  }
+}
+
+Table question_options {
+  id uuid [pk, default: `uuid()`]
+  option text [not null]
+  isCorrect boolean [not null, default: false]
+  order int [not null, default: 0]
+  questionId uuid [not null, ref: > questions.id, delete: cascade]
+  
+  indexes {
+    (questionId)
+    (questionId, order)
+  }
+}
+
+Table attempts {
+  id uuid [pk, default: `uuid()`]
+  status enum('IN_PROGRESS', 'SUBMITTED', 'GRADED') [not null, default: 'IN_PROGRESS']
+  score float [null, note: 'Final calculated score']
+  attemptNumber int [not null, default: 1, note: 'Sequential attempt number']
+  startedAt timestamp [not null, default: `now()`]
+  submittedAt timestamp [null]
+  timeSpent int [null, note: 'Time spent in seconds']
+  studentId uuid [not null, ref: > users.id]
+  examId uuid [not null, ref: > exams.id]
+  createdAt timestamp [not null, default: `now()`]
+  updatedAt timestamp [not null]
+  
+  indexes {
+    (studentId)
+    (examId)
+    (studentId, examId)
+    (status)
+  }
+}
+
+Table answers {
+  id uuid [pk, default: `uuid()`]
+  selectedOption varchar(255) [null, note: 'Selected option ID for MCQ']
+  answerText text [null, note: 'Text answer for essay questions']
+  isCorrect boolean [not null, default: false]
+  points float [not null, default: 0, note: 'Points awarded']
+  attemptId uuid [not null, ref: > attempts.id, delete: cascade]
+  questionId uuid [not null, ref: > questions.id]
+  createdAt timestamp [not null, default: `now()`]
+  updatedAt timestamp [not null]
+  
+  indexes {
+    (attemptId, questionId) [unique, name: 'unique_answer_per_question']
+    (attemptId)
+    (questionId)
+  }
+}
+
+Table notifications {
+  id uuid [pk, default: `uuid()`]
+  userId uuid [not null, ref: > users.id, delete: cascade]
+  type enum('EXAM_CREATED', 'EXAM_UPDATED', 'EXAM_REMINDER', 'EXAM_STARTED', 'EXAM_ENDING', 'EXAM_ENDED', 'MESSAGE_RECEIVED', 'SUSPICIOUS_ACTIVITY', 'TAB_SWITCH_WARNING', 'SCREEN_SHARING_DETECTED', 'COPY_PASTE_ATTEMPT', 'IP_VIOLATION', 'FINGERPRINT_MISMATCH', 'SYSTEM', 'GRADE_PUBLISHED', 'ATTEMPT_SUBMITTED') [not null]
+  priority enum('LOW', 'MEDIUM', 'HIGH', 'URGENT') [not null, default: 'MEDIUM']
+  title varchar(255) [not null]
+  message text [not null]
+  channels enum('IN_APP', 'EMAIL', 'PUSH')[] [not null, default: '{"IN_APP"}']
+  examId uuid [null, ref: > exams.id, delete: cascade]
+  attemptId varchar(255) [null]
+  metadata json [null, note: 'Additional flexible data']
+  isRead boolean [not null, default: false]
+  readAt timestamp [null]
+  sentViaEmail boolean [not null, default: false]
+  sentViaPush boolean [not null, default: false]
+  emailSentAt timestamp [null]
+  pushSentAt timestamp [null]
+  createdAt timestamp [not null, default: `now()`]
+  updatedAt timestamp [not null]
+  
+  indexes {
+    (userId)
+    (userId, isRead)
+    (userId, type)
+    (createdAt)
+  }
+}
+
+Table notification_preferences {
+  id uuid [pk, default: `uuid()`]
+  userId uuid [unique, not null, ref: - users.id, delete: cascade, note: '1-to-1 relationship']
+  enableInApp boolean [not null, default: true]
+  enableEmail boolean [not null, default: true]
+  enablePush boolean [not null, default: false]
+  examCreated boolean [not null, default: true]
+  examUpdated boolean [not null, default: true]
+  examReminder boolean [not null, default: true]
+  examStarted boolean [not null, default: true]
+  examEnding boolean [not null, default: true]
+  examEnded boolean [not null, default: true]
+  messageReceived boolean [not null, default: true]
+  suspiciousActivity boolean [not null, default: true]
+  tabSwitchWarning boolean [not null, default: true]
+  screenSharingDetected boolean [not null, default: true]
+  copyPasteAttempt boolean [not null, default: true]
+  ipViolation boolean [not null, default: true]
+  fingerprintMismatch boolean [not null, default: true]
+  system boolean [not null, default: true]
+  gradePublished boolean [not null, default: true]
+  attemptSubmitted boolean [not null, default: true]
+  emailDigestEnabled boolean [not null, default: false]
+  emailDigestFrequency varchar(50) [not null, default: 'DAILY', note: 'REALTIME, DAILY, WEEKLY']
+  createdAt timestamp [not null, default: `now()`]
+  updatedAt timestamp [not null]
+  
+  indexes {
+    (userId) [unique]
+  }
+}
+
+Table notification_templates {
+  id uuid [pk, default: `uuid()`]
+  type enum('EXAM_CREATED', 'EXAM_UPDATED', 'EXAM_REMINDER', 'EXAM_STARTED', 'EXAM_ENDING', 'EXAM_ENDED', 'MESSAGE_RECEIVED', 'SUSPICIOUS_ACTIVITY', 'TAB_SWITCH_WARNING', 'SCREEN_SHARING_DETECTED', 'COPY_PASTE_ATTEMPT', 'IP_VIOLATION', 'FINGERPRINT_MISMATCH', 'SYSTEM', 'GRADE_PUBLISHED', 'ATTEMPT_SUBMITTED') [unique, not null]
+  titleTemplate varchar(255) [not null, note: 'Template with variables']
+  messageTemplate text [not null, note: 'Template with variables']
+  emailSubject varchar(500) [null]
+  emailBody text [null, note: 'HTML or plain text']
+  pushTitle varchar(255) [null]
+  pushBody text [null]
+  variables json [null, note: 'Available template variables']
+  createdAt timestamp [not null, default: `now()`]
+  updatedAt timestamp [not null]
+  
+  indexes {
+    (type) [unique]
+  }
+}
+
+// Relationships Summary
+// User (1) ---< (N) Exam: One teacher creates many exams
+// Exam (1) ---< (N) Question: One exam has many questions
+// Question (1) ---< (N) QuestionOption: One question has many options
+// User (1) ---< (N) Attempt: One student makes many attempts
+// Exam (1) ---< (N) Attempt: One exam has many attempts
+// Attempt (1) ---< (N) Answer: One attempt has many answers
+// Question (1) ---< (N) Answer: One question has many answer instances
+// User (1) ---< (N) Notification: One user receives many notifications
+// User (1) --- (1) NotificationPreference: One-to-one relationship
+// Exam (1) ---< (N) Notification: One exam can generate many notifications
+// NotificationType (1) --- (1) NotificationTemplate: One-to-one relationship
+
+// Note: Messages table has been excluded as per requirements
