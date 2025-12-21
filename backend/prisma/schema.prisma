@@ -69,7 +69,7 @@ model User {
   email     String?  @unique
   name      String
   role      UserRole @default(STUDENT)
-  courses   String[] @default([]) // Danh sách lớp (ví dụ: ["CSE301", "CSE302"])
+  courses   String[] @default([]) // Danh sách lớp (ví dụ: ["CSE301", "CSE302"]) - DEPRECATED: Use coursesEnrolled instead
   isActive  Boolean  @default(true)
   
   createdAt DateTime @default(now())
@@ -82,6 +82,7 @@ model User {
   notificationPreference   NotificationPreference?
   sentMessages             Message[]                 @relation("MessageSender")
   receivedMessages         Message[]                 @relation("MessageReceiver")
+  coursesEnrolled          CourseEnrollment[]        @relation("UserEnrollments")
   
   @@map("users")
 }
@@ -312,4 +313,37 @@ model Message {
   @@map("messages")
   @@index([senderId, receiverId])
   @@index([receiverId, isRead])
+}
+
+model Course {
+  id          String   @id @default(uuid())
+  code        String   @unique // CSE301, CSE302, etc.
+  name        String   // Lập trình Web, Cơ sở dữ liệu, etc.
+  description String?
+  isActive    Boolean  @default(true)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  enrollments CourseEnrollment[]
+  
+  @@map("courses")
+}
+
+model CourseEnrollment {
+  id        String   @id @default(uuid())
+  
+  userId    String
+  user      User     @relation("UserEnrollments", fields: [userId], references: [id], onDelete: Cascade)
+  
+  courseId  String
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  
+  enrolledAt DateTime @default(now())
+  
+  @@unique([userId, courseId])
+  @@map("course_enrollments")
+  @@index([userId])
+  @@index([courseId])
 }

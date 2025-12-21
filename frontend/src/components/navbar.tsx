@@ -22,6 +22,7 @@ import {
   PlusCircle,
   Menu,
   X,
+  BookOpen,
 } from "lucide-react";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 
@@ -72,6 +73,7 @@ export function Navbar() {
         return [
           { href: "/admin", label: "Trang chủ", icon: Home },
           { href: "/admin/users", label: "Quản lý người dùng", icon: User },
+          { href: "/admin/courses", label: "Quản lý lớp học", icon: BookOpen },
           { href: "/admin/exams", label: "Quản lý bài thi", icon: FileText },
           { href: "/admin/stats", label: "Thống kê", icon: BarChart },
         ];

@@ -1,4 +1,13 @@
 // Global type definitions for Online Exam System
+
+export interface CourseEnrollment {
+  course: {
+    id: string;
+    code: string;
+    name: string;
+  };
+}
+
 export interface User {
   id: string;
   username: string;
@@ -7,7 +16,8 @@ export interface User {
   email?: string;
   isActive?: boolean;
   subject?: string; // For teachers
-  courses?: string[]; // Array of course codes (e.g., ["CSE301", "CSE302"])
+  courses?: string[]; // Array of course codes (e.g., ["CSE301", "CSE302"]) - OLD SYSTEM
+  coursesEnrolled?: CourseEnrollment[]; // NEW SYSTEM - Relational courses
   createdAt: string;
   updatedAt?: string;
 }

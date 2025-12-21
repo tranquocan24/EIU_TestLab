@@ -18,6 +18,17 @@ export class UsersService {
         courses: true,
         isActive: true,
         createdAt: true,
+        coursesEnrolled: {
+          select: {
+            course: {
+              select: {
+                id: true,
+                code: true,
+                name: true,
+              },
+            },
+          },
+        },
       },
     });
   }
@@ -34,6 +45,17 @@ export class UsersService {
         courses: true,
         isActive: true,
         createdAt: true,
+        coursesEnrolled: {
+          select: {
+            course: {
+              select: {
+                id: true,
+                code: true,
+                name: true,
+              },
+            },
+          },
+        },
       },
     });
   }

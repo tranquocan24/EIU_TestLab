@@ -383,6 +383,61 @@ class ApiClient {
       await this.client.put('/notifications/preferences', preferences);
     return response.data;
   }
+
+  // Courses endpoints
+  async getCourses(): Promise<any[]> {
+    const response = await this.client.get('/courses');
+    return response.data;
+  }
+
+  async getCourse(id: string): Promise<any> {
+    const response = await this.client.get(`/courses/${id}`);
+    return response.data;
+  }
+
+  async createCourse(data: {
+    code: string;
+    name: string;
+    description?: string;
+    isActive?: boolean;
+  }): Promise<any> {
+    const response = await this.client.post('/courses', data);
+    return response.data;
+  }
+
+  async updateCourse(id: string, data: {
+    code?: string;
+    name?: string;
+    description?: string;
+    isActive?: boolean;
+  }): Promise<any> {
+    const response = await this.client.patch(`/courses/${id}`, data);
+    return response.data;
+  }
+
+  async deleteCourse(id: string): Promise<void> {
+    await this.client.delete(`/courses/${id}`);
+  }
+
+  async enrollUsers(courseId: string, userIds: string[]): Promise<any> {
+    const response = await this.client.post(`/courses/${courseId}/enroll`, { userIds });
+    return response.data;
+  }
+
+  async unenrollUsers(courseId: string, userIds: string[]): Promise<any> {
+    const response = await this.client.post(`/courses/${courseId}/unenroll`, { userIds });
+    return response.data;
+  }
+
+  async getEnrolledUsers(courseId: string): Promise<any[]> {
+    const response = await this.client.get(`/courses/${courseId}/enrolled-users`);
+    return response.data;
+  }
+
+  async getAvailableUsers(courseId: string): Promise<any[]> {
+    const response = await this.client.get(`/courses/${courseId}/available-users`);
+    return response.data;
+  }
 }
 
 // Create and export singleton instance

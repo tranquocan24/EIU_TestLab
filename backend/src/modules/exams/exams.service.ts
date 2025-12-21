@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '@/common/prisma/prisma.service';
 import { CreateExamDto, UpdateExamDto } from './dto';
 import { MarkdownParserService } from './markdown-parser.service';
+import { CourseHelper } from '@/common/helpers/course.helper';
 
 @Injectable()
 export class ExamsService {
@@ -10,23 +11,29 @@ export class ExamsService {
     private readonly markdownParser: MarkdownParserService,
   ) { }
 
-  async findAll(userId?: string, userRole?: string, userCourses?: string | string[]) {
+  async findAll(userId?: string, userRole?: string) {
     // Build where condition based on user role
     let whereCondition: any = {};
 
-    // If student, filter by allowedCourses matching student's courses
-    if (userRole === 'STUDENT' && userCourses) {
-      // Handle both array and string formats
-      const studentCoursesArray = Array.isArray(userCourses)
-        ? userCourses
-        : userCourses.split(',').map(c => c.trim());
+    // If student, use CourseHelper to get accessible exams
+    if (userRole === 'STUDENT' && userId) {
+      // Get user's course codes from both old and new system
+      const studentCoursesArray = await CourseHelper.getUserCourseCodes(userId);
 
-      // Find exams where allowedCourses contains at least one of student's courses
-      whereCondition.OR = studentCoursesArray.map(course => ({
-        allowedCourses: {
-          contains: course
-        }
-      }));
+      if (studentCoursesArray.length > 0) {
+        // Find exams where allowedCourses contains at least one of student's courses
+        whereCondition.OR = [
+          // Exams with no course restriction
+          { allowedCourses: null },
+          { allowedCourses: '' },
+          // Exams matching student's courses
+          ...studentCoursesArray.map(course => ({
+            allowedCourses: {
+              contains: course
+            }
+          }))
+        ];
+      }
 
       // Only show published exams to students
       whereCondition.status = 'PUBLISHED';

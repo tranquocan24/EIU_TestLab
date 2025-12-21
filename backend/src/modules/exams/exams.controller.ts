@@ -13,7 +13,7 @@ export class ExamsController {
 
   @Get()
   findAll(@GetUser() user: any) {
-    return this.examsService.findAll(user.id, user.role, user.courses);
+    return this.examsService.findAll(user.id, user.role);
   }
 
   @Get(':id')
