@@ -23,6 +23,11 @@ export class AttemptsService {
       throw new NotFoundException(`Exam with ID ${examId} not found`);
     }
 
+    // Check if exam is archived
+    if (exam.status === 'ARCHIVED') {
+      throw new BadRequestException('This exam has been archived and is no longer available for taking. You can only view results.');
+    }
+
     // Check if exam has questions
     if (!exam.questions || exam.questions.length === 0) {
       throw new BadRequestException('This exam has no questions');

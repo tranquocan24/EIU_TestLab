@@ -202,12 +202,20 @@ export default function ManageExamsPage() {
 
   const handleDuplicate = async (examId: string) => {
     try {
-      const exam = await api.getExamById(examId);
-      // TODO: Implement duplicate logic - copy exam with new title
-      alert("Tính năng nhân bản đề thi đang được phát triển!");
-    } catch (error) {
+      setLoading(true);
+      const result = await api.duplicateExam(examId);
+      console.log("Duplicate result:", result);
+      alert(result.message || "Nhân bản đề thi thành công!");
+      await loadExams(); // Reload list
+    } catch (error: any) {
       console.error("Error duplicating exam:", error);
-      alert("Không thể nhân bản đề thi!");
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        "Không thể nhân bản đề thi. Vui lòng thử lại!";
+      alert(errorMessage);
+    } finally {
+      setLoading(false);
     }
   };
 

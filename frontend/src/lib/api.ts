@@ -206,6 +206,44 @@ class ApiClient {
     }
   }
 
+  async duplicateExam(id: string): Promise<ApiResponse<Exam>> {
+    try {
+      const response: AxiosResponse<Exam> = await this.client.post(`/exams/${id}/duplicate`);
+      console.log('Duplicate exam response:', response.data);
+      return {
+        success: true,
+        data: response.data,
+        message: 'Nhân bản đề thi thành công',
+      };
+    } catch (error: any) {
+      console.error('Duplicate exam error details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      });
+      throw error;
+    }
+  }
+
+  async archiveExam(id: string): Promise<ApiResponse<Exam>> {
+    try {
+      const response: AxiosResponse<any> = await this.client.put(`/exams/${id}/archive`);
+      console.log('Archive exam response:', response.data);
+      return {
+        success: true,
+        data: response.data.exam,
+        message: response.data.message || 'Lưu trữ đề thi thành công',
+      };
+    } catch (error: any) {
+      console.error('Archive exam error details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      });
+      throw error;
+    }
+  }
+
   async importMarkdownExam(markdownContent: string): Promise<any> {
     const response = await this.client.post('/exams/import-markdown', { 
       markdownContent 

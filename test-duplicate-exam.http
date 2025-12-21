@@ -1,0 +1,16 @@
+### Login as Teacher
+POST http://localhost:4000/auth/login
+Content-Type: application/json
+
+{
+  "username": "teacher1",
+  "password": "12345678"
+}
+
+### Get all exams (use token from login response)
+GET http://localhost:4000/exams
+Authorization: Bearer YOUR_TOKEN_HERE
+
+### Duplicate exam (replace EXAM_ID and YOUR_TOKEN_HERE)
+POST http://localhost:4000/exams/EXAM_ID/duplicate
+Authorization: Bearer YOUR_TOKEN_HERE

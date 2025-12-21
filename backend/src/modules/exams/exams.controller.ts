@@ -35,11 +35,25 @@ export class ExamsController {
     return this.examsService.parseMarkdown(importMarkdownDto.markdownContent);
   }
 
+  @Put(':id/archive')
+  @UseGuards(RolesGuard)
+  @Roles('ADMIN')
+  archive(@Param('id') id: string) {
+    return this.examsService.archiveExam(id);
+  }
+
   @Put(':id')
   @UseGuards(RolesGuard)
   @Roles('TEACHER', 'ADMIN')
   update(@Param('id') id: string, @Body() updateExamDto: UpdateExamDto) {
     return this.examsService.update(id, updateExamDto);
+  }
+
+  @Post(':id/duplicate')
+  @UseGuards(RolesGuard)
+  @Roles('TEACHER', 'ADMIN')
+  duplicate(@Param('id') id: string, @GetUser('id') userId: string) {
+    return this.examsService.duplicate(id, userId);
   }
 
   @Delete(':id')

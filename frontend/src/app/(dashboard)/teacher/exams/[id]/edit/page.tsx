@@ -121,16 +121,11 @@ export default function EditExamPage() {
                 ? user.courses
                 : (typeof user.courses === 'string' ? user.courses.split(',').map(c => c.trim()).filter(Boolean) : [])
             setTeacherCourses(coursesArray)
-
-            // Auto-select first course if available
-            if (coursesArray.length > 0 && !selectedCourse) {
-                setSelectedCourse(coursesArray[0])
-            }
         }
 
         // Load exam data
         loadExamData()
-    }, [isAuthenticated, user, router, loadExamData, selectedCourse])
+    }, [isAuthenticated, user, router, loadExamData])
 
     const addQuestion = (type: 'multiple-choice' | 'essay') => {
         const newQuestion: Question = {

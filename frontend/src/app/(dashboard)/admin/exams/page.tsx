@@ -149,6 +149,33 @@ export default function AdminExamsPage() {
     }
   };
 
+  const handleViewExam = (examId: string) => {
+    router.push(`/admin/exams/${examId}`);
+  };
+
+  const handleArchiveExam = async (examId: string) => {
+    if (
+      !confirm(
+        "Bạn có chắc chắn muốn lưu trữ đề thi này? Học sinh sẽ không thể làm bài nữa, chỉ có thể xem kết quả."
+      )
+    ) {
+      return;
+    }
+
+    try {
+      const result = await api.archiveExam(examId);
+      alert(result.message || "Lưu trữ đề thi thành công!");
+      await loadExams();
+    } catch (error: any) {
+      console.error("Error archiving exam:", error);
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        "Có lỗi xảy ra. Vui lòng thử lại!";
+      alert(errorMessage);
+    }
+  };
+
   const stats = {
     total: exams.length,
     published: exams.filter((e) => e.status === "PUBLISHED").length,
@@ -321,16 +348,32 @@ export default function AdminExamsPage() {
                       </td>
                       <td className="py-3 px-4">
                         <div className="flex gap-2">
-                          <Button variant="outline" size="sm">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleViewExam(exam.id)}
+                            title="Xem chi tiết"
+                          >
                             <Eye className="h-4 w-4" />
                           </Button>
-                          <Button variant="outline" size="sm">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleArchiveExam(exam.id)}
+                            disabled={exam.status === "ARCHIVED"}
+                            title={
+                              exam.status === "ARCHIVED"
+                                ? "Đã lưu trữ"
+                                : "Lưu trữ đề thi"
+                            }
+                          >
                             <Archive className="h-4 w-4" />
                           </Button>
                           <Button
                             variant="outline"
                             size="sm"
                             onClick={() => handleDeleteExam(exam.id)}
+                            title="Xóa đề thi"
                           >
                             <Trash2 className="h-4 w-4 text-red-600" />
                           </Button>

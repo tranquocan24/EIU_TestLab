@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '@/common/prisma/prisma.service';
 import { CreateExamDto, UpdateExamDto } from './dto';
 import { MarkdownParserService } from './markdown-parser.service';
@@ -316,6 +316,94 @@ export class ExamsService {
   }
 
   /**
+   * Duplicate an existing exam with all its questions and options
+   */
+  async duplicate(id: string, userId: string) {
+    // Find the original exam with all questions and options
+    const originalExam = await this.prisma.exam.findUnique({
+      where: { id },
+      include: {
+        questions: {
+          include: {
+            options: true,
+          },
+          orderBy: {
+            order: 'asc',
+          },
+        },
+      },
+    });
+
+    if (!originalExam) {
+      throw new NotFoundException(`Exam with ID ${id} not found`);
+    }
+
+    // Create a new exam with duplicated data
+    const duplicatedExam = await this.prisma.exam.create({
+      data: {
+        title: `${originalExam.title} (Bản sao)`,
+        subject: originalExam.subject,
+        duration: originalExam.duration,
+        description: originalExam.description,
+        status: 'DRAFT', // Always set duplicated exams to DRAFT
+        allowedCourses: originalExam.allowedCourses,
+        maxAttempts: originalExam.maxAttempts,
+        passingScore: originalExam.passingScore,
+        createdById: userId,
+        questions: {
+          create: originalExam.questions.map((q) => ({
+            question: q.question,
+            type: q.type,
+            points: q.points,
+            order: q.order,
+            options: {
+              create: q.options.map((opt) => ({
+                option: opt.option,
+                isCorrect: opt.isCorrect,
+                order: opt.order,
+              })),
+            },
+          })),
+        },
+      },
+      include: {
+        createdBy: {
+          select: {
+            id: true,
+            name: true,
+            username: true,
+          },
+        },
+        questions: {
+          include: {
+            options: true,
+          },
+          orderBy: {
+            order: 'asc',
+          },
+        },
+      },
+    });
+
+    // Create notification for the teacher
+    try {
+      await this.prisma.notification.create({
+        data: {
+          userId: userId,
+          type: 'EXAM_CREATED',
+          title: `Đã nhân bản bài kiểm tra: ${duplicatedExam.title}`,
+          message: `Bản sao của "${originalExam.title}" đã được tạo`,
+          examId: duplicatedExam.id,
+        },
+      });
+    } catch (error) {
+      console.error('Error creating notification:', error);
+    }
+
+    return duplicatedExam;
+  }
+
+  /**
    * Parse markdown content and return exam data for preview (not saved to DB)
    */
   async parseMarkdown(markdownContent: string) {
@@ -351,5 +439,47 @@ export class ExamsService {
 
     // Save to database using existing create method
     return this.create(createExamDto, userId);
+  }
+
+  /**
+   * Archive an exam - prevents new attempts, only results can be viewed
+   */
+  async archiveExam(examId: string) {
+    const exam = await this.prisma.exam.findUnique({
+      where: { id: examId },
+    });
+
+    if (!exam) {
+      throw new NotFoundException(`Exam with ID ${examId} not found`);
+    }
+
+    if (exam.status === 'ARCHIVED') {
+      throw new BadRequestException('Exam is already archived');
+    }
+
+    const updatedExam = await this.prisma.exam.update({
+      where: { id: examId },
+      data: { status: 'ARCHIVED' },
+      include: {
+        createdBy: {
+          select: {
+            id: true,
+            name: true,
+            username: true,
+          },
+        },
+        _count: {
+          select: {
+            questions: true,
+            attempts: true,
+          },
+        },
+      },
+    });
+
+    return {
+      message: 'Exam has been archived successfully. Students can no longer take this exam.',
+      exam: updatedExam,
+    };
   }
 }
