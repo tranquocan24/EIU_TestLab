@@ -20,6 +20,10 @@ import {
   Trash2,
   Archive,
   RefreshCw,
+  BookOpen,
+  CheckCircle,
+  Edit,
+  FolderArchive,
 } from "lucide-react";
 import api from "@/lib/api";
 
@@ -209,7 +213,7 @@ export default function AdminExamsPage() {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#112444] mx-auto mb-4"></div>
           <p className="text-gray-600">Đang tải danh sách đề thi...</p>
         </div>
       </div>
@@ -219,9 +223,21 @@ export default function AdminExamsPage() {
   return (
     <div className="space-y-6 animate-fadeInUp">
       {/* Header */}
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-gray-800">Quản lý bài thi</h1>
-        <Button variant="outline" onClick={loadExams}>
+      <div className="eiu-gradient-primary text-white p-6 rounded-2xl shadow-lg flex justify-between items-center">
+        <div>
+          <div className="flex items-center gap-3 mb-2">
+            <BookOpen className="h-8 w-8" />
+            <h1 className="text-3xl font-bold">Quản lý bài thi</h1>
+          </div>
+          <p className="text-blue-100 ml-11">
+            Quản lý và theo dõi các đề thi trong hệ thống
+          </p>
+        </div>
+        <Button
+          variant="outline"
+          onClick={loadExams}
+          className="bg-white/10 border-white/30 text-white hover:bg-white hover:text-[#112444] smooth-transition"
+        >
           <RefreshCw className="h-4 w-4 mr-2" />
           Làm mới
         </Button>
@@ -229,34 +245,60 @@ export default function AdminExamsPage() {
 
       {/* Statistics */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card className="border-l-4 border-l-gray-500">
-          <CardContent className="p-4">
-            <div className="text-sm text-gray-600">Tổng số</div>
-            <div className="text-2xl font-bold text-gray-800">
+        <Card className="stat-card card-hover-lift border-none shadow-md bg-gradient-to-br from-gray-50 to-gray-100">
+          <CardContent className="p-5">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 bg-gray-500 rounded-lg">
+                <FileText className="h-5 w-5 text-white" />
+              </div>
+              <div className="text-sm text-gray-600 font-medium">Tổng số</div>
+            </div>
+            <div className="text-3xl font-bold text-gray-800">
               {stats.total}
             </div>
           </CardContent>
         </Card>
-        <Card className="border-l-4 border-l-green-500">
-          <CardContent className="p-4">
-            <div className="text-sm text-gray-600">Đã xuất bản</div>
-            <div className="text-2xl font-bold text-green-600">
+        <Card className="stat-card card-hover-lift border-none shadow-md bg-gradient-to-br from-green-50 to-green-100">
+          <CardContent className="p-5">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 bg-green-500 rounded-lg">
+                <CheckCircle className="h-5 w-5 text-white" />
+              </div>
+              <div className="text-sm text-green-700 font-medium">
+                Đã xuất bản
+              </div>
+            </div>
+            <div className="text-3xl font-bold text-green-600">
               {stats.published}
             </div>
           </CardContent>
         </Card>
-        <Card className="border-l-4 border-l-yellow-500">
-          <CardContent className="p-4">
-            <div className="text-sm text-gray-600">Bản nháp</div>
-            <div className="text-2xl font-bold text-yellow-600">
+        <Card className="stat-card card-hover-lift border-none shadow-md bg-gradient-to-br from-yellow-50 to-yellow-100">
+          <CardContent className="p-5">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 bg-yellow-500 rounded-lg">
+                <Edit className="h-5 w-5 text-white" />
+              </div>
+              <div className="text-sm text-yellow-700 font-medium">
+                Bản nháp
+              </div>
+            </div>
+            <div className="text-3xl font-bold text-yellow-600">
               {stats.draft}
             </div>
           </CardContent>
         </Card>
-        <Card className="border-l-4 border-l-gray-400">
-          <CardContent className="p-4">
-            <div className="text-sm text-gray-600">Đã lưu trữ</div>
-            <div className="text-2xl font-bold text-gray-600">
+        <Card className="stat-card card-hover-lift border-none shadow-md bg-gradient-to-br from-gray-50 to-gray-200">
+          <CardContent className="p-5">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 bg-gray-400 rounded-lg">
+                <FolderArchive className="h-5 w-5 text-white" />
+              </div>
+              <div className="text-sm text-gray-700 font-medium">
+                Đã lưu trữ
+              </div>
+            </div>
+            <div className="text-3xl font-bold text-gray-600">
               {stats.archived}
             </div>
           </CardContent>
@@ -264,7 +306,7 @@ export default function AdminExamsPage() {
       </div>
 
       {/* Filters */}
-      <Card>
+      <Card className="shadow-md">
         <CardContent className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="relative">
@@ -273,12 +315,12 @@ export default function AdminExamsPage() {
                 placeholder="Tìm kiếm đề thi..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
+                className="pl-10 focus:ring-2 focus:ring-[#112444]"
               />
             </div>
 
             <Select value={courseFilter} onValueChange={setCourseFilter}>
-              <SelectTrigger>
+              <SelectTrigger className="focus:ring-2 focus:ring-[#112444]">
                 <SelectValue placeholder="Tất cả lớp" />
               </SelectTrigger>
               <SelectContent>
@@ -292,7 +334,7 @@ export default function AdminExamsPage() {
             </Select>
 
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger>
+              <SelectTrigger className="focus:ring-2 focus:ring-[#112444]">
                 <SelectValue placeholder="Tất cả trạng thái" />
               </SelectTrigger>
               <SelectContent>
@@ -308,46 +350,48 @@ export default function AdminExamsPage() {
 
       {/* Exams Table */}
       {filteredExams.length > 0 ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>Danh sách bài thi ({filteredExams.length})</CardTitle>
+        <Card className="shadow-lg">
+          <CardHeader className="bg-gradient-to-r from-gray-50 to-blue-50 border-b">
+            <CardTitle className="text-[#112444]">
+              Danh sách bài thi ({filteredExams.length})
+            </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-0">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="bg-gray-50 border-b border-gray-200">
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700">
+                  <tr className="bg-[#112444] text-white">
+                    <th className="text-left py-4 px-4 font-semibold">
                       Tên đề thi
                     </th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700">
-                      Lớp
-                    </th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700">
+                    <th className="text-left py-4 px-4 font-semibold">Lớp</th>
+                    <th className="text-left py-4 px-4 font-semibold">
                       Giáo viên
                     </th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700">
+                    <th className="text-left py-4 px-4 font-semibold">
                       Trạng thái
                     </th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700">
+                    <th className="text-left py-4 px-4 font-semibold">
                       Câu hỏi
                     </th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700">
+                    <th className="text-left py-4 px-4 font-semibold">
                       Lượt thi
                     </th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700">
+                    <th className="text-left py-4 px-4 font-semibold">
                       Ngày tạo
                     </th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700">
+                    <th className="text-left py-4 px-4 font-semibold">
                       Thao tác
                     </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredExams.map((exam) => (
+                  {filteredExams.map((exam, index) => (
                     <tr
                       key={exam.id}
-                      className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
+                      className={`table-row-hover border-b border-gray-100 ${
+                        index % 2 === 0 ? "bg-white" : "bg-gray-50/50"
+                      }`}
                     >
                       <td className="py-3 px-4 text-gray-800 font-medium">
                         {exam.title}
@@ -377,6 +421,7 @@ export default function AdminExamsPage() {
                             size="sm"
                             onClick={() => handleViewExam(exam.id)}
                             title="Xem chi tiết"
+                            className="hover:bg-[#112444] hover:text-white hover:border-[#112444] smooth-transition"
                           >
                             <Eye className="h-4 w-4" />
                           </Button>
@@ -390,6 +435,7 @@ export default function AdminExamsPage() {
                                 ? "Đã lưu trữ"
                                 : "Lưu trữ đề thi"
                             }
+                            className="hover:bg-gray-600 hover:text-white hover:border-gray-600 smooth-transition disabled:opacity-50"
                           >
                             <Archive className="h-4 w-4" />
                           </Button>
@@ -398,8 +444,9 @@ export default function AdminExamsPage() {
                             size="sm"
                             onClick={() => handleDeleteExam(exam.id)}
                             title="Xóa đề thi"
+                            className="hover:bg-red-600 hover:text-white hover:border-red-600 smooth-transition"
                           >
-                            <Trash2 className="h-4 w-4 text-red-600" />
+                            <Trash2 className="h-4 w-4 text-red-600 hover:text-white" />
                           </Button>
                         </div>
                       </td>

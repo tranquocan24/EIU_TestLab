@@ -14,6 +14,9 @@ import {
   CheckCircle2,
   XCircle,
   AlertCircle,
+  TrendingUp,
+  TrendingDown,
+  Award,
 } from "lucide-react";
 import api from "@/lib/api";
 
@@ -207,7 +210,7 @@ export default function ExamDetailPage() {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#112444] mx-auto mb-4"></div>
           <p className="text-gray-600">Đang tải thông tin đề thi...</p>
         </div>
       </div>
@@ -234,67 +237,81 @@ export default function ExamDetailPage() {
   return (
     <div className="space-y-6 animate-fadeInUp">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => router.push("/admin/exams")}
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Quay lại
-          </Button>
-          <h1 className="text-3xl font-bold text-gray-800">{exam.title}</h1>
+      <div className="eiu-gradient-primary text-white p-6 rounded-2xl shadow-lg">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => router.push("/admin/exams")}
+              className="bg-white/10 border-white/30 text-white hover:bg-white hover:text-[#112444] smooth-transition"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Quay lại
+            </Button>
+            <div>
+              <h1 className="text-3xl font-bold">{exam.title}</h1>
+              <p className="text-blue-100 mt-1">
+                Chi tiết đề thi và kết quả thi
+              </p>
+            </div>
+          </div>
+          {getExamStatusBadge(exam.status)}
         </div>
-        {getExamStatusBadge(exam.status)}
       </div>
 
       {/* Exam Info Card */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FileText className="h-5 w-5" />
+      <Card className="shadow-lg border-t-4 border-t-[#112444]">
+        <CardHeader className="bg-gradient-to-r from-gray-50 to-blue-50">
+          <CardTitle className="flex items-center gap-2 text-[#112444]">
+            <FileText className="h-6 w-6" />
             Thông tin đề thi
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <p className="text-sm text-gray-500 mb-1">Môn học</p>
-              <p className="text-lg font-semibold text-gray-800">
-                {exam.subject}
-              </p>
+        <CardContent className="p-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bg-blue-50 p-4 rounded-lg">
+              <p className="text-sm text-blue-600 mb-1 font-medium">Môn học</p>
+              <p className="text-lg font-bold text-[#112444]">{exam.subject}</p>
             </div>
-            <div>
-              <p className="text-sm text-gray-500 mb-1">Giáo viên tạo</p>
-              <p className="text-lg font-semibold text-gray-800">
+            <div className="bg-purple-50 p-4 rounded-lg">
+              <p className="text-sm text-purple-600 mb-1 font-medium">
+                Giáo viên tạo
+              </p>
+              <p className="text-lg font-bold text-[#112444]">
                 {exam.createdBy.name}
               </p>
             </div>
-            <div>
-              <p className="text-sm text-gray-500 mb-1">Thời gian làm bài</p>
-              <p className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-                <Clock className="h-4 w-4" />
+            <div className="bg-green-50 p-4 rounded-lg">
+              <p className="text-sm text-green-600 mb-1 font-medium">
+                Thời gian làm bài
+              </p>
+              <p className="text-lg font-bold text-[#112444] flex items-center gap-2">
+                <Clock className="h-5 w-5 text-green-600" />
                 {exam.duration} phút
               </p>
             </div>
-            <div>
-              <p className="text-sm text-gray-500 mb-1">Điểm đạt</p>
-              <p className="text-lg font-semibold text-gray-800">
+            <div className="bg-yellow-50 p-4 rounded-lg">
+              <p className="text-sm text-yellow-600 mb-1 font-medium">
+                Điểm đạt
+              </p>
+              <p className="text-lg font-bold text-[#112444]">
                 {exam.passingScore}%
               </p>
             </div>
-            <div>
-              <p className="text-sm text-gray-500 mb-1">Số câu hỏi</p>
-              <p className="text-lg font-semibold text-gray-800">
+            <div className="bg-indigo-50 p-4 rounded-lg">
+              <p className="text-sm text-indigo-600 mb-1 font-medium">
+                Số câu hỏi
+              </p>
+              <p className="text-lg font-bold text-[#112444]">
                 {exam.questions.length} câu
               </p>
             </div>
-            <div>
-              <p className="text-sm text-gray-500 mb-1">Ngày tạo</p>
-              <p className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-                <Calendar className="h-4 w-4" />
-                {formatDate(exam.createdAt)}
+            <div className="bg-pink-50 p-4 rounded-lg">
+              <p className="text-sm text-pink-600 mb-1 font-medium">Ngày tạo</p>
+              <p className="text-lg font-bold text-[#112444] flex items-center gap-2">
+                <Calendar className="h-5 w-5 text-pink-600" />
+                {formatDate(exam.createdAt).split(",")[0]}
               </p>
             </div>
           </div>
@@ -309,49 +326,75 @@ export default function ExamDetailPage() {
 
       {/* Statistics */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        <Card className="border-l-4 border-l-blue-500">
+        <Card className="stat-card card-hover-lift border-none shadow-md bg-gradient-to-br from-blue-50 to-blue-100">
           <CardContent className="p-4">
-            <div className="text-sm text-gray-600">Tổng lượt thi</div>
+            <div className="flex items-center gap-2 mb-2">
+              <Users className="h-4 w-4 text-blue-600" />
+              <div className="text-xs text-blue-700 font-medium">
+                Tổng lượt thi
+              </div>
+            </div>
             <div className="text-2xl font-bold text-blue-600">
               {stats.totalAttempts}
             </div>
           </CardContent>
         </Card>
-        <Card className="border-l-4 border-l-green-500">
+        <Card className="stat-card card-hover-lift border-none shadow-md bg-gradient-to-br from-green-50 to-green-100">
           <CardContent className="p-4">
-            <div className="text-sm text-gray-600">Đã hoàn thành</div>
+            <div className="flex items-center gap-2 mb-2">
+              <CheckCircle2 className="h-4 w-4 text-green-600" />
+              <div className="text-xs text-green-700 font-medium">
+                Đã hoàn thành
+              </div>
+            </div>
             <div className="text-2xl font-bold text-green-600">
               {stats.completedAttempts}
             </div>
           </CardContent>
         </Card>
-        <Card className="border-l-4 border-l-yellow-500">
+        <Card className="stat-card card-hover-lift border-none shadow-md bg-gradient-to-br from-yellow-50 to-yellow-100">
           <CardContent className="p-4">
-            <div className="text-sm text-gray-600">Đang làm</div>
+            <div className="flex items-center gap-2 mb-2">
+              <AlertCircle className="h-4 w-4 text-yellow-600" />
+              <div className="text-xs text-yellow-700 font-medium">
+                Đang làm
+              </div>
+            </div>
             <div className="text-2xl font-bold text-yellow-600">
               {stats.inProgress}
             </div>
           </CardContent>
         </Card>
-        <Card className="border-l-4 border-l-purple-500">
+        <Card className="stat-card card-hover-lift border-none shadow-md bg-gradient-to-br from-purple-50 to-purple-100">
           <CardContent className="p-4">
-            <div className="text-sm text-gray-600">Điểm TB</div>
+            <div className="flex items-center gap-2 mb-2">
+              <TrendingUp className="h-4 w-4 text-purple-600" />
+              <div className="text-xs text-purple-700 font-medium">Điểm TB</div>
+            </div>
             <div className="text-2xl font-bold text-purple-600">
               {stats.averageScore}
             </div>
           </CardContent>
         </Card>
-        <Card className="border-l-4 border-l-emerald-500">
+        <Card className="stat-card card-hover-lift border-none shadow-md bg-gradient-to-br from-emerald-50 to-emerald-100">
           <CardContent className="p-4">
-            <div className="text-sm text-gray-600">Cao nhất</div>
+            <div className="flex items-center gap-2 mb-2">
+              <Award className="h-4 w-4 text-emerald-600" />
+              <div className="text-xs text-emerald-700 font-medium">
+                Cao nhất
+              </div>
+            </div>
             <div className="text-2xl font-bold text-emerald-600">
               {stats.highestScore}
             </div>
           </CardContent>
         </Card>
-        <Card className="border-l-4 border-l-red-500">
+        <Card className="stat-card card-hover-lift border-none shadow-md bg-gradient-to-br from-red-50 to-red-100">
           <CardContent className="p-4">
-            <div className="text-sm text-gray-600">Thấp nhất</div>
+            <div className="flex items-center gap-2 mb-2">
+              <TrendingDown className="h-4 w-4 text-red-600" />
+              <div className="text-xs text-red-700 font-medium">Thấp nhất</div>
+            </div>
             <div className="text-2xl font-bold text-red-600">
               {stats.lowestScore}
             </div>
@@ -360,19 +403,19 @@ export default function ExamDetailPage() {
       </div>
 
       {/* Questions List */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FileText className="h-5 w-5" />
+      <Card className="shadow-lg">
+        <CardHeader className="bg-gradient-to-r from-gray-50 to-blue-50 border-b">
+          <CardTitle className="flex items-center gap-2 text-[#112444]">
+            <FileText className="h-6 w-6" />
             Danh sách câu hỏi ({exam.questions.length})
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-6">
           <div className="space-y-4">
             {exam.questions.map((question, index) => (
               <div
                 key={question.id}
-                className="border border-gray-200 rounded-lg p-4 hover:border-gray-300 transition-colors"
+                className="border-l-4 border-[#112444] bg-gradient-to-r from-blue-50/30 to-transparent rounded-r-lg p-5 hover:shadow-md smooth-transition"
               >
                 <div className="flex items-start justify-between mb-2">
                   <h4 className="font-semibold text-gray-800">
@@ -418,44 +461,44 @@ export default function ExamDetailPage() {
       </Card>
 
       {/* Attempts List */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5" />
+      <Card className="shadow-lg">
+        <CardHeader className="bg-gradient-to-r from-gray-50 to-blue-50 border-b">
+          <CardTitle className="flex items-center gap-2 text-[#112444]">
+            <Users className="h-6 w-6" />
             Danh sách bài làm ({attempts.length})
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           {attempts.length > 0 ? (
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="bg-gray-50 border-b border-gray-200">
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700">
+                  <tr className="bg-[#112444] text-white">
+                    <th className="text-left py-4 px-4 font-semibold">
                       Học sinh
                     </th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700">
+                    <th className="text-left py-4 px-4 font-semibold">
                       Lần thi
                     </th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700">
+                    <th className="text-left py-4 px-4 font-semibold">
                       Trạng thái
                     </th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700">
-                      Điểm
-                    </th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700">
+                    <th className="text-left py-4 px-4 font-semibold">Điểm</th>
+                    <th className="text-left py-4 px-4 font-semibold">
                       Thời gian làm
                     </th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700">
+                    <th className="text-left py-4 px-4 font-semibold">
                       Ngày nộp
                     </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {attempts.map((attempt) => (
+                  {attempts.map((attempt, index) => (
                     <tr
                       key={attempt.id}
-                      className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
+                      className={`table-row-hover border-b border-gray-100 ${
+                        index % 2 === 0 ? "bg-white" : "bg-gray-50/50"
+                      }`}
                     >
                       <td className="py-3 px-4 text-gray-800 font-medium">
                         {attempt.student.name}

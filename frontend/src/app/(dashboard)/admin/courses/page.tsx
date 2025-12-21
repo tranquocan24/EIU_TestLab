@@ -205,7 +205,7 @@ export default function AdminCoursesPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600" />
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#112444]" />
       </div>
     );
   }
@@ -213,107 +213,130 @@ export default function AdminCoursesPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-gradient-to-r from-red-600 to-rose-700 text-white p-8 rounded-2xl text-center">
-        <h1 className="text-3xl font-bold mb-2">Quản lý lớp học</h1>
-        <p className="text-red-100">Tạo lớp và phân công giáo viên, học sinh</p>
+      <div className="eiu-gradient-primary text-white p-8 rounded-2xl text-center relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32" />
+        <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full -ml-24 -mb-24" />
+        <div className="relative z-10">
+          <BookOpen className="h-12 w-12 mx-auto mb-4 opacity-90" />
+          <h1 className="text-3xl font-bold mb-2">Quản lý lớp học</h1>
+          <p className="text-blue-100">
+            Tạo lớp và phân công giáo viên, học sinh
+          </p>
+        </div>
       </div>
 
       {/* Actions */}
-      <div className="flex justify-between gap-4">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-          <Input
-            placeholder="Tìm kiếm..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
-          />
-        </div>
-        <div className="flex gap-3">
-          <Button variant="outline" onClick={loadCourses}>
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Làm mới
-          </Button>
-          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                Thêm lớp
+      <Card className="border-t-4 border-t-[#112444]">
+        <CardContent className="p-4">
+          <div className="flex justify-between gap-4">
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                placeholder="Tìm kiếm theo mã lớp hoặc tên lớp..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 smooth-transition"
+              />
+            </div>
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                onClick={loadCourses}
+                className="smooth-transition hover:border-[#112444] hover:text-[#112444]"
+              >
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Làm mới
               </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Thêm lớp học mới</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                <div>
-                  <Label>Mã lớp *</Label>
-                  <Input
-                    placeholder="CSE301"
-                    value={formData.code}
-                    onChange={(e) =>
-                      setFormData({ ...formData, code: e.target.value })
-                    }
-                  />
-                </div>
-                <div>
-                  <Label>Tên lớp *</Label>
-                  <Input
-                    placeholder="Lập trình Web"
-                    value={formData.name}
-                    onChange={(e) =>
-                      setFormData({ ...formData, name: e.target.value })
-                    }
-                  />
-                </div>
-                <div>
-                  <Label>Mô tả</Label>
-                  <Input
-                    placeholder="Mô tả về lớp học"
-                    value={formData.description}
-                    onChange={(e) =>
-                      setFormData({ ...formData, description: e.target.value })
-                    }
-                  />
-                </div>
-                <div className="flex gap-3 pt-4">
-                  <Button onClick={handleAddCourse} className="flex-1">
-                    Tạo lớp
+              <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button className="bg-[#112444] hover:bg-[#1a365d] smooth-transition">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Thêm lớp
                   </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => setIsAddDialogOpen(false)}
-                    className="flex-1"
-                  >
-                    Hủy
-                  </Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
-        </div>
-      </div>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Thêm lớp học mới</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4 py-4">
+                    <div>
+                      <Label>Mã lớp *</Label>
+                      <Input
+                        placeholder="CSE301"
+                        value={formData.code}
+                        onChange={(e) =>
+                          setFormData({ ...formData, code: e.target.value })
+                        }
+                      />
+                    </div>
+                    <div>
+                      <Label>Tên lớp *</Label>
+                      <Input
+                        placeholder="Lập trình Web"
+                        value={formData.name}
+                        onChange={(e) =>
+                          setFormData({ ...formData, name: e.target.value })
+                        }
+                      />
+                    </div>
+                    <div>
+                      <Label>Mô tả</Label>
+                      <Input
+                        placeholder="Mô tả về lớp học"
+                        value={formData.description}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            description: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+                    <div className="flex gap-3 pt-4">
+                      <Button
+                        onClick={handleAddCourse}
+                        className="flex-1 bg-[#112444] hover:bg-[#1a365d] smooth-transition"
+                      >
+                        Tạo lớp
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => setIsAddDialogOpen(false)}
+                        className="flex-1 smooth-transition"
+                      >
+                        Hủy
+                      </Button>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Statistics */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card className="border-l-4 border-l-purple-500">
-          <CardContent className="p-4">
-            <div className="text-sm text-gray-600">Tổng số lớp</div>
-            <div className="text-2xl font-bold">{courses.length}</div>
+        <Card className="stat-card border-l-4 border-l-[#112444]">
+          <CardContent className="p-6">
+            <div className="text-sm text-gray-600 mb-2">Tổng số lớp</div>
+            <div className="text-3xl font-bold text-[#112444]">
+              {courses.length}
+            </div>
           </CardContent>
         </Card>
-        <Card className="border-l-4 border-l-green-500">
-          <CardContent className="p-4">
-            <div className="text-sm text-gray-600">Đang hoạt động</div>
-            <div className="text-2xl font-bold text-green-600">
+        <Card className="stat-card border-l-4 border-l-green-500">
+          <CardContent className="p-6">
+            <div className="text-sm text-gray-600 mb-2">Đang hoạt động</div>
+            <div className="text-3xl font-bold text-green-600">
               {courses.filter((c) => c.isActive).length}
             </div>
           </CardContent>
         </Card>
-        <Card className="border-l-4 border-l-blue-500">
-          <CardContent className="p-4">
-            <div className="text-sm text-gray-600">Tổng sinh viên</div>
-            <div className="text-2xl font-bold text-blue-600">
+        <Card className="stat-card border-l-4 border-l-blue-500">
+          <CardContent className="p-6">
+            <div className="text-sm text-gray-600 mb-2">Tổng sinh viên</div>
+            <div className="text-3xl font-bold text-blue-600">
               {courses.reduce(
                 (sum, c) => sum + (c._count?.enrollments || 0),
                 0
@@ -321,10 +344,10 @@ export default function AdminCoursesPage() {
             </div>
           </CardContent>
         </Card>
-        <Card className="border-l-4 border-l-orange-500">
-          <CardContent className="p-4">
-            <div className="text-sm text-gray-600">TB/lớp</div>
-            <div className="text-2xl font-bold text-orange-600">
+        <Card className="stat-card border-l-4 border-l-orange-500">
+          <CardContent className="p-6">
+            <div className="text-sm text-gray-600 mb-2">TB/lớp</div>
+            <div className="text-3xl font-bold text-orange-600">
               {courses.length > 0
                 ? Math.round(
                     courses.reduce(
@@ -339,52 +362,78 @@ export default function AdminCoursesPage() {
       </div>
 
       {/* Courses List */}
-      <Card>
-        <CardHeader>
+      <Card className="card-hover-lift">
+        <CardHeader className="bg-gradient-to-r from-[#112444] to-[#1a365d] text-white rounded-t-lg">
           <CardTitle className="flex items-center gap-2">
             <BookOpen className="h-5 w-5" />
             Danh sách lớp học ({filteredCourses.length})
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           {filteredCourses.length > 0 ? (
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="bg-gray-50 border-b">
-                    <th className="text-left py-3 px-4">Mã lớp</th>
-                    <th className="text-left py-3 px-4">Tên lớp</th>
-                    <th className="text-left py-3 px-4">Mô tả</th>
-                    <th className="text-center py-3 px-4">Số người</th>
-                    <th className="text-center py-3 px-4">Thao tác</th>
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700">
+                      Mã lớp
+                    </th>
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700">
+                      Tên lớp
+                    </th>
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700">
+                      Mô tả
+                    </th>
+                    <th className="text-center py-3 px-4 font-semibold text-gray-700">
+                      Số người
+                    </th>
+                    <th className="text-center py-3 px-4 font-semibold text-gray-700">
+                      Thao tác
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredCourses.map((course) => (
-                    <tr key={course.id} className="border-b hover:bg-gray-50">
-                      <td className="py-3 px-4 font-medium">{course.code}</td>
-                      <td className="py-3 px-4">{course.name}</td>
-                      <td className="py-3 px-4 text-sm text-gray-600">
+                  {filteredCourses.map((course, index) => (
+                    <tr
+                      key={course.id}
+                      className={`border-b table-row-hover ${
+                        index % 2 === 0 ? "bg-white" : "bg-gray-50/50"
+                      }`}
+                    >
+                      <td className="py-4 px-4">
+                        <span className="font-semibold text-[#112444]">
+                          {course.code}
+                        </span>
+                      </td>
+                      <td className="py-4 px-4 font-medium text-gray-900">
+                        {course.name}
+                      </td>
+                      <td className="py-4 px-4 text-sm text-gray-600 max-w-xs truncate">
                         {course.description || "-"}
                       </td>
-                      <td className="py-3 px-4 text-center">
-                        <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-sm">
+                      <td className="py-4 px-4 text-center">
+                        <span className="inline-flex items-center px-3 py-1 bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 rounded-full text-sm font-medium">
+                          <Users className="h-3 w-3 mr-1" />
                           {course._count?.enrollments || 0}
                         </span>
                       </td>
-                      <td className="py-3 px-4">
+                      <td className="py-4 px-4">
                         <div className="flex gap-2 justify-center">
                           <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => openManageDialog(course)}
+                            className="smooth-transition hover:bg-blue-50"
+                            title="Quản lý người dùng"
                           >
-                            <Users className="h-4 w-4 text-blue-600" />
+                            <Users className="h-4 w-4 text-[#112444]" />
                           </Button>
                           <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => openEditDialog(course)}
+                            className="smooth-transition hover:bg-orange-50"
+                            title="Chỉnh sửa"
                           >
                             <Edit className="h-4 w-4 text-orange-600" />
                           </Button>
@@ -392,6 +441,8 @@ export default function AdminCoursesPage() {
                             variant="ghost"
                             size="sm"
                             onClick={() => handleDeleteCourse(course)}
+                            className="smooth-transition hover:bg-red-50"
+                            title="Xóa"
                           >
                             <Trash2 className="h-4 w-4 text-red-600" />
                           </Button>
@@ -403,9 +454,16 @@ export default function AdminCoursesPage() {
               </table>
             </div>
           ) : (
-            <div className="text-center py-12">
-              <BookOpen className="h-16 w-16 mx-auto text-gray-300 mb-4" />
-              <p className="text-gray-500">Chưa có lớp học nào</p>
+            <div className="text-center py-16 px-4">
+              <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 mb-4">
+                <BookOpen className="h-10 w-10 text-gray-400" />
+              </div>
+              <p className="text-gray-600 font-medium mb-1">
+                Chưa có lớp học nào
+              </p>
+              <p className="text-sm text-gray-500">
+                Bắt đầu bằng cách tạo lớp học mới
+              </p>
             </div>
           )}
         </CardContent>
@@ -446,13 +504,16 @@ export default function AdminCoursesPage() {
               />
             </div>
             <div className="flex gap-3 pt-4">
-              <Button onClick={handleEditCourse} className="flex-1">
+              <Button
+                onClick={handleEditCourse}
+                className="flex-1 bg-[#112444] hover:bg-[#1a365d] smooth-transition"
+              >
                 Cập nhật
               </Button>
               <Button
                 variant="outline"
                 onClick={() => setIsEditDialogOpen(false)}
-                className="flex-1"
+                className="flex-1 smooth-transition"
               >
                 Hủy
               </Button>
@@ -474,19 +535,32 @@ export default function AdminCoursesPage() {
                 Đã phân công ({enrolledUsers.length})
               </h3>
               {enrolledUsers.length > 0 ? (
-                <div className="border rounded-lg max-h-60 overflow-y-auto">
+                <div className="border rounded-lg max-h-60 overflow-y-auto shadow-sm">
                   <table className="w-full text-sm">
-                    <thead className="bg-gray-50 sticky top-0">
+                    <thead className="bg-gradient-to-r from-[#112444] to-[#1a365d] text-white sticky top-0">
                       <tr>
-                        <th className="text-left py-2 px-3">Tên</th>
-                        <th className="text-left py-2 px-3">Username</th>
-                        <th className="text-left py-2 px-3">Vai trò</th>
-                        <th className="text-center py-2 px-3">Thao tác</th>
+                        <th className="text-left py-3 px-3 font-semibold">
+                          Tên
+                        </th>
+                        <th className="text-left py-3 px-3 font-semibold">
+                          Username
+                        </th>
+                        <th className="text-left py-3 px-3 font-semibold">
+                          Vai trò
+                        </th>
+                        <th className="text-center py-3 px-3 font-semibold">
+                          Thao tác
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
-                      {enrolledUsers.map((u) => (
-                        <tr key={u.id} className="border-t">
+                      {enrolledUsers.map((u, index) => (
+                        <tr
+                          key={u.id}
+                          className={`border-t table-row-hover ${
+                            index % 2 === 0 ? "bg-white" : "bg-gray-50/50"
+                          }`}
+                        >
                           <td className="py-2 px-3">{u.name}</td>
                           <td className="py-2 px-3">{u.username}</td>
                           <td className="py-2 px-3">
@@ -520,11 +594,11 @@ export default function AdminCoursesPage() {
               </h3>
               {availableUsers.length > 0 ? (
                 <>
-                  <div className="border rounded-lg max-h-60 overflow-y-auto">
+                  <div className="border rounded-lg max-h-60 overflow-y-auto shadow-sm">
                     <table className="w-full text-sm">
-                      <thead className="bg-gray-50 sticky top-0">
+                      <thead className="bg-gradient-to-r from-gray-700 to-gray-800 text-white sticky top-0">
                         <tr>
-                          <th className="text-left py-2 px-3">
+                          <th className="text-left py-3 px-3">
                             <input
                               type="checkbox"
                               checked={
@@ -537,19 +611,30 @@ export default function AdminCoursesPage() {
                                     : []
                                 );
                               }}
+                              className="smooth-transition"
                             />
                           </th>
-                          <th className="text-left py-2 px-3">Tên</th>
-                          <th className="text-left py-2 px-3">Username</th>
-                          <th className="text-left py-2 px-3">Vai trò</th>
+                          <th className="text-left py-3 px-3 font-semibold">
+                            Tên
+                          </th>
+                          <th className="text-left py-3 px-3 font-semibold">
+                            Username
+                          </th>
+                          <th className="text-left py-3 px-3 font-semibold">
+                            Vai trò
+                          </th>
                         </tr>
                       </thead>
                       <tbody>
-                        {availableUsers.map((u) => (
+                        {availableUsers.map((u, index) => (
                           <tr
                             key={u.id}
-                            className={`border-t cursor-pointer hover:bg-gray-50 ${
-                              selectedUserIds.includes(u.id) ? "bg-blue-50" : ""
+                            className={`border-t cursor-pointer table-row-hover ${
+                              selectedUserIds.includes(u.id)
+                                ? "bg-blue-100"
+                                : index % 2 === 0
+                                ? "bg-white"
+                                : "bg-gray-50/50"
                             }`}
                             onClick={() => {
                               setSelectedUserIds((prev) =>
@@ -559,17 +644,20 @@ export default function AdminCoursesPage() {
                               );
                             }}
                           >
-                            <td className="py-2 px-3">
+                            <td className="py-3 px-3">
                               <input
                                 type="checkbox"
                                 checked={selectedUserIds.includes(u.id)}
                                 readOnly
+                                className="smooth-transition"
                               />
                             </td>
-                            <td className="py-2 px-3">{u.name}</td>
-                            <td className="py-2 px-3">{u.username}</td>
-                            <td className="py-2 px-3">
-                              <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs">
+                            <td className="py-3 px-3 font-medium">{u.name}</td>
+                            <td className="py-3 px-3 text-gray-600">
+                              {u.username}
+                            </td>
+                            <td className="py-3 px-3">
+                              <span className="inline-flex items-center px-2 py-1 bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 rounded-full text-xs font-medium">
                                 {u.role}
                               </span>
                             </td>
@@ -582,7 +670,7 @@ export default function AdminCoursesPage() {
                     <Button
                       onClick={handleEnrollUsers}
                       disabled={selectedUserIds.length === 0}
-                      className="flex-1"
+                      className="flex-1 bg-[#112444] hover:bg-[#1a365d] smooth-transition disabled:opacity-50"
                     >
                       <UserPlus className="h-4 w-4 mr-2" />
                       Phân công ({selectedUserIds.length})
@@ -590,6 +678,7 @@ export default function AdminCoursesPage() {
                     <Button
                       variant="outline"
                       onClick={() => setSelectedUserIds([])}
+                      className="smooth-transition"
                     >
                       Bỏ chọn
                     </Button>

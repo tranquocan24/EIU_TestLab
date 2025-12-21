@@ -1,155 +1,179 @@
-'use client'
+"use client";
 
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import api from '@/lib/api'
-import { useAuth } from '@/hooks/useAuth'
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import api from "@/lib/api";
+import { useAuth } from "@/hooks/useAuth";
 
 interface Exam {
-  id: string
-  title: string
-  subject: string
-  duration: number
-  status: string
-  maxAttempts?: number | null // null = không giới hạn
-  startTime?: string
-  endTime?: string
+  id: string;
+  title: string;
+  subject: string;
+  duration: number;
+  status: string;
+  maxAttempts?: number | null; // null = không giới hạn
+  startTime?: string;
+  endTime?: string;
   createdBy: {
-    id: string
-    name: string
-    username: string
-  }
+    id: string;
+    name: string;
+    username: string;
+  };
   _count: {
-    questions: number
-    attempts: number
-  }
+    questions: number;
+    attempts: number;
+  };
 }
 
 interface DisplayExam {
-  id: string
-  title: string
-  subject: string
-  duration: number
-  questionCount: number
-  status: 'available' | 'completed' | 'expired'
-  maxAttempts?: number | null
-  timeLeft?: string
-  score?: number
-  completedAt?: string
-  createdBy: string
-  attemptCount: number
-  startTime?: string
-  endTime?: string
+  id: string;
+  title: string;
+  subject: string;
+  duration: number;
+  questionCount: number;
+  status: "available" | "completed" | "expired";
+  maxAttempts?: number | null;
+  timeLeft?: string;
+  score?: number;
+  completedAt?: string;
+  createdBy: string;
+  attemptCount: number;
+  startTime?: string;
+  endTime?: string;
 }
 
 export default function StudentExamList() {
-  const router = useRouter()
-  const { user } = useAuth()
-  const [exams, setExams] = useState<DisplayExam[]>([])
-  const [filteredExams, setFilteredExams] = useState<DisplayExam[]>([])
-  const [loading, setLoading] = useState(true)
-  const [subjectFilter, setSubjectFilter] = useState('')
-  const [statusFilter, setStatusFilter] = useState('')
-  const [searchTerm, setSearchTerm] = useState('')
-  const [selectedExam, setSelectedExam] = useState<DisplayExam | null>(null)
-  const [showModal, setShowModal] = useState(false)
+  const router = useRouter();
+  const { user } = useAuth();
+  const [exams, setExams] = useState<DisplayExam[]>([]);
+  const [filteredExams, setFilteredExams] = useState<DisplayExam[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [subjectFilter, setSubjectFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedExam, setSelectedExam] = useState<DisplayExam | null>(null);
+  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
-    loadExamList()
-  }, [])
+    loadExamList();
+  }, []);
 
   useEffect(() => {
-    const filtered = exams.filter(exam => {
-      const matchSubject = !subjectFilter || exam.subject === subjectFilter
-      const matchStatus = !statusFilter || exam.status === statusFilter
-      const matchSearch = !searchTerm ||
+    const filtered = exams.filter((exam) => {
+      const matchSubject = !subjectFilter || exam.subject === subjectFilter;
+      const matchStatus = !statusFilter || exam.status === statusFilter;
+      const matchSearch =
+        !searchTerm ||
         exam.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        exam.subject.toLowerCase().includes(searchTerm.toLowerCase())
+        exam.subject.toLowerCase().includes(searchTerm.toLowerCase());
 
-      return matchSubject && matchStatus && matchSearch
-    })
+      return matchSubject && matchStatus && matchSearch;
+    });
 
-    setFilteredExams(filtered)
-  }, [exams, subjectFilter, statusFilter, searchTerm])
+    setFilteredExams(filtered);
+  }, [exams, subjectFilter, statusFilter, searchTerm]);
 
   const loadExamList = async () => {
     try {
-      setLoading(true)
-      console.log('Loading exams for student...')
+      setLoading(true);
+      console.log("Loading exams for student...");
 
       // Call API to get exams (backend will filter by student's courses)
-      const response = await api.getExams()
-      console.log('Exams from API:', response)
+      const response = await api.getExams();
+      console.log("Exams from API:", response);
 
       // Get student's attempts to check completed exams
-      const myAttempts = await api.getMyAttempts()
-      console.log('My attempts:', myAttempts)
+      const myAttempts = await api.getMyAttempts();
+      console.log("My attempts:", myAttempts);
 
       // Create a map of examId -> attempt for quick lookup
       const attemptMap = new Map(
         myAttempts.map((attempt: any) => [attempt.exam.id, attempt])
-      )
+      );
 
       // Transform backend data to display format
       const displayExams: DisplayExam[] = response.map((exam: Exam) => {
         // Calculate exam status
-        let status: 'available' | 'completed' | 'expired' = 'available'
-        let timeLeft = ''
+        let status: "available" | "completed" | "expired" = "available";
+        let timeLeft = "";
 
-        const now = new Date()
+        const now = new Date();
 
         // Check if exam has start time and hasn't started yet
         if (exam.startTime) {
-          const startDate = new Date(exam.startTime)
+          const startDate = new Date(exam.startTime);
           if (startDate > now) {
             // Exam hasn't started yet
-            const diff = startDate.getTime() - now.getTime()
-            const days = Math.floor(diff / (1000 * 60 * 60 * 24))
-            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+            const diff = startDate.getTime() - now.getTime();
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor(
+              (diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+            );
 
             if (days > 0) {
-              timeLeft = `Bắt đầu sau ${days} ngày`
+              timeLeft = `Bắt đầu sau ${days} ngày`;
             } else if (hours > 0) {
-              timeLeft = `Bắt đầu sau ${hours} giờ`
+              timeLeft = `Bắt đầu sau ${hours} giờ`;
             } else {
-              timeLeft = 'Sắp bắt đầu'
+              timeLeft = "Sắp bắt đầu";
             }
-            status = 'expired' // Use expired status to disable button
+            status = "expired"; // Use expired status to disable button
           }
         }
 
         // Check if exam has end time and if it's expired
-        if (status !== 'expired' && exam.endTime) {
-          const endDate = new Date(exam.endTime)
+        if (status !== "expired" && exam.endTime) {
+          const endDate = new Date(exam.endTime);
           if (endDate < now) {
-            status = 'expired'
-            timeLeft = 'Đã hết hạn'
+            status = "expired";
+            timeLeft = "Đã hết hạn";
           } else if (!timeLeft) {
             // Calculate time left to end
-            const diff = endDate.getTime() - now.getTime()
-            const days = Math.floor(diff / (1000 * 60 * 60 * 24))
-            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+            const diff = endDate.getTime() - now.getTime();
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor(
+              (diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+            );
 
             if (days > 0) {
-              timeLeft = `Còn ${days} ngày`
+              timeLeft = `Còn ${days} ngày`;
             } else if (hours > 0) {
-              timeLeft = `Còn ${hours} giờ`
+              timeLeft = `Còn ${hours} giờ`;
             } else {
-              timeLeft = 'Sắp hết hạn'
+              timeLeft = "Sắp hết hạn";
             }
           }
         } else if (!timeLeft) {
           // No end time = always available
-          timeLeft = 'Không giới hạn'
+          timeLeft = "Không giới hạn";
         }
 
         // Check if student has completed this exam
-        const myAttempt = attemptMap.get(exam.id)
+        const myAttempt = attemptMap.get(exam.id);
 
         // Only mark as completed if:
         // 1. Student has attempts AND
@@ -158,14 +182,15 @@ export default function StudentExamList() {
         if (myAttempt) {
           // Get student's attempt count for this exam
           const studentAttemptsCount = myAttempts.filter(
-            (a: any) => a.exam.id === exam.id &&
-              (a.status === 'SUBMITTED' || a.status === 'GRADED')
-          ).length
+            (a: any) =>
+              a.exam.id === exam.id &&
+              (a.status === "SUBMITTED" || a.status === "GRADED")
+          ).length;
 
           // Check if max attempts reached (only if maxAttempts is set)
           if (exam.maxAttempts !== null && exam.maxAttempts !== undefined) {
             if (studentAttemptsCount >= exam.maxAttempts) {
-              status = 'completed' // Max attempts reached
+              status = "completed"; // Max attempts reached
             }
             // else: Can still retake
           }
@@ -187,108 +212,138 @@ export default function StudentExamList() {
           completedAt: myAttempt?.submittedAt,
           startTime: exam.startTime,
           endTime: exam.endTime,
-        }
-      })
+        };
+      });
 
-      console.log('Transformed exams:', displayExams)
-      setExams(displayExams)
+      console.log("Transformed exams:", displayExams);
+      setExams(displayExams);
     } catch (error) {
-      console.error('Error loading exam list:', error)
-      alert('Có lỗi khi tải danh sách bài thi. Vui lòng thử lại!')
+      console.error("Error loading exam list:", error);
+      alert("Có lỗi khi tải danh sách bài thi. Vui lòng thử lại!");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const getStatusText = (status: string) => {
     const statusMap = {
-      'available': 'Có thể làm',
-      'completed': 'Đã hoàn thành',
-      'expired': 'Hết hạn'
-    }
-    return statusMap[status as keyof typeof statusMap] || status
-  }
+      available: "Có thể làm",
+      completed: "Đã hoàn thành",
+      expired: "Hết hạn",
+    };
+    return statusMap[status as keyof typeof statusMap] || status;
+  };
 
   const getStatusColor = (status: string) => {
     const colorMap = {
-      'available': 'bg-green-100 text-green-800',
-      'completed': 'bg-blue-100 text-blue-800',
-      'expired': 'bg-red-100 text-red-800'
-    }
-    return colorMap[status as keyof typeof colorMap] || 'bg-gray-100 text-gray-800'
-  }
+      available: "bg-green-100 text-green-800",
+      completed: "bg-blue-100 text-blue-800",
+      expired: "bg-red-100 text-red-800",
+    };
+    return (
+      colorMap[status as keyof typeof colorMap] || "bg-gray-100 text-gray-800"
+    );
+  };
 
   const formatDateTime = (dateTimeString?: string) => {
-    if (!dateTimeString) return ''
-    const date = new Date(dateTimeString)
-    return date.toLocaleDateString('vi-VN') + ' ' + date.toLocaleTimeString('vi-VN', {
-      hour: '2-digit',
-      minute: '2-digit'
-    })
-  }
+    if (!dateTimeString) return "";
+    const date = new Date(dateTimeString);
+    return (
+      date.toLocaleDateString("vi-VN") +
+      " " +
+      date.toLocaleTimeString("vi-VN", {
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    );
+  };
 
   const handleTakeExam = (exam: DisplayExam) => {
-    setSelectedExam(exam)
-    setShowModal(true)
-  }
+    setSelectedExam(exam);
+    setShowModal(true);
+  };
 
   const startExam = async () => {
     if (selectedExam) {
       try {
         // Enable fullscreen before navigating
-        const elem = document.documentElement
+        const elem = document.documentElement;
         if (elem.requestFullscreen) {
-          await elem.requestFullscreen()
+          await elem.requestFullscreen();
         }
 
         // Navigate to exam page
-        console.log('Starting exam:', selectedExam.id)
-        router.push(`/student/exam?id=${selectedExam.id}`)
-        setShowModal(false)
+        console.log("Starting exam:", selectedExam.id);
+        router.push(`/student/exam?id=${selectedExam.id}`);
+        setShowModal(false);
       } catch (error) {
-        console.error('Failed to enable fullscreen:', error)
-        alert('Không thể bật chế độ toàn màn hình. Vui lòng cho phép trình duyệt vào chế độ toàn màn hình để tiếp tục.')
+        console.error("Failed to enable fullscreen:", error);
+        alert(
+          "Không thể bật chế độ toàn màn hình. Vui lòng cho phép trình duyệt vào chế độ toàn màn hình để tiếp tục."
+        );
       }
     }
-  }
+  };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#112444] mx-auto mb-4"></div>
           <p className="text-gray-600">Đang tải danh sách bài thi...</p>
         </div>
       </div>
-    )
+    );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fadeInUp">
       {/* Header */}
-      <div className="bg-gradient-to-r from-[#112444] to-[#1a365d] text-white p-8 rounded-2xl">
-        <h1 className="text-3xl font-bold mb-2">Danh sách bài thi</h1>
-        <p className="text-blue-100">Chọn bài thi để bắt đầu làm bài</p>
+      <div className="eiu-gradient-primary text-white p-8 rounded-2xl shadow-2xl relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+        <div className="relative z-10">
+          <h1 className="text-4xl font-bold mb-3 flex items-center gap-3">
+            <span className="text-5xl">📚</span>
+            Danh sách bài thi
+          </h1>
+          <p className="text-blue-100 text-lg">
+            Chọn bài thi để bắt đầu làm bài và thể hiện khả năng của bạn
+          </p>
+        </div>
       </div>
 
       {/* Filters */}
-      <Card>
+      <Card className="shadow-lg border-t-4 border-t-[#112444]">
         <CardContent className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Select value={subjectFilter || 'all'} onValueChange={(value) => setSubjectFilter(value === 'all' ? '' : value)}>
+            <Select
+              value={subjectFilter || "all"}
+              onValueChange={(value) =>
+                setSubjectFilter(value === "all" ? "" : value)
+              }
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Tất cả môn học" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Tất cả môn học</SelectItem>
                 {/* Dynamically generate subjects from exams */}
-                {Array.from(new Set(exams.map(e => e.subject))).map(subject => (
-                  <SelectItem key={subject} value={subject}>{subject}</SelectItem>
-                ))}
+                {Array.from(new Set(exams.map((e) => e.subject))).map(
+                  (subject) => (
+                    <SelectItem key={subject} value={subject}>
+                      {subject}
+                    </SelectItem>
+                  )
+                )}
               </SelectContent>
             </Select>
 
-            <Select value={statusFilter || 'all'} onValueChange={(value) => setStatusFilter(value === 'all' ? '' : value)}>
+            <Select
+              value={statusFilter || "all"}
+              onValueChange={(value) =>
+                setStatusFilter(value === "all" ? "" : value)
+              }
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Tất cả trạng thái" />
               </SelectTrigger>
@@ -314,8 +369,11 @@ export default function StudentExamList() {
       {filteredExams.length > 0 ? (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {filteredExams.map((exam) => (
-            <Card key={exam.id} className="hover:shadow-lg transition-shadow duration-300">
-              <CardHeader className="pb-4">
+            <Card
+              key={exam.id}
+              className="card-hover-lift border-l-4 border-l-[#112444] shadow-md"
+            >
+              <CardHeader className="pb-4 bg-gradient-to-r from-gray-50 to-blue-50">
                 <div className="flex justify-between items-start">
                   <div className="flex-1 mr-4">
                     <CardTitle className="text-lg font-semibold text-gray-800 mb-2">
@@ -323,7 +381,11 @@ export default function StudentExamList() {
                     </CardTitle>
                     <p className="text-blue-600 font-medium">{exam.subject}</p>
                   </div>
-                  <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(exam.status)}`}>
+                  <span
+                    className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(
+                      exam.status
+                    )}`}
+                  >
                     {getStatusText(exam.status)}
                   </span>
                 </div>
@@ -337,34 +399,44 @@ export default function StudentExamList() {
                   </div>
                   <div className="flex items-center space-x-2">
                     <span>❓</span>
-                    <span className="text-gray-600">{exam.questionCount} câu hỏi</span>
+                    <span className="text-gray-600">
+                      {exam.questionCount} câu hỏi
+                    </span>
                   </div>
-                  {exam.status === 'completed' && exam.completedAt ? (
+                  {exam.status === "completed" && exam.completedAt ? (
                     <>
                       <div className="flex items-center space-x-2">
                         <span>📅</span>
-                        <span className="text-gray-600">{formatDateTime(exam.completedAt)}</span>
+                        <span className="text-gray-600">
+                          {formatDateTime(exam.completedAt)}
+                        </span>
                       </div>
                       <div className="flex items-center space-x-2">
                         <span>👨‍🏫</span>
-                        <span className="text-gray-600">GV: {exam.createdBy}</span>
+                        <span className="text-gray-600">
+                          GV: {exam.createdBy}
+                        </span>
                       </div>
                     </>
                   ) : (
                     <>
                       <div className="flex items-center space-x-2">
                         <span>📅</span>
-                        <span className="text-gray-600">Còn {exam.timeLeft}</span>
+                        <span className="text-gray-600">
+                          Còn {exam.timeLeft}
+                        </span>
                       </div>
                       <div className="flex items-center space-x-2">
                         <span>👨‍🏫</span>
-                        <span className="text-gray-600">GV: {exam.createdBy}</span>
+                        <span className="text-gray-600">
+                          GV: {exam.createdBy}
+                        </span>
                       </div>
                     </>
                   )}
                 </div>
 
-                {exam.status === 'completed' && exam.score && (
+                {exam.status === "completed" && exam.score && (
                   <div className="text-center">
                     <div className="inline-block bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-2 rounded-full font-bold">
                       {exam.score}%
@@ -373,27 +445,33 @@ export default function StudentExamList() {
                 )}
 
                 <div className="flex space-x-2">
-                  {exam.status === 'available' && (
+                  {exam.status === "available" && (
                     <Button
                       onClick={() => handleTakeExam(exam)}
-                      className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
+                      className="flex-1 bg-[#112444] hover:bg-[#1a365d] smooth-transition shadow-md"
                     >
-                      Bắt đầu thi
+                      🚀 Bắt đầu thi
                     </Button>
                   )}
 
-                  {exam.status === 'completed' && (
+                  {exam.status === "completed" && (
                     <>
-                      <Button variant="outline" className="flex-1">
-                        Xem kết quả
+                      <Button
+                        variant="outline"
+                        className="flex-1 border-[#112444] text-[#112444] hover:bg-[#112444] hover:text-white smooth-transition"
+                      >
+                        📊 Xem kết quả
                       </Button>
-                      <Button variant="outline" className="flex-1">
-                        Chi tiết
+                      <Button
+                        variant="outline"
+                        className="flex-1 border-green-600 text-green-600 hover:bg-green-600 hover:text-white smooth-transition"
+                      >
+                        📋 Chi tiết
                       </Button>
                     </>
                   )}
 
-                  {exam.status === 'expired' && (
+                  {exam.status === "expired" && (
                     <Button disabled className="flex-1">
                       Hết hạn
                     </Button>
@@ -404,11 +482,16 @@ export default function StudentExamList() {
           ))}
         </div>
       ) : (
-        <Card>
-          <CardContent className="text-center py-12">
-            <div className="text-6xl mb-4">📝</div>
-            <h3 className="text-xl font-semibold text-gray-700 mb-2">Chưa có bài thi nào</h3>
-            <p className="text-gray-500">Hiện tại chưa có bài thi nào khả dụng. Vui lòng liên hệ giáo viên để biết thêm thông tin.</p>
+        <Card className="shadow-lg">
+          <CardContent className="text-center py-16">
+            <div className="text-8xl mb-4">📝</div>
+            <h3 className="text-2xl font-bold text-[#112444] mb-3">
+              Chưa có bài thi nào
+            </h3>
+            <p className="text-gray-500 text-lg">
+              Hiện tại chưa có bài thi nào khả dụng. Vui lòng liên hệ giáo viên
+              để biết thêm thông tin.
+            </p>
           </CardContent>
         </Card>
       )}
@@ -427,18 +510,26 @@ export default function StudentExamList() {
             <div className="space-y-3">
               <div className="space-y-2">
                 <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-3 rounded-lg border border-blue-200">
-                  <h3 className="font-bold text-blue-900 text-base mb-1">{selectedExam.title}</h3>
-                  <p className="text-blue-700 text-sm font-medium">{selectedExam.subject}</p>
+                  <h3 className="font-bold text-blue-900 text-base mb-1">
+                    {selectedExam.title}
+                  </h3>
+                  <p className="text-blue-700 text-sm font-medium">
+                    {selectedExam.subject}
+                  </p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-2">
                   <div className="bg-gray-50 p-2 rounded-lg">
                     <p className="text-xs text-gray-500 mb-1">Thời gian</p>
-                    <p className="font-bold text-gray-800 text-sm">{selectedExam.duration} phút</p>
+                    <p className="font-bold text-gray-800 text-sm">
+                      {selectedExam.duration} phút
+                    </p>
                   </div>
                   <div className="bg-gray-50 p-2 rounded-lg">
                     <p className="text-xs text-gray-500 mb-1">Số câu hỏi</p>
-                    <p className="font-bold text-gray-800 text-sm">{selectedExam.questionCount} câu</p>
+                    <p className="font-bold text-gray-800 text-sm">
+                      {selectedExam.questionCount} câu
+                    </p>
                   </div>
                 </div>
 
@@ -451,13 +542,17 @@ export default function StudentExamList() {
                       {selectedExam.startTime && (
                         <div className="flex justify-between">
                           <span className="text-amber-700">Bắt đầu:</span>
-                          <span className="font-medium text-amber-900">{formatDateTime(selectedExam.startTime)}</span>
+                          <span className="font-medium text-amber-900">
+                            {formatDateTime(selectedExam.startTime)}
+                          </span>
                         </div>
                       )}
                       {selectedExam.endTime && (
                         <div className="flex justify-between">
                           <span className="text-amber-700">Kết thúc:</span>
-                          <span className="font-medium text-amber-900">{formatDateTime(selectedExam.endTime)}</span>
+                          <span className="font-medium text-amber-900">
+                            {formatDateTime(selectedExam.endTime)}
+                          </span>
                         </div>
                       )}
                     </div>
@@ -467,15 +562,28 @@ export default function StudentExamList() {
 
               <div className="bg-amber-50 p-3 rounded-lg border border-amber-200">
                 <h4 className="font-semibold text-amber-900 mb-2 flex items-center text-sm gap-1">
-                  <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  <svg
+                    className="h-4 w-4"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                      clipRule="evenodd"
+                    />
                   </svg>
                   Lưu ý quan trọng:
                 </h4>
                 <ul className="text-xs text-amber-800 space-y-1">
-                  <li>🔒 Chế độ <strong>toàn màn hình</strong></li>
+                  <li>
+                    🔒 Chế độ <strong>toàn màn hình</strong>
+                  </li>
                   <li>⛔ Không copy câu hỏi</li>
-                  <li>⚠️ Thoát toàn màn hình <strong>3 lần</strong> = <strong>nộp bài</strong></li>
+                  <li>
+                    ⚠️ Thoát toàn màn hình <strong>3 lần</strong> ={" "}
+                    <strong>nộp bài</strong>
+                  </li>
                   <li>💾 Tự động lưu câu trả lời</li>
                 </ul>
               </div>
@@ -483,15 +591,24 @@ export default function StudentExamList() {
           )}
 
           <DialogFooter className="gap-2 pt-2">
-            <Button variant="outline" onClick={() => setShowModal(false)} size="sm">
+            <Button
+              variant="outline"
+              onClick={() => setShowModal(false)}
+              size="sm"
+              className="smooth-transition"
+            >
               Hủy
             </Button>
-            <Button onClick={startExam} className="bg-green-600 hover:bg-green-700" size="sm">
+            <Button
+              onClick={startExam}
+              className="bg-[#112444] hover:bg-[#1a365d] smooth-transition shadow-md"
+              size="sm"
+            >
               🚀 Bắt đầu làm bài
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }
