@@ -7,8 +7,6 @@ export class AttemptsService {
   constructor(private readonly prisma: PrismaService) { }
 
   async startAttempt(examId: string, userId: string) {
-    console.log('[startAttempt] Called with:', { examId, userId });
-
     // Check if exam exists
     const exam = await this.prisma.exam.findUnique({
       where: { id: examId },
@@ -21,25 +19,12 @@ export class AttemptsService {
       },
     });
 
-    console.log('[startAttempt] Exam found:', {
-      found: !!exam,
-      id: exam?.id,
-      title: exam?.title,
-      questionCount: exam?.questions?.length || 0,
-      maxAttempts: exam?.maxAttempts,
-    });
-
     if (!exam) {
-      console.error('[startAttempt] Exam not found:', examId);
       throw new NotFoundException(`Exam with ID ${examId} not found`);
     }
 
     // Check if exam has questions
     if (!exam.questions || exam.questions.length === 0) {
-      console.error('[startAttempt] Exam has no questions:', {
-        examId: exam.id,
-        title: exam.title,
-      });
       throw new BadRequestException('This exam has no questions');
     }
 
@@ -66,8 +51,6 @@ export class AttemptsService {
       }
     });
 
-    console.log('[startAttempt] Previous attempts:', previousAttempts.length);
-
     // Check if max attempts exceeded
     if (exam.maxAttempts !== null && exam.maxAttempts !== undefined) {
       if (previousAttempts.length >= exam.maxAttempts) {
@@ -86,11 +69,8 @@ export class AttemptsService {
 
     // If already has in-progress attempt, return it
     if (inProgressAttempt) {
-      console.log('[startAttempt] Returning existing in-progress attempt:', inProgressAttempt.id);
       return inProgressAttempt;
     }
-
-    console.log('[startAttempt] Creating new attempt...');
 
     // Calculate next attempt number
     const nextAttemptNumber = previousAttempts.length > 0
@@ -121,26 +101,20 @@ export class AttemptsService {
       },
     });
 
-    console.log('[startAttempt] New attempt created:', {
-      id: attempt.id,
-      questionCount: attempt.exam.questions.length,
-    });
-
     try {
-      // Transform data to match frontend expectations
       const transformedAttempt = {
         ...attempt,
         exam: {
           ...attempt.exam,
           questions: attempt.exam.questions.map(q => ({
             id: q.id,
-            questionText: q.question, // Map 'question' to 'questionText'
+            questionText: q.question,
             type: q.type,
             points: q.points,
             order: q.order,
             options: q.options.map(opt => ({
               id: opt.id,
-              text: opt.option, // Map 'option' to 'text'
+              text: opt.option,
               isCorrect: opt.isCorrect,
               order: opt.order,
             })),
@@ -148,19 +122,13 @@ export class AttemptsService {
         },
       };
 
-      console.log('[startAttempt] Transformed new attempt successfully');
       return transformedAttempt;
     } catch (transformError) {
-      console.error('[startAttempt] Error transforming new attempt:', transformError);
       throw transformError;
     }
   }
 
   async submitAnswer(attemptId: string, dto: SubmitAnswerDto, userId: string) {
-    console.log('[submitAnswer] Starting...')
-    console.log('Attempt ID:', attemptId)
-    console.log('User ID:', userId)
-    console.log('DTO:', dto)
 
     const attempt = await this.prisma.attempt.findUnique({
       where: { id: attemptId },
@@ -178,23 +146,14 @@ export class AttemptsService {
     });
 
     if (!attempt) {
-      console.error('[submitAnswer] Attempt not found:', attemptId)
       throw new NotFoundException(`Attempt with ID ${attemptId} not found`);
     }
 
-    console.log('[submitAnswer] Found attempt:', {
-      id: attempt.id,
-      studentId: attempt.studentId,
-      status: attempt.status
-    })
-
     if (attempt.studentId !== userId) {
-      console.error('[submitAnswer] User mismatch. Expected:', attempt.studentId, 'Got:', userId)
       throw new ForbiddenException('You can only submit answers to your own attempt');
     }
 
     if (attempt.status !== 'IN_PROGRESS') {
-      console.error('[submitAnswer] Invalid status:', attempt.status)
       throw new BadRequestException('This attempt has already been submitted');
     }
 
@@ -207,11 +166,8 @@ export class AttemptsService {
     });
 
     if (!question) {
-      console.error('[submitAnswer] Question not found:', dto.questionId)
       throw new NotFoundException(`Question with ID ${dto.questionId} not found`);
     }
-
-    console.log('[submitAnswer] Found question:', question.id)
 
     // Check if answer is correct
     let isCorrect = false;
@@ -222,24 +178,18 @@ export class AttemptsService {
     
     if (isEssayQuestion) {
       // Essay questions need manual grading - don't auto-score
-      console.log('[submitAnswer] Essay question - will require manual grading')
       isCorrect = false; // Will be set by teacher
       points = 0; // Will be set by teacher
     } else if (dto.selectedOption) {
       // Multiple choice - auto grade
       const selectedOpt = question.options.find((opt) => opt.id === dto.selectedOption);
-      console.log('[submitAnswer] Selected option:', dto.selectedOption)
-      console.log('[submitAnswer] Found option:', selectedOpt)
       if (selectedOpt?.isCorrect) {
         isCorrect = true;
         points = question.points;
       }
     }
 
-    console.log('[submitAnswer] Answer evaluation:', { isCorrect, points, isEssay: isEssayQuestion })
-
     // Upsert answer
-    console.log('[submitAnswer] Upserting answer...')
     const answer = await this.prisma.answer.upsert({
       where: {
         attemptId_questionId: {
@@ -263,16 +213,10 @@ export class AttemptsService {
       },
     });
 
-    console.log('[submitAnswer] ✓ Answer saved:', answer.id)
     return answer;
   }
 
   async submitAttempt(attemptId: string, timeSpent: number, userId: string) {
-    console.log('[submitAttempt] Starting...')
-    console.log('Attempt ID:', attemptId)
-    console.log('User ID:', userId)
-    console.log('Time spent:', timeSpent)
-
     const attempt = await this.prisma.attempt.findUnique({
       where: { id: attemptId },
       include: {
@@ -286,24 +230,14 @@ export class AttemptsService {
     });
 
     if (!attempt) {
-      console.error('[submitAttempt] Attempt not found:', attemptId)
       throw new NotFoundException(`Attempt with ID ${attemptId} not found`);
     }
 
-    console.log('[submitAttempt] Found attempt:', {
-      id: attempt.id,
-      studentId: attempt.studentId,
-      status: attempt.status,
-      answersCount: attempt.answers.length
-    })
-
     if (attempt.studentId !== userId) {
-      console.error('[submitAttempt] User mismatch. Expected:', attempt.studentId, 'Got:', userId)
       throw new ForbiddenException('You can only submit your own attempt');
     }
 
     if (attempt.status !== 'IN_PROGRESS') {
-      console.error('[submitAttempt] Invalid status:', attempt.status)
       throw new BadRequestException('This attempt has already been submitted');
     }
 
@@ -321,17 +255,7 @@ export class AttemptsService {
       ? null 
       : (maxPoints > 0 ? Math.round((totalPoints / maxPoints) * 100 * 100) / 100 : 0);
 
-    console.log('[submitAttempt] Score calculation:', {
-      totalPoints,
-      maxPoints,
-      score,
-      hasEssayQuestions,
-      status: hasEssayQuestions ? 'Needs manual grading' : 'Auto-graded',
-      percentage: score !== null ? `${score.toFixed(2)}%` : 'Pending'
-    })
-
     // Update attempt - keep as SUBMITTED if has essay questions (needs manual grading)
-    console.log('[submitAttempt] Updating attempt status to SUBMITTED...')
     const updatedAttempt = await this.prisma.attempt.update({
       where: { id: attemptId },
       data: {
@@ -354,9 +278,6 @@ export class AttemptsService {
       },
     });
 
-    console.log('[submitAttempt] ✓ Attempt submitted successfully')
-    console.log('Final score:', updatedAttempt.score)
-
     // Create notification for the teacher who created the exam
     try {
       const student = await this.prisma.user.findUnique({
@@ -375,9 +296,8 @@ export class AttemptsService {
           examId: attempt.exam.id,
         },
       });
-      console.log(`✅ Created notification for teacher about student submission`);
     } catch (error) {
-      console.error('Error creating teacher notification:', error);
+      // Silently fail - attempt was submitted successfully
       // Don't throw error - attempt was submitted successfully
     }
 

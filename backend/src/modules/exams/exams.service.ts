@@ -191,8 +191,6 @@ export class ExamsService {
               examId: exam.id,
             })),
           });
-
-          console.log(`✅ Created notifications for ${students.length} students`);
         }
       } catch (error) {
         console.error('Error creating notifications:', error);
@@ -213,7 +211,6 @@ export class ExamsService {
           examId: exam.id,
         },
       });
-      console.log(`✅ Created notification for teacher`);
     } catch (error) {
       console.error('Error creating teacher notification:', error);
       // Don't throw error - exam was created successfully

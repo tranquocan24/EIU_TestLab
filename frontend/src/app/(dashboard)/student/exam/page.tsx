@@ -123,6 +123,12 @@ export default function ExamTakingPage() {
   const [showRecoveryBanner, setShowRecoveryBanner] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false); // Track fullscreen state
   const [showFullscreenPrompt, setShowFullscreenPrompt] = useState(false); // Show prompt to enable fullscreen
+  
+  // Tab switching detection
+  const [showTabSwitchWarning, setShowTabSwitchWarning] = useState(false); // Show tab switch warning modal
+  const tabSwitchCountRef = useRef(0); // Track tab switch count
+  const [tabSwitchCount, setTabSwitchCount] = useState(0); // For UI display only
+  const isHandlingVisibilityChangeRef = useRef(false); // Prevent multiple triggers
 
   // Initialize exam persistence hook
   const { saveState, loadSavedState, findSession, clearState } =
@@ -372,6 +378,73 @@ export default function ExamTakingPage() {
     };
   }, [exam, isSubmitting, attemptId, autoSubmitExam]);
 
+  // Monitor tab switching (visibility change)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      console.log("🔍 Visibility change detected!");
+      console.log("- document.hidden:", document.hidden);
+      console.log("- exam:", exam ? "loaded" : "not loaded");
+      console.log("- isSubmitting:", isSubmitting);
+      console.log("- antiCheatEnabledRef.current:", antiCheatEnabledRef.current);
+      console.log("- isHandlingVisibilityChangeRef.current:", isHandlingVisibilityChangeRef.current);
+
+      // Prevent multiple simultaneous triggers
+      if (isHandlingVisibilityChangeRef.current) {
+        console.log("⏭️ Skipping visibility change - already handling");
+        return;
+      }
+
+      // Check if user switched to another tab/window
+      if (document.hidden && exam && !isSubmitting && antiCheatEnabledRef.current) {
+        isHandlingVisibilityChangeRef.current = true;
+
+        // Use ref to avoid re-render loop
+        tabSwitchCountRef.current += 1;
+        const newCount = tabSwitchCountRef.current;
+
+        // Update state for UI display
+        setTabSwitchCount(newCount);
+
+        console.log(`⚠️ Tab switch count: ${newCount}/3`);
+
+        if (newCount >= 3) {
+          // Auto submit after 3 warnings
+          alert(
+            "⚠️ Bạn đã chuyển tab/cửa sổ 3 lần. Hệ thống sẽ tự động nộp bài của bạn."
+          );
+          // Trigger submit through state change
+          setIsSubmitting(true);
+          // Call submit directly
+          if (attemptId) {
+            autoSubmitExam();
+          }
+        } else {
+          // Show warning modal
+          console.log("📢 Showing tab switch warning modal");
+          setShowTabSwitchWarning(true);
+        }
+
+        // Reset flag after a delay
+        setTimeout(() => {
+          isHandlingVisibilityChangeRef.current = false;
+        }, 1000);
+      } else {
+        console.log(
+          "ℹ️ Visibility change ignored (tab became visible or conditions not met)"
+        );
+      }
+    };
+
+    console.log("✅ Adding visibility change listener");
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    // Cleanup on unmount
+    return () => {
+      console.log("🧹 Removing visibility change listener");
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [exam, isSubmitting, attemptId, autoSubmitExam]);
+
   const handleReturnToFullscreen = async () => {
     setShowFullscreenWarning(false);
 
@@ -394,6 +467,15 @@ export default function ExamTakingPage() {
         console.error("Error entering fullscreen:", error);
       }
     }
+  };
+
+  const handleAcknowledgeTabSwitch = () => {
+    setShowTabSwitchWarning(false);
+
+    // Reset the handling flag to allow next detection
+    isHandlingVisibilityChangeRef.current = false;
+
+    console.log("✓ Tab switch warning acknowledged");
   };
 
   const handleSubmit = async () => {
@@ -940,6 +1022,42 @@ export default function ExamTakingPage() {
                   <span>Chưa toàn màn hình</span>
                 </div>
               )}
+
+              {/* Tab switch warning count */}
+              {tabSwitchCount > 0 && (
+                <div className="flex items-center gap-1.5 text-xs text-red-300">
+                  <svg
+                    className="w-3.5 h-3.5"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  <span>Chuyển tab: {tabSwitchCount}/3</span>
+                </div>
+              )}
+
+              {/* Fullscreen exit warning count */}
+              {fullscreenExitCount > 0 && (
+                <div className="flex items-center gap-1.5 text-xs text-orange-300">
+                  <svg
+                    className="w-3.5 h-3.5"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  <span>Thoát fullscreen: {fullscreenExitCount}/3</span>
+                </div>
+              )}
             </div>
           </div>
           <div className="text-left sm:text-right">
@@ -1295,6 +1413,64 @@ export default function ExamTakingPage() {
               className="w-full bg-blue-600 hover:bg-blue-700"
             >
               Quay lại chế độ toàn màn hình
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Tab Switch Warning Dialog */}
+      <Dialog
+        open={showTabSwitchWarning}
+        onOpenChange={() => {}} // Không cho đóng dialog
+        modal={true}
+      >
+        <DialogContent
+          className="[&>button]:hidden" // Ẩn nút X
+          onPointerDownOutside={(e) => e.preventDefault()} // Chặn click ngoài
+          onEscapeKeyDown={(e) => e.preventDefault()} // Chặn ESC
+        >
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-amber-600">
+              <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 20 20">
+                <path
+                  fillRule="evenodd"
+                  d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                  clipRule="evenodd"
+                />
+              </svg>
+              Cảnh báo: Chuyển tab phát hiện!
+            </DialogTitle>
+            <DialogDescription>
+              Bạn đã chuyển sang tab/cửa sổ khác!
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="py-4">
+            <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-red-700 font-semibold text-center">
+                ⚠️ Còn {3 - tabSwitchCount} lần cảnh báo
+              </p>
+              <p className="text-red-600 text-sm text-center mt-1">
+                Sau {3 - tabSwitchCount} lần chuyển tab nữa, hệ thống sẽ tự động
+                nộp bài!
+              </p>
+            </div>
+
+            <p className="text-gray-700 mb-4">
+              Để đảm bảo tính công bằng trong kỳ thi, bạn không được phép chuyển
+              sang tab/cửa sổ/ứng dụng khác trong suốt quá trình làm bài.
+            </p>
+            <p className="text-gray-700">
+              Vui lòng tập trung làm bài trên tab hiện tại.
+            </p>
+          </div>
+
+          <DialogFooter>
+            <Button
+              onClick={handleAcknowledgeTabSwitch}
+              className="w-full bg-blue-600 hover:bg-blue-700"
+            >
+              Tôi hiểu - Tiếp tục làm bài
             </Button>
           </DialogFooter>
         </DialogContent>

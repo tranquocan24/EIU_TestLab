@@ -1,0 +1,168 @@
+{
+  "exams": [
+    {
+      "id": "exam_001",
+      "title": "Kiểm tra Lập trình Web - Cơ bản",
+      "subject": "Lập trình Web",
+      "description": "Bài kiểm tra kiến thức cơ bản về HTML, CSS và JavaScript",
+      "duration": 45,
+      "createdBy": "GV001",
+      "createdAt": "2025-01-01T00:00:00Z",
+      "questions": [
+        {
+          "id": 1,
+          "type": "multiple-choice",
+          "question": "HTML là viết tắt của gì?",
+          "options": [
+            "HyperText Markup Language",
+            "High Tech Modern Language",
+            "Home Tool Markup Language",
+            "Hyperlink and Text Markup Language"
+          ],
+          "correctAnswer": 0
+        },
+        {
+          "id": 2,
+          "type": "multiple-choice",
+          "question": "CSS được sử dụng để làm gì?",
+          "options": [
+            "Tạo cấu trúc trang web",
+            "Định dạng và trang trí trang web",
+            "Xử lý logic trang web",
+            "Kết nối cơ sở dữ liệu"
+          ],
+          "correctAnswer": 1
+        },
+        {
+          "id": 3,
+          "type": "multiple-choice",
+          "question": "Thẻ nào được sử dụng để tạo liên kết trong HTML?",
+          "options": [
+            "<link>",
+            "<a>",
+            "<href>",
+            "<url>"
+          ],
+          "correctAnswer": 1
+        },
+        {
+          "id": 4,
+          "type": "multiple-select",
+          "question": "Những ngôn ngữ nào sau đây được sử dụng trong front-end development?",
+          "options": [
+            "HTML",
+            "CSS",
+            "JavaScript",
+            "Python",
+            "Java"
+          ],
+          "correctAnswer": [
+            0,
+            1,
+            2
+          ]
+        },
+        {
+          "id": 5,
+          "type": "text",
+          "question": "Viết cú pháp để khai báo một biến trong JavaScript:",
+          "correctAnswer": "var x; hoặc let x; hoặc const x;"
+        }
+      ]
+    },
+    {
+      "id": "exam_002",
+      "title": "Kiểm tra JavaScript - Nâng cao",
+      "subject": "Lập trình Web",
+      "description": "Bài kiểm tra kiến thức nâng cao về JavaScript ES6+",
+      "duration": 60,
+      "createdBy": "GV001",
+      "createdAt": "2025-01-01T00:00:00Z",
+      "questions": [
+        {
+          "id": 1,
+          "type": "multiple-choice",
+          "question": "Arrow function được giới thiệu trong phiên bản nào của JavaScript?",
+          "options": [
+            "ES5",
+            "ES6",
+            "ES7",
+            "ES8"
+          ],
+          "correctAnswer": 1
+        },
+        {
+          "id": 2,
+          "type": "multiple-choice",
+          "question": "Từ khóa nào được sử dụng để khai báo hằng số trong JavaScript?",
+          "options": [
+            "var",
+            "let",
+            "const",
+            "final"
+          ],
+          "correctAnswer": 2
+        },
+        {
+          "id": 3,
+          "type": "multiple-select",
+          "question": "Những tính năng nào sau đây là mới trong ES6?",
+          "options": [
+            "Arrow functions",
+            "Template literals",
+            "Destructuring",
+            "Classes",
+            "Promises"
+          ],
+          "correctAnswer": [
+            0,
+            1,
+            2,
+            3
+          ]
+        }
+      ]
+    },
+    {
+      "id": "exam_003",
+      "title": "Kiểm tra Cơ sở dữ liệu",
+      "subject": "Cơ sở dữ liệu",
+      "description": "Bài kiểm tra về SQL và thiết kế cơ sở dữ liệu",
+      "duration": 75,
+      "createdBy": "GV002",
+      "createdAt": "2025-01-01T00:00:00Z",
+      "questions": [
+        {
+          "id": 1,
+          "type": "multiple-choice",
+          "question": "SQL là viết tắt của gì?",
+          "options": [
+            "Structured Query Language",
+            "Simple Query Language",
+            "Standard Query Language",
+            "Sequential Query Language"
+          ],
+          "correctAnswer": 0
+        },
+        {
+          "id": 2,
+          "type": "multiple-choice",
+          "question": "Lệnh nào được sử dụng để tạo bảng mới trong SQL?",
+          "options": [
+            "NEW TABLE",
+            "CREATE TABLE",
+            "MAKE TABLE",
+            "ADD TABLE"
+          ],
+          "correctAnswer": 1
+        },
+        {
+          "id": 3,
+          "type": "text",
+          "question": "Viết câu lệnh SQL để lấy tất cả dữ liệu từ bảng 'users':",
+          "correctAnswer": "SELECT * FROM users;"
+        }
+      ]
+    }
+  ]
+}

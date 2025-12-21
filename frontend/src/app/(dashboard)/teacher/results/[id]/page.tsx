@@ -390,7 +390,9 @@ export default function TeacherResultDetailPage() {
             const isEssay =
               answer.question.type?.toLowerCase().includes("essay") ||
               answer.question.type?.toLowerCase().includes("text");
-            const isGraded = answer.points > 0 || answer.isCorrect;
+            const isGraded = isEssay
+              ? answer.points !== null
+              : answer.points > 0 || answer.isCorrect;
 
             return (
               <Card

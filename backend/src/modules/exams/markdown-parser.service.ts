@@ -113,17 +113,12 @@ export class MarkdownParserService {
       throw new BadRequestException('Không tìm thấy câu hỏi nào trong markdown');
     }
 
-    console.log(`[DEBUG] Found ${matches.length} questions to parse`);
-
     return matches.map((match, index) => {
       const questionNumber = parseInt(match[1], 10);
       let questionContent = match[2].trim();
       
       // Remove trailing separator (---) if exists
       questionContent = questionContent.replace(/\n*---\s*$/g, '').trim();
-      
-      console.log(`[DEBUG] Parsing question ${questionNumber}, content length: ${questionContent.length}`);
-      console.log(`[DEBUG] First 200 chars: ${questionContent.substring(0, 200)}`);
 
       return this.parseQuestion(questionContent, questionNumber || index + 1);
     });
@@ -172,8 +167,6 @@ export class MarkdownParserService {
       // Extract options - flexible regex to handle spaces and line breaks
       // Match: "- A. text" or "-A. text" or "- A.text"
       const optionMatches = Array.from(content.matchAll(/-\s*([A-Z])\.\s*([^\n]+)/g));
-      
-      console.log(`[DEBUG] Câu ${order}: Found ${optionMatches.length} options`);
       
       options = optionMatches.map((match, idx) => {
         const optionLetter = match[1];

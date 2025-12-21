@@ -45,14 +45,31 @@ export class AuthService {
         name: true,
         role: true,
         courses: true,
+        coursesEnrolled: {
+          include: {
+            course: {
+              select: {
+                id: true,
+                code: true,
+                name: true,
+              },
+            },
+          },
+        },
       },
     });
 
     // Generate token
     const token = await this.signToken(user.id, user.username, user.role);
 
+    // Map coursesEnrolled to courses array for backward compatibility
+    const courseCodes = user.coursesEnrolled?.map(e => e.course.code) || [];
+
     return {
-      user,
+      user: {
+        ...user,
+        courses: courseCodes,
+      },
       access_token: token,
     };
   }
@@ -61,6 +78,19 @@ export class AuthService {
     // Find user
     const user = await this.prisma.user.findUnique({
       where: { username: dto.username },
+      include: {
+        coursesEnrolled: {
+          include: {
+            course: {
+              select: {
+                id: true,
+                code: true,
+                name: true,
+              },
+            },
+          },
+        },
+      },
     });
 
     if (!user) {
@@ -77,6 +107,9 @@ export class AuthService {
     // Generate token
     const token = await this.signToken(user.id, user.username, user.role);
 
+    // Map coursesEnrolled to courses array for backward compatibility
+    const courseCodes = user.coursesEnrolled?.map(e => e.course.code) || [];
+
     return {
       user: {
         id: user.id,
@@ -84,7 +117,7 @@ export class AuthService {
         email: user.email,
         name: user.name,
         role: user.role,
-        courses: user.courses,
+        courses: courseCodes,
       },
       access_token: token,
     };

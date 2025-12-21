@@ -13,19 +13,7 @@ export class AttemptsController {
 
   @Post('start')
   async startAttempt(@Body() dto: StartAttemptDto, @GetUser('id') userId: string) {
-    try {
-      console.log('[AttemptsController] startAttempt called:', { dto, userId });
-      const result = await this.attemptsService.startAttempt(dto.examId, userId);
-      console.log('[AttemptsController] startAttempt success');
-      return result;
-    } catch (error) {
-      console.error('[AttemptsController] startAttempt error:', {
-        message: error.message,
-        stack: error.stack,
-        name: error.name,
-      });
-      throw error;
-    }
+    return this.attemptsService.startAttempt(dto.examId, userId);
   }
 
   @Put(':id/answer')
