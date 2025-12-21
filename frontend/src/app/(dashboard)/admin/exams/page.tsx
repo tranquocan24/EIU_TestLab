@@ -27,6 +27,7 @@ interface Exam {
   id: string;
   title: string;
   subject: string;
+  allowedCourses?: string;
   status: "PUBLISHED" | "DRAFT" | "ARCHIVED";
   createdAt: string;
   createdBy: {
@@ -38,15 +39,22 @@ interface Exam {
   };
 }
 
+interface Course {
+  id: string;
+  code: string;
+  name: string;
+}
+
 export default function AdminExamsPage() {
   const router = useRouter();
   const { user, isAuthenticated } = useAuth();
   const [exams, setExams] = useState<Exam[]>([]);
   const [filteredExams, setFilteredExams] = useState<Exam[]>([]);
+  const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [subjectFilter, setSubjectFilter] = useState("all");
+  const [courseFilter, setCourseFilter] = useState("all");
 
   useEffect(() => {
     if (!isAuthenticated || user?.role.toLowerCase() !== "admin") {
@@ -55,11 +63,12 @@ export default function AdminExamsPage() {
     }
 
     loadExams();
+    loadCourses();
   }, [isAuthenticated, user, router]);
 
   useEffect(() => {
     filterExams();
-  }, [exams, searchQuery, statusFilter, subjectFilter]);
+  }, [exams, searchQuery, statusFilter, courseFilter]);
 
   const loadExams = async () => {
     try {
@@ -73,6 +82,15 @@ export default function AdminExamsPage() {
     }
   };
 
+  const loadCourses = async () => {
+    try {
+      const data = await api.getCourses();
+      setCourses(data);
+    } catch (error) {
+      console.error("Error loading courses:", error);
+    }
+  };
+
   const filterExams = () => {
     let filtered = [...exams];
 
@@ -82,6 +100,8 @@ export default function AdminExamsPage() {
         (e) =>
           e.title.toLowerCase().includes(query) ||
           e.subject.toLowerCase().includes(query) ||
+          (e.allowedCourses &&
+            e.allowedCourses.toLowerCase().includes(query)) ||
           e.createdBy.name.toLowerCase().includes(query)
       );
     }
@@ -92,8 +112,10 @@ export default function AdminExamsPage() {
       );
     }
 
-    if (subjectFilter && subjectFilter !== "all") {
-      filtered = filtered.filter((e) => e.subject === subjectFilter);
+    if (courseFilter && courseFilter !== "all") {
+      filtered = filtered.filter(
+        (e) => e.allowedCourses && e.allowedCourses.includes(courseFilter)
+      );
     }
 
     setFilteredExams(filtered);
@@ -255,15 +277,17 @@ export default function AdminExamsPage() {
               />
             </div>
 
-            <Select value={subjectFilter} onValueChange={setSubjectFilter}>
+            <Select value={courseFilter} onValueChange={setCourseFilter}>
               <SelectTrigger>
-                <SelectValue placeholder="Tất cả môn học" />
+                <SelectValue placeholder="Tất cả lớp" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Tất cả môn học</SelectItem>
-                <SelectItem value="Lập trình Web">Lập trình Web</SelectItem>
-                <SelectItem value="Cơ sở dữ liệu">Cơ sở dữ liệu</SelectItem>
-                <SelectItem value="Mạng máy tính">Mạng máy tính</SelectItem>
+                <SelectItem value="all">Tất cả lớp</SelectItem>
+                {courses.map((course) => (
+                  <SelectItem key={course.id} value={course.code}>
+                    {course.code} - {course.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
 
@@ -297,7 +321,7 @@ export default function AdminExamsPage() {
                       Tên đề thi
                     </th>
                     <th className="text-left py-3 px-4 font-semibold text-gray-700">
-                      Môn học
+                      Lớp
                     </th>
                     <th className="text-left py-3 px-4 font-semibold text-gray-700">
                       Giáo viên
@@ -329,7 +353,7 @@ export default function AdminExamsPage() {
                         {exam.title}
                       </td>
                       <td className="py-3 px-4 text-gray-600">
-                        {exam.subject}
+                        {exam.allowedCourses || "Tất cả"}
                       </td>
                       <td className="py-3 px-4 text-gray-600">
                         {exam.createdBy.name}
@@ -395,9 +419,7 @@ export default function AdminExamsPage() {
                 Không tìm thấy đề thi
               </h3>
               <p className="text-gray-500">
-                {searchQuery ||
-                statusFilter !== "all" ||
-                subjectFilter !== "all"
+                {searchQuery || statusFilter !== "all" || courseFilter !== "all"
                   ? "Không tìm thấy đề thi phù hợp với bộ lọc"
                   : "Chưa có đề thi nào trong hệ thống"}
               </p>
