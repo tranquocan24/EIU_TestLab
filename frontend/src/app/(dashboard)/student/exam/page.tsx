@@ -123,7 +123,7 @@ export default function ExamTakingPage() {
   const [showRecoveryBanner, setShowRecoveryBanner] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false); // Track fullscreen state
   const [showFullscreenPrompt, setShowFullscreenPrompt] = useState(false); // Show prompt to enable fullscreen
-  
+
   // Tab switching detection
   const [showTabSwitchWarning, setShowTabSwitchWarning] = useState(false); // Show tab switch warning modal
   const tabSwitchCountRef = useRef(0); // Track tab switch count
@@ -385,8 +385,14 @@ export default function ExamTakingPage() {
       console.log("- document.hidden:", document.hidden);
       console.log("- exam:", exam ? "loaded" : "not loaded");
       console.log("- isSubmitting:", isSubmitting);
-      console.log("- antiCheatEnabledRef.current:", antiCheatEnabledRef.current);
-      console.log("- isHandlingVisibilityChangeRef.current:", isHandlingVisibilityChangeRef.current);
+      console.log(
+        "- antiCheatEnabledRef.current:",
+        antiCheatEnabledRef.current
+      );
+      console.log(
+        "- isHandlingVisibilityChangeRef.current:",
+        isHandlingVisibilityChangeRef.current
+      );
 
       // Prevent multiple simultaneous triggers
       if (isHandlingVisibilityChangeRef.current) {
@@ -395,7 +401,12 @@ export default function ExamTakingPage() {
       }
 
       // Check if user switched to another tab/window
-      if (document.hidden && exam && !isSubmitting && antiCheatEnabledRef.current) {
+      if (
+        document.hidden &&
+        exam &&
+        !isSubmitting &&
+        antiCheatEnabledRef.current
+      ) {
         isHandlingVisibilityChangeRef.current = true;
 
         // Use ref to avoid re-render loop
