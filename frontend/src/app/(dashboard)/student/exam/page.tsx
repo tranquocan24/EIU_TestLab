@@ -13,6 +13,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import api from "@/lib/api";
+import { useExamPersistence } from "@/hooks/useExamPersistence";
+import { clearExpiredSessions, clearExamState } from "@/lib/examStorage";
 
 // Prevent copying
 const preventCopy = (e: ClipboardEvent) => {
@@ -117,6 +119,23 @@ export default function ExamTakingPage() {
   const hasLoadedRef = useRef(false);
   const isHandlingFullscreenChangeRef = useRef(false); // Prevent multiple triggers
   const antiCheatEnabledRef = useRef(false); // Track if anti-cheat is enabled
+  const [examStartTime, setExamStartTime] = useState<Date | null>(null);
+  const [showRecoveryBanner, setShowRecoveryBanner] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false); // Track fullscreen state
+  const [showFullscreenPrompt, setShowFullscreenPrompt] = useState(false); // Show prompt to enable fullscreen
+
+  // Initialize exam persistence hook
+  const { saveState, loadSavedState, findSession, clearState } =
+    useExamPersistence({
+      examId: examId,
+      attemptId: attemptId,
+      answers,
+      currentQuestion,
+      duration: exam?.duration || 0,
+      examTitle: exam?.title,
+      startTime: examStartTime || undefined,
+      enabled: !!examId && !!attemptId,
+    });
 
   useEffect(() => {
     console.log(
@@ -128,6 +147,10 @@ export default function ExamTakingPage() {
     if (examId && !hasLoadedRef.current) {
       console.log("[useEffect] Calling loadExam");
       hasLoadedRef.current = true;
+
+      // Clean up expired sessions first
+      clearExpiredSessions().catch(console.error);
+
       loadExam(examId);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -141,12 +164,37 @@ export default function ExamTakingPage() {
       const totalTime = (exam.duration || 0) * 60;
       const timeSpent = Math.floor((totalTime - timeRemaining) / 60);
 
-      // Submit answers
-      for (const [questionId, optionId] of Object.entries(answers)) {
+      console.log("=== AUTO SUBMITTING EXAM ===");
+      console.log("Total questions:", exam.questions.length);
+      console.log("Answered questions:", Object.keys(answers).length);
+
+      // Submit ALL questions - including unanswered ones
+      for (const question of exam.questions) {
         try {
-          await api.submitAnswer(attemptId, questionId, optionId);
+          const answer = answers[question.id];
+
+          if (answer) {
+            // Submit answered question
+            const isEssay = question.type?.toLowerCase().includes("essay");
+            if (isEssay) {
+              await api.submitAnswer(attemptId, question.id, "", answer);
+            } else {
+              await api.submitAnswer(attemptId, question.id, answer);
+            }
+            console.log(`✓ Submitted answer for question ${question.id}`);
+          } else {
+            // Submit empty answer for unanswered questions
+            const isEssay = question.type?.toLowerCase().includes("essay");
+            if (isEssay) {
+              await api.submitAnswer(attemptId, question.id, "", "");
+            } else {
+              // For multiple choice, submit with empty selectedOption
+              await api.submitAnswer(attemptId, question.id, "");
+            }
+            console.log(`✗ Submitted empty answer for question ${question.id}`);
+          }
         } catch (error) {
-          console.error("Error submitting answer:", error);
+          console.error(`Error submitting question ${question.id}:`, error);
         }
       }
 
@@ -179,7 +227,7 @@ export default function ExamTakingPage() {
     };
   }, [exam]);
 
-  const enableAntiCheat = async () => {
+  const enableAntiCheat = useCallback(async () => {
     if (antiCheatEnabledRef.current) return;
 
     let styleElement: HTMLStyleElement | null = null;
@@ -187,8 +235,22 @@ export default function ExamTakingPage() {
     try {
       // Enable fullscreen - MUST be called from user gesture
       const elem = document.documentElement;
-      if (elem.requestFullscreen) {
-        await elem.requestFullscreen();
+      if (elem.requestFullscreen && !document.fullscreenElement) {
+        try {
+          await elem.requestFullscreen();
+          setIsFullscreen(true);
+          console.log("✅ Fullscreen enabled successfully");
+        } catch (fsError: any) {
+          // Handle permissions error gracefully
+          if (fsError.name === "NotAllowedError") {
+            console.warn(
+              "⚠️ Fullscreen blocked by browser. User needs to interact first."
+            );
+            // Don't throw - let exam continue without fullscreen
+          } else {
+            console.error("Error enabling fullscreen:", fsError);
+          }
+        }
       }
 
       // Prevent copy/paste
@@ -208,7 +270,7 @@ export default function ExamTakingPage() {
       console.error("Error enabling anti-cheat:", error);
       throw error;
     }
-  };
+  }, []); // Empty deps - function doesn't depend on any state
 
   const disableAntiCheat = () => {
     // Exit fullscreen
@@ -238,6 +300,10 @@ export default function ExamTakingPage() {
     const handleFullscreenChange = () => {
       console.log("🔍 Fullscreen change detected!");
       console.log("- document.fullscreenElement:", document.fullscreenElement);
+
+      // Update fullscreen state
+      setIsFullscreen(!!document.fullscreenElement);
+
       console.log("- exam:", exam ? "loaded" : "not loaded");
       console.log("- isSubmitting:", isSubmitting);
       console.log(
@@ -314,11 +380,19 @@ export default function ExamTakingPage() {
 
     try {
       const elem = document.documentElement;
-      if (elem.requestFullscreen) {
+      if (elem.requestFullscreen && !document.fullscreenElement) {
         await elem.requestFullscreen();
+        setIsFullscreen(true);
+        console.log("✓ Returned to fullscreen");
       }
-    } catch (error) {
-      console.error("Error entering fullscreen:", error);
+    } catch (error: any) {
+      if (error.name === "NotAllowedError") {
+        console.warn(
+          "⚠️ Fullscreen permission denied. User needs to interact first."
+        );
+      } else {
+        console.error("Error entering fullscreen:", error);
+      }
     }
   };
 
@@ -336,40 +410,45 @@ export default function ExamTakingPage() {
       console.log("=== SUBMITTING EXAM ===");
       console.log("Attempt ID:", attemptId);
       console.log("Time spent:", timeSpent, "minutes");
-      console.log("Total answers:", Object.keys(answers).length);
-      console.log("Answers:", answers);
+      console.log("Total questions:", exam?.questions.length);
+      console.log("Answered questions:", Object.keys(answers).length);
 
-      // Submit all answers first
+      // Submit ALL questions - including unanswered ones
       let successCount = 0;
       let errorCount = 0;
 
-      for (const [questionId, answer] of Object.entries(answers)) {
+      for (const question of exam?.questions || []) {
         try {
-          // Find the question to check if it's essay type
-          const question = exam?.questions.find((q) => q.id === questionId);
-          const isEssay = question?.type?.toLowerCase().includes("essay");
+          const answer = answers[question.id];
+          const isEssay = question.type?.toLowerCase().includes("essay");
 
           console.log(
-            `Submitting answer for question ${questionId}: ${answer} (${
-              isEssay ? "essay" : "multiple-choice"
-            })`
+            `Submitting question ${question.id}: ${
+              answer ? "answered" : "empty"
+            } (${isEssay ? "essay" : "multiple-choice"})`
           );
 
-          if (isEssay) {
-            // For essay questions, send as textAnswer
-            await api.submitAnswer(attemptId, questionId, "", answer);
+          if (answer) {
+            // Submit answered question
+            if (isEssay) {
+              await api.submitAnswer(attemptId, question.id, "", answer);
+            } else {
+              await api.submitAnswer(attemptId, question.id, answer);
+            }
           } else {
-            // For multiple choice, send as selectedOption
-            await api.submitAnswer(attemptId, questionId, answer);
+            // Submit empty answer for unanswered questions
+            if (isEssay) {
+              await api.submitAnswer(attemptId, question.id, "", "");
+            } else {
+              await api.submitAnswer(attemptId, question.id, "");
+            }
           }
+
           successCount++;
-          console.log(`✓ Answer ${successCount} submitted successfully`);
+          console.log(`✓ Question ${question.id} submitted successfully`);
         } catch (error: unknown) {
           errorCount++;
-          console.error(
-            `✗ Error submitting answer for question ${questionId}:`,
-            error
-          );
+          console.error(`✗ Error submitting question ${question.id}:`, error);
           if (error && typeof error === "object" && "response" in error) {
             const axiosError = error as {
               response?: { status?: number; data?: unknown };
@@ -400,6 +479,9 @@ export default function ExamTakingPage() {
           .exitFullscreen()
           .catch((err) => console.error("Error exiting fullscreen:", err));
       }
+
+      // Clear persisted state after successful submission
+      await clearState();
 
       // Navigate to results page
       alert("Nộp bài thành công!");
@@ -478,12 +560,82 @@ export default function ExamTakingPage() {
       setExam(transformedExam);
       setTimeRemaining(transformedExam.duration * 60); // Convert to seconds
 
-      // Start attempt
+      // Check for existing session first
+      console.log("[loadExam] Checking for existing session...");
+      const existingSession = await findSession(id);
+
+      if (existingSession) {
+        console.log("✓ Found existing session:", existingSession);
+
+        // Validate session with server - check if attempt is still IN_PROGRESS
+        try {
+          console.log("[loadExam] Validating session with server...");
+          const attemptStatus = await api.getAttemptDetail(
+            existingSession.attemptId
+          );
+
+          if (attemptStatus.status !== "IN_PROGRESS") {
+            console.warn(
+              "⚠️ Session no longer valid - attempt status:",
+              attemptStatus.status
+            );
+            // Clear this session from IndexedDB
+            await clearExamState(id, existingSession.attemptId);
+            console.log("✓ Cleared invalid session from IndexedDB");
+            // Don't restore - create new attempt below
+          } else {
+            // Session is valid - restore it
+            console.log("✓ Session validated - restoring...");
+
+            // Calculate remaining time based on start time
+            const startTime = new Date(existingSession.startTime);
+            const now = new Date();
+            const elapsedSeconds = Math.floor(
+              (now.getTime() - startTime.getTime()) / 1000
+            );
+            const totalSeconds = existingSession.duration * 60;
+            const remainingSeconds = Math.max(0, totalSeconds - elapsedSeconds);
+
+            // Restore session state
+            setAttemptId(existingSession.attemptId);
+            setAnswers(existingSession.answers || {});
+            setCurrentQuestion(existingSession.currentQuestion || 0);
+            setTimeRemaining(remainingSeconds);
+            setExamStartTime(startTime);
+            setShowRecoveryBanner(true);
+
+            console.log(
+              "✓ Session restored. Time remaining:",
+              remainingSeconds,
+              "seconds"
+            );
+
+            // Check if already in fullscreen, if not will be handled by useEffect below
+            if (document.fullscreenElement) {
+              setIsFullscreen(true);
+              console.log("✓ Already in fullscreen for restored session");
+            }
+
+            // Hide recovery banner after 5 seconds
+            setTimeout(() => setShowRecoveryBanner(false), 5000);
+            return;
+          }
+        } catch (error) {
+          console.warn("⚠️ Could not validate session with server:", error);
+          // Clear potentially corrupted session
+          await clearExamState(id, existingSession.attemptId);
+          console.log("✓ Cleared unvalidated session from IndexedDB");
+          // Continue to create new attempt
+        }
+      }
+
+      // Start new attempt
       try {
         console.log("Starting attempt for exam:", id);
         const attempt = await api.startExam(id);
         console.log("Started attempt:", attempt);
         setAttemptId(attempt.id);
+        setExamStartTime(new Date());
       } catch (error: any) {
         console.error("Error starting attempt:", error);
         console.error("Error details:", {
@@ -572,6 +724,7 @@ export default function ExamTakingPage() {
       // Check if already in fullscreen (from previous page)
       if (document.fullscreenElement) {
         console.log("✅ Already in fullscreen mode");
+        setIsFullscreen(true);
         // Just enable other anti-cheat measures (not fullscreen)
         document.addEventListener("copy", preventCopy);
         document.addEventListener("cut", preventCopy);
@@ -585,17 +738,12 @@ export default function ExamTakingPage() {
           "✅ Anti-cheat measures enabled (fullscreen already active)"
         );
       } else {
-        // Not in fullscreen - show warning
-        console.warn("⚠️ Not in fullscreen mode - user needs to enable it");
-        alert("Vui lòng bật chế độ toàn màn hình để tiếp tục làm bài!");
-
-        // Try to enable fullscreen
-        enableAntiCheat().catch((error) => {
-          console.error("Failed to enable anti-cheat:", error);
-        });
+        // Not in fullscreen - show prompt to user
+        console.log("⚠️ Not in fullscreen mode - showing prompt");
+        setShowFullscreenPrompt(true);
       }
     }
-  }, [exam]);
+  }, [exam, enableAntiCheat]);
 
   if (loading) {
     return (
@@ -674,12 +822,125 @@ export default function ExamTakingPage() {
 
   return (
     <div className="space-y-4 sm:space-y-6 px-2 sm:px-0 pb-6 sm:pb-8 min-h-screen">
+      {/* Recovery Banner */}
+      {showRecoveryBanner && (
+        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 max-w-md w-full mx-4 animate-in slide-in-from-top duration-300">
+          <div className="bg-green-50 border-2 border-green-500 rounded-lg shadow-lg p-4">
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0">
+                <svg
+                  className="w-6 h-6 text-green-600"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-sm font-semibold text-green-800">
+                  ✓ Phiên thi đã được khôi phục
+                </h3>
+                <p className="text-xs text-green-700 mt-1">
+                  Câu trả lời của bạn đã được tự động khôi phục. Bạn có thể tiếp
+                  tục làm bài từ vị trí trước đó.
+                </p>
+                <p className="text-xs text-green-600 mt-1 font-medium">
+                  Đã khôi phục: {Object.keys(answers).length} câu trả lời
+                </p>
+
+                {/* Fullscreen button for restored sessions */}
+                {!isFullscreen && (
+                  <button
+                    onClick={async () => {
+                      try {
+                        await enableAntiCheat();
+                        console.log("✓ Anti-cheat enabled manually");
+                      } catch (error) {
+                        console.error("Error enabling anti-cheat:", error);
+                      }
+                    }}
+                    className="mt-2 text-xs bg-green-600 text-white px-3 py-1.5 rounded hover:bg-green-700 transition-colors flex items-center gap-1"
+                  >
+                    <svg
+                      className="w-3.5 h-3.5"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" />
+                    </svg>
+                    Bật chế độ toàn màn hình
+                  </button>
+                )}
+              </div>
+              <button
+                onClick={() => setShowRecoveryBanner(false)}
+                className="flex-shrink-0 text-green-600 hover:text-green-800"
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="bg-gradient-to-r from-[#112444] to-[#1a365d] text-white p-4 sm:p-6 rounded-2xl">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-0">
-          <div>
+          <div className="flex-1">
             <h1 className="text-xl sm:text-2xl font-bold mb-1">{exam.title}</h1>
             <p className="text-sm sm:text-base text-blue-100">{exam.subject}</p>
+
+            {/* Auto-save indicator */}
+            <div className="flex items-center gap-2 mt-2">
+              <div className="flex items-center gap-1.5 text-xs text-green-300">
+                <svg
+                  className="w-3.5 h-3.5"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                <span>Tự động lưu</span>
+              </div>
+
+              {/* Fullscreen warning */}
+              {!isFullscreen && attemptId && (
+                <div className="flex items-center gap-1.5 text-xs text-amber-300">
+                  <svg
+                    className="w-3.5 h-3.5"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  <span>Chưa toàn màn hình</span>
+                </div>
+              )}
+            </div>
           </div>
           <div className="text-left sm:text-right">
             <div className={`text-3xl sm:text-4xl font-bold ${getTimeColor()}`}>
@@ -983,9 +1244,14 @@ export default function ExamTakingPage() {
       {/* Fullscreen Warning Dialog */}
       <Dialog
         open={showFullscreenWarning}
-        onOpenChange={setShowFullscreenWarning}
+        onOpenChange={() => {}} // Không cho đóng dialog
+        modal={true}
       >
-        <DialogContent>
+        <DialogContent
+          className="[&>button]:hidden" // Ẩn nút X
+          onPointerDownOutside={(e) => e.preventDefault()} // Chặn click ngoài
+          onEscapeKeyDown={(e) => e.preventDefault()} // Chặn ESC
+        >
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-amber-600">
               <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 20 20">
@@ -1029,6 +1295,68 @@ export default function ExamTakingPage() {
               className="w-full bg-blue-600 hover:bg-blue-700"
             >
               Quay lại chế độ toàn màn hình
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Fullscreen Prompt Dialog - Initial */}
+      <Dialog
+        open={showFullscreenPrompt}
+        onOpenChange={() => {}} // Không cho đóng dialog
+        modal={true}
+      >
+        <DialogContent
+          className="sm:max-w-md [&>button]:hidden" // Ẩn nút X
+          onPointerDownOutside={(e) => e.preventDefault()} // Chặn click ngoài
+          onEscapeKeyDown={(e) => e.preventDefault()} // Chặn ESC
+        >
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-blue-600">
+              <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" />
+              </svg>
+              Bật chế độ toàn màn hình
+            </DialogTitle>
+            <DialogDescription>
+              Vui lòng bật chế độ toàn màn hình để tiếp tục làm bài!
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="py-4">
+            <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-blue-800 text-sm">
+                📌 <strong>Lưu ý:</strong> Để đảm bảo tính công bằng, bạn cần
+                làm bài trong chế độ toàn màn hình.
+              </p>
+            </div>
+
+            <ul className="space-y-2 text-sm text-gray-700">
+              <li className="flex items-start gap-2">
+                <span className="text-green-600 mt-0.5">✓</span>
+                <span>Hệ thống sẽ tự động lưu câu trả lời của bạn</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-amber-600 mt-0.5">⚠</span>
+                <span>Thoát toàn màn hình 3 lần sẽ bị nộp bài tự động</span>
+              </li>
+            </ul>
+          </div>
+
+          <DialogFooter>
+            <Button
+              onClick={async () => {
+                try {
+                  await enableAntiCheat();
+                  setShowFullscreenPrompt(false);
+                  console.log("✓ Fullscreen enabled from prompt");
+                } catch (error) {
+                  console.error("Error enabling fullscreen:", error);
+                }
+              }}
+              className="w-full bg-green-600 hover:bg-green-700"
+            >
+              OK - Bật chế độ toàn màn hình
             </Button>
           </DialogFooter>
         </DialogContent>

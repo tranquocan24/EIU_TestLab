@@ -369,7 +369,9 @@ export class AttemptsService {
           userId: attempt.exam.createdById,
           type: 'ATTEMPT_SUBMITTED',
           title: `Học sinh đã nộp bài: ${attempt.exam.title}`,
-          message: `${student?.name || student?.username || 'Học sinh'} đã hoàn thành bài kiểm tra - Điểm: ${score.toFixed(1)}%`,
+          message: score !== null 
+            ? `${student?.name || student?.username || 'Học sinh'} đã hoàn thành bài kiểm tra - Điểm: ${score.toFixed(1)}%`
+            : `${student?.name || student?.username || 'Học sinh'} đã hoàn thành bài kiểm tra - Chờ chấm tự luận`,
           examId: attempt.exam.id,
         },
       });
