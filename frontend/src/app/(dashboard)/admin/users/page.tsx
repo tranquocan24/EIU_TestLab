@@ -148,19 +148,19 @@ export default function ManageUsersPage() {
     switch (role) {
       case "STUDENT":
         return (
-          <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold">
+          <span className="inline-flex items-center justify-center min-w-[90px] px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold whitespace-nowrap">
             Học sinh
           </span>
         );
       case "TEACHER":
         return (
-          <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-semibold">
+          <span className="inline-flex items-center justify-center min-w-[90px] px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-semibold whitespace-nowrap">
             Giáo viên
           </span>
         );
       case "ADMIN":
         return (
-          <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-semibold">
+          <span className="inline-flex items-center justify-center min-w-[90px] px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-semibold whitespace-nowrap">
             Quản trị
           </span>
         );
@@ -608,25 +608,25 @@ export default function ManageUsersPage() {
               <table className="w-full">
                 <thead>
                   <tr className="bg-gray-50 border-b border-gray-200">
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700">
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700 min-w-[120px]">
                       Username
                     </th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700">
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700 min-w-[150px]">
                       Họ tên
                     </th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700">
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700 min-w-[110px]">
                       Vai trò
                     </th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700">
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700 min-w-[180px]">
                       Email
                     </th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700">
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700 min-w-[150px]">
                       Lớp học
                     </th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700">
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700 min-w-[110px]">
                       Ngày tạo
                     </th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700">
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700 min-w-[120px]">
                       Thao tác
                     </th>
                   </tr>
@@ -641,19 +641,23 @@ export default function ManageUsersPage() {
                         {u.username}
                       </td>
                       <td className="py-3 px-4 text-gray-800">{u.name}</td>
-                      <td className="py-3 px-4">{getRoleBadge(u.role)}</td>
-                      <td className="py-3 px-4 text-gray-600">
+                      <td className="py-3 px-4">
+                        <div className="flex items-center">
+                          {getRoleBadge(u.role)}
+                        </div>
+                      </td>
+                      <td className="py-3 px-4 text-gray-600 text-sm">
                         {u.email || "-"}
                       </td>
-                      <td className="py-3 px-4 text-gray-600">
+                      <td className="py-3 px-4">
                         {(() => {
                           const allCourses = getUserCourses(u);
                           return allCourses.length > 0 ? (
-                            <div className="flex flex-wrap gap-1">
+                            <div className="flex flex-wrap gap-1.5">
                               {allCourses.map((course, idx) => (
                                 <span
                                   key={idx}
-                                  className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded text-xs"
+                                  className="inline-flex items-center px-2 py-0.5 bg-blue-50 text-blue-700 rounded text-xs font-medium"
                                   title={course.name || course.code}
                                 >
                                   {course.code}
@@ -661,11 +665,11 @@ export default function ManageUsersPage() {
                               ))}
                             </div>
                           ) : (
-                            "-"
+                            <span className="text-gray-400">-</span>
                           );
                         })()}
                       </td>
-                      <td className="py-3 px-4 text-gray-600">
+                      <td className="py-3 px-4 text-gray-600 text-sm">
                         {formatDate(u.createdAt)}
                       </td>
                       <td className="py-3 px-4">
@@ -674,6 +678,7 @@ export default function ManageUsersPage() {
                             variant="outline"
                             size="sm"
                             onClick={() => handleEditUser(u)}
+                            title="Chỉnh sửa"
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
@@ -681,6 +686,7 @@ export default function ManageUsersPage() {
                             variant="outline"
                             size="sm"
                             onClick={() => handleDeleteUser(u.id)}
+                            title="Xóa"
                           >
                             <Trash2 className="h-4 w-4 text-red-600" />
                           </Button>
