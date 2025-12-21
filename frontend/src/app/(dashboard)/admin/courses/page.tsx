@@ -362,8 +362,8 @@ export default function AdminCoursesPage() {
       </div>
 
       {/* Courses List */}
-      <Card className="card-hover-lift">
-        <CardHeader className="bg-gradient-to-r from-[#112444] to-[#1a365d] text-white rounded-t-lg">
+      <Card className="card-hover-lift overflow-hidden pt-0">
+        <CardHeader className="bg-gradient-to-r from-[#112444] to-[#1a365d] text-white py-4 px-6">
           <CardTitle className="flex items-center gap-2">
             <BookOpen className="h-5 w-5" />
             Danh sách lớp học ({filteredCourses.length})

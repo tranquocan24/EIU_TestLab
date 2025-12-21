@@ -1,0 +1,7 @@
+username,password,name,email,role,courses
+student001,123456,Nguyễn Văn A,student001@student.eiu.edu.vn,STUDENT,CSE301
+student002,123456,Trần Thị B,student002@student.eiu.edu.vn,STUDENT,"CSE301,CSE302"
+student003,123456,Lê Văn C,student003@student.eiu.edu.vn,STUDENT,CSE302
+teacher001,123456,Phạm Thị D,teacher001@eiu.edu.vn,TEACHER,"CSE301,CSE302"
+teacher002,123456,Hoàng Văn E,teacher002@eiu.edu.vn,TEACHER,CSE301
+admin001,admin123,Võ Thị F,admin001@eiu.edu.vn,ADMIN,
