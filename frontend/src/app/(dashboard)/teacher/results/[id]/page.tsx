@@ -285,7 +285,14 @@ export default function TeacherResultDetailPage() {
             <div>
               <div className="text-sm text-gray-600">Class</div>
               <div className="font-semibold text-gray-800">
-                {attempt.student.courses}
+                {Array.isArray(attempt.student.courses)
+                  ? attempt.student.courses.join(", ")
+                  : typeof attempt.student.courses === "string"
+                  ? attempt.student.courses
+                      .split(",")
+                      .map((c) => c.trim())
+                      .join(", ")
+                  : attempt.student.courses}
               </div>
             </div>
           </div>
