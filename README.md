@@ -230,7 +230,7 @@ cd backend
 npm run start:dev
 ```
 
-Backend sẽ chạy tại: `http://localhost:3000`  
+Backend sẽ chạy tại: `http://localhost:4000`  
 API Documentation: `http://localhost:3000/api`
 
 #### Chạy Frontend (Terminal 2)
@@ -240,7 +240,7 @@ cd frontend
 npm run dev
 ```
 
-Frontend sẽ chạy tại: `http://localhost:3001`
+Frontend sẽ chạy tại: `http://localhost:3000`
 
 ---
 
@@ -248,7 +248,7 @@ Frontend sẽ chạy tại: `http://localhost:3001`
 
 ### 🔐 Đăng nhập
 
-1. Truy cập `http://localhost:3001`
+1. Truy cập `http://localhost:3000`
 2. Nhập username và password
 3. Hệ thống tự động chuyển đến dashboard tương ứng với role
 
@@ -417,71 +417,21 @@ Sau khi seed dữ liệu, bạn có thể sử dụng các tài khoản sau đ�
 
 | Username | Password | Họ tên |
 |----------|----------|--------|
-| `admin` | `admin123` | System Administrator |
+| `admin` | `12345678` | System Administrator |
 
 ### 👨‍🏫 Giảng viên (Teachers)
 
 | Username | Password | Họ tên | Email |
 |----------|----------|--------|-------|
-| `gv001` | `123456` | PGS.TS Nguyễn Văn C | nguyenvanc@eiu.edu.vn |
-| `gv002` | `123456` | TS. Trần Thị D | tranthid@eiu.edu.vn |
+| `teacher1` | `12345678` | PGS.TS Nguyễn Văn C | nguyenvanc@eiu.edu.vn |
 
 ### 👨‍🎓 Sinh viên (Students)
 
 | Username | Password | Họ tên | MSSV |
 |----------|----------|--------|------|
-| `sv001` | `123456` | Nguyễn Văn A | 2021001 |
-| `sv002` | `123456` | Trần Thị B | 2021002 |
-| `sv003` | `123456` | Lê Văn C | 2021003 |
+| `student1` | `12345678` | Nguyễn Văn A | 2021001 |
 
 > **Lưu ý**: Đổi password ngay sau khi đăng nhập lần đầu trong môi trường production.
-
----
-
-## 🗺 Roadmap
-
-### ✅ Phase 1 - Core Features (Completed)
-
-- [x] Authentication & Authorization
-- [x] User Management (Admin, Teacher, Student)
-- [x] Course Management
-- [x] Exam Creation & Management
-- [x] Question Bank
-- [x] Markdown Import
-- [x] Take Exam Interface
-- [x] Grading System
-- [x] Basic Statistics
-
-### 🚧 Phase 2 - Enhanced Features (In Progress)
-
-- [x] Real-time Notifications (WebSocket)
-- [x] Advanced Search & Filters
-- [ ] Exam Scheduling
-- [ ] Auto-save Answers
-- [ ] Image Upload for Questions
-- [ ] Rich Text Editor
-- [ ] Email Notifications
-- [ ] CSV/Excel Export
-
-### 📋 Phase 3 - Advanced Features (Planned)
-
-- [ ] AI-powered Question Generation
-- [ ] Plagiarism Detection
-- [ ] Video Proctoring
-- [ ] Mobile App (React Native)
-- [ ] Advanced Analytics Dashboard
-- [ ] Integration with LMS (Moodle, Canvas)
-- [ ] Multi-language Support
-- [ ] Accessibility Improvements (WCAG 2.1)
-
-### 🔮 Future Ideas
-
-- [ ] Gamification (Badges, Leaderboards)
-- [ ] Peer Review System
-- [ ] Discussion Forums
-- [ ] Live Coding Exams
-- [ ] Virtual Whiteboard
-- [ ] AI Teaching Assistant
 
 ---
 
@@ -550,17 +500,6 @@ Dự án này được phát hành dưới **MIT License**. Xem file [LICENSE](L
 
 ---
 
-## 👨‍💻 Team
-
-Được phát triển với ❤️ bởi:
-
-- **Project Lead**: [Your Name](https://github.com/yourusername)
-- **Backend Developer**: [Name](https://github.com/username)
-- **Frontend Developer**: [Name](https://github.com/username)
-- **UI/UX Designer**: [Name](https://github.com/username)
-
----
-
 ## 🙏 Acknowledgments
 
 - [Eastern International University](https://eiu.edu.vn) - Đại học Quốc tế Miền Đông
@@ -573,9 +512,7 @@ Dự án này được phát hành dưới **MIT License**. Xem file [LICENSE](L
 
 ## 📞 Liên hệ
 
-- **Website**: [eiu.edu.vn](https://eiu.edu.vn)
-- **Email**: testlab@eiu.edu.vn
-- **GitHub Issues**: [Create an issue](https://github.com/yourusername/EIU_TestLab/issues)
+- **Email**: an.tranquoc.cit22@eiu.edu.vn
 
 ---
 
