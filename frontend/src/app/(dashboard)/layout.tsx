@@ -1,13 +1,14 @@
-import { Navbar } from '@/components/navbar'
-import { Header } from '@/components/header'
+import { Navbar } from "@/components/navbar";
+import { Header } from "@/components/header";
+import { AuthGuard } from "@/components/AuthGuard";
 
 export default function DashboardLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode
+  children: React.ReactNode;
 }>) {
   return (
-    <>
+    <AuthGuard requireAuth={true}>
       <Header />
       <Navbar />
       <main className="flex-1 bg-gray-50">
@@ -15,6 +16,6 @@ export default function DashboardLayout({
           {children}
         </div>
       </main>
-    </>
-  )
+    </AuthGuard>
+  );
 }

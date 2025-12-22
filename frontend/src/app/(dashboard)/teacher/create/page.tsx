@@ -67,11 +67,6 @@ export default function CreateExamPage() {
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
 
   useEffect(() => {
-    if (!isAuthenticated || user?.role.toLowerCase() !== "teacher") {
-      router.push("/login");
-      return;
-    }
-
     // Get teacher's courses array
     if (user?.courses) {
       const coursesArray = Array.isArray(user.courses)
@@ -89,7 +84,7 @@ export default function CreateExamPage() {
         setSelectedCourse(coursesArray[0]);
       }
     }
-  }, [isAuthenticated, user, router, selectedCourse]);
+  }, [user, selectedCourse]);
 
   const addQuestion = (type: "multiple-choice" | "essay") => {
     const newQuestion: Question = {

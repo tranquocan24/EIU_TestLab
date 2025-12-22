@@ -45,7 +45,7 @@ interface Exam {
 
 export default function ManageExamsPage() {
   const router = useRouter();
-  const { user, isAuthenticated } = useAuth();
+  const { user } = useAuth();
   const [exams, setExams] = useState<Exam[]>([]);
   const [filteredExams, setFilteredExams] = useState<Exam[]>([]);
   const [loading, setLoading] = useState(true);
@@ -56,11 +56,6 @@ export default function ManageExamsPage() {
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
   useEffect(() => {
-    if (!isAuthenticated || user?.role.toLowerCase() !== "teacher") {
-      router.push("/login");
-      return;
-    }
-
     loadExams();
 
     // Check for success message from create page
@@ -69,7 +64,7 @@ export default function ManageExamsPage() {
       alert(successMessage);
       sessionStorage.removeItem("examCreated");
     }
-  }, [isAuthenticated, user, router]);
+  }, []);
 
   useEffect(() => {
     filterAndSortExams();
