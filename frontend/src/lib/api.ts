@@ -63,19 +63,19 @@ class ApiClient {
             localStorage.removeItem('token');
             localStorage.removeItem('auth-storage');
             localStorage.removeItem('storage-version');
-            
+
             // Only redirect if not already on login page
             if (!window.location.pathname.includes('/login')) {
               // Show notification if available
               const message = error.response?.data?.message || 'Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại';
-              
+
               // Try to show toast if it exists
               if (window.dispatchEvent) {
-                window.dispatchEvent(new CustomEvent('session-expired', { 
-                  detail: { message } 
+                window.dispatchEvent(new CustomEvent('session-expired', {
+                  detail: { message }
                 }));
               }
-              
+
               // Redirect after a short delay
               setTimeout(() => {
                 window.location.href = '/login';
@@ -264,8 +264,8 @@ class ApiClient {
   }
 
   async importMarkdownExam(markdownContent: string): Promise<any> {
-    const response = await this.client.post('/exams/import-markdown', { 
-      markdownContent 
+    const response = await this.client.post('/exams/import-markdown', {
+      markdownContent
     });
     return response.data;
   }

@@ -115,7 +115,7 @@ export default function EditExamPage() {
       console.error("Error loading exam:", error);
       alert(
         "Không thể tải thông tin đề thi: " +
-          (error.response?.data?.message || error.message)
+        (error.response?.data?.message || error.message)
       );
       setLoadingExam(false);
       router.push("/teacher/exams");
@@ -133,11 +133,11 @@ export default function EditExamPage() {
       const coursesArray = Array.isArray(user.courses)
         ? user.courses
         : typeof user.courses === "string"
-        ? (user.courses as string)
+          ? (user.courses as string)
             .split(",")
             .map((c: string) => c.trim())
             .filter(Boolean)
-        : [];
+          : [];
       setTeacherCourses(coursesArray);
     }
 
@@ -238,9 +238,9 @@ export default function EditExamPage() {
           options:
             q.type === "multiple-choice" && q.options
               ? q.options.map((optText, optIndex) => ({
-                  text: optText,
-                  isCorrect: q.correctAnswer === optIndex,
-                }))
+                text: optText,
+                isCorrect: q.correctAnswer === optIndex,
+              }))
               : [],
         })),
       };

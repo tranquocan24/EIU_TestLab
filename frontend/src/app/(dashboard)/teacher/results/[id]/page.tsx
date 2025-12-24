@@ -292,11 +292,11 @@ export default function TeacherResultDetailPage() {
                 {Array.isArray(attempt.student.courses)
                   ? attempt.student.courses.join(", ")
                   : typeof attempt.student.courses === "string"
-                  ? attempt.student.courses
+                    ? attempt.student.courses
                       .split(",")
                       .map((c) => c.trim())
                       .join(", ")
-                  : attempt.student.courses}
+                    : attempt.student.courses}
               </div>
             </div>
           </div>
@@ -453,15 +453,14 @@ export default function TeacherResultDetailPage() {
             return (
               <Card
                 key={answer.id}
-                className={`border-2 ${
-                  isEssay
+                className={`border-2 ${isEssay
                     ? isGraded
                       ? "border-blue-200 bg-blue-50/30"
                       : "border-purple-200 bg-purple-50/30"
                     : answer.isCorrect
-                    ? "border-green-200 bg-green-50/30"
-                    : "border-red-200 bg-red-50/30"
-                }`}
+                      ? "border-green-200 bg-green-50/30"
+                      : "border-red-200 bg-red-50/30"
+                  }`}
               >
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between gap-4">
@@ -476,11 +475,10 @@ export default function TeacherResultDetailPage() {
                           </Badge>
                         ) : (
                           <Badge
-                            className={`${
-                              answer.isCorrect
+                            className={`${answer.isCorrect
                                 ? "bg-green-500 hover:bg-green-600"
                                 : "bg-red-500 hover:bg-red-600"
-                            } text-white`}
+                              } text-white`}
                           >
                             {answer.isCorrect ? (
                               <>
@@ -508,13 +506,12 @@ export default function TeacherResultDetailPage() {
                         </div>
                       ) : (
                         <div
-                          className={`text-2xl font-bold ${
-                            isEssay
+                          className={`text-2xl font-bold ${isEssay
                               ? "text-blue-600"
                               : answer.isCorrect
-                              ? "text-green-600"
-                              : "text-red-600"
-                          }`}
+                                ? "text-green-600"
+                                : "text-red-600"
+                            }`}
                         >
                           {answer.points}/{answer.question.points}
                         </div>

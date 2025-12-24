@@ -171,7 +171,7 @@ export default function ExamTakingPage() {
   // Check proctoring status when attemptId is available
   useEffect(() => {
     if (!attemptId) return;
-    
+
     const checkProctoringStatus = async () => {
       try {
         const status = await api.getProctoringStatus();
@@ -188,7 +188,7 @@ export default function ExamTakingPage() {
         setIsRecording(true);
       }
     };
-    
+
     checkProctoringStatus();
   }, [attemptId]);
 
@@ -554,8 +554,7 @@ export default function ExamTakingPage() {
           const isEssay = question.type?.toLowerCase().includes("essay");
 
           console.log(
-            `Submitting question ${question.id}: ${
-              answer ? "answered" : "empty"
+            `Submitting question ${question.id}: ${answer ? "answered" : "empty"
             } (${isEssay ? "essay" : "multiple-choice"})`
           );
 
@@ -971,13 +970,12 @@ export default function ExamTakingPage() {
             }}
           />
           {/* Proctoring status indicator */}
-          <div className={`mt-2 text-xs text-center px-2 py-1 rounded-full ${
-            proctoringStatus === "recording" 
-              ? "bg-red-100 text-red-700" 
+          <div className={`mt-2 text-xs text-center px-2 py-1 rounded-full ${proctoringStatus === "recording"
+              ? "bg-red-100 text-red-700"
               : proctoringStatus === "error"
-              ? "bg-yellow-100 text-yellow-700"
-              : "bg-gray-100 text-gray-700"
-          }`}>
+                ? "bg-yellow-100 text-yellow-700"
+                : "bg-gray-100 text-gray-700"
+            }`}>
             {proctoringStatus === "recording" && "🔴 Đang ghi hình"}
             {proctoringStatus === "uploading" && "📤 Đang tải lên..."}
             {proctoringStatus === "error" && "⚠️ Lỗi camera"}
@@ -1169,9 +1167,8 @@ export default function ExamTakingPage() {
             <div
               className="bg-blue-600 h-2 rounded-full transition-all duration-300"
               style={{
-                width: `${
-                  ((currentQuestion + 1) / exam.questions.length) * 100
-                }%`,
+                width: `${((currentQuestion + 1) / exam.questions.length) * 100
+                  }%`,
               }}
             ></div>
           </div>
@@ -1265,19 +1262,17 @@ export default function ExamTakingPage() {
                   <button
                     key={option.id}
                     onClick={() => handleAnswerSelect(questionId, option.id)}
-                    className={`w-full p-3 sm:p-4 text-left border-2 rounded-lg transition-all duration-200 ${
-                      isSelected
+                    className={`w-full p-3 sm:p-4 text-left border-2 rounded-lg transition-all duration-200 ${isSelected
                         ? "border-blue-500 bg-blue-50 shadow-md"
                         : "border-gray-200 hover:border-blue-300 hover:bg-gray-50"
-                    }`}
+                      }`}
                   >
                     <div className="flex items-center space-x-3">
                       <div
-                        className={`w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0 rounded-full border-2 flex items-center justify-center ${
-                          isSelected
+                        className={`w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0 rounded-full border-2 flex items-center justify-center ${isSelected
                             ? "border-blue-500 bg-blue-500"
                             : "border-gray-300"
-                        }`}
+                          }`}
                       >
                         {isSelected && (
                           <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-white rounded-full"></div>
@@ -1444,7 +1439,7 @@ export default function ExamTakingPage() {
       {/* Fullscreen Warning Dialog */}
       <Dialog
         open={showFullscreenWarning}
-        onOpenChange={() => {}} // Không cho đóng dialog
+        onOpenChange={() => { }} // Không cho đóng dialog
         modal={true}
       >
         <DialogContent
@@ -1503,7 +1498,7 @@ export default function ExamTakingPage() {
       {/* Tab Switch Warning Dialog */}
       <Dialog
         open={showTabSwitchWarning}
-        onOpenChange={() => {}} // Không cho đóng dialog
+        onOpenChange={() => { }} // Không cho đóng dialog
         modal={true}
       >
         <DialogContent
@@ -1561,7 +1556,7 @@ export default function ExamTakingPage() {
       {/* Fullscreen Prompt Dialog - Initial */}
       <Dialog
         open={showFullscreenPrompt}
-        onOpenChange={() => {}} // Không cho đóng dialog
+        onOpenChange={() => { }} // Không cho đóng dialog
         modal={true}
       >
         <DialogContent

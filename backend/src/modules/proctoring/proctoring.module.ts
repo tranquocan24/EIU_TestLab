@@ -5,13 +5,13 @@ import { ProctoringController } from './proctoring.controller';
 import { ProctoringService } from './proctoring.service';
 
 @Module({
-  imports: [
-    MulterModule.register({
-      storage: memoryStorage(),
-    }),
-  ],
-  controllers: [ProctoringController],
-  providers: [ProctoringService],
-  exports: [ProctoringService],
+    imports: [
+        MulterModule.register({
+            storage: memoryStorage(),
+        }),
+    ],
+    controllers: [ProctoringController],
+    providers: [ProctoringService],
+    exports: [ProctoringService],
 })
-export class ProctoringModule {}
+export class ProctoringModule { }

@@ -72,11 +72,11 @@ export default function CreateExamPage() {
       const coursesArray = Array.isArray(user.courses)
         ? user.courses
         : typeof user.courses === "string"
-        ? (user.courses as string)
+          ? (user.courses as string)
             .split(",")
             .map((c: string) => c.trim())
             .filter((c: string) => c)
-        : [];
+          : [];
       setTeacherCourses(coursesArray);
 
       // Auto-select first course if available
@@ -280,9 +280,9 @@ export default function CreateExamPage() {
           options:
             q.type === "multiple-choice" && q.options
               ? q.options.map((optText, optIndex) => ({
-                  text: optText,
-                  isCorrect: q.correctAnswer === optIndex,
-                }))
+                text: optText,
+                isCorrect: q.correctAnswer === optIndex,
+              }))
               : [],
         })),
       };

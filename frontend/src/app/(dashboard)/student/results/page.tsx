@@ -369,13 +369,12 @@ export default function StudentResultsPage() {
                         )}`}
                       >
                         <div
-                          className={`text-4xl font-bold mb-1 ${
-                            (result.score ?? 0) >= 80
+                          className={`text-4xl font-bold mb-1 ${(result.score ?? 0) >= 80
                               ? "text-green-600"
                               : (result.score ?? 0) >= 60
-                              ? "text-yellow-600"
-                              : "text-red-600"
-                          }`}
+                                ? "text-yellow-600"
+                                : "text-red-600"
+                            }`}
                         >
                           {Math.round((result.score ?? 0) * 100) / 100}%
                         </div>
