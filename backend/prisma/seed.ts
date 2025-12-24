@@ -36,7 +36,7 @@ async function main() {
       email: 'teacher1@eiu.edu.vn',
       name: 'Nguyễn Văn An',
       role: 'TEACHER',
-      courses: 'CSE301,CSE302', // Teacher dạy 2 lớp
+      courses: ['CSE301', 'CSE302'], // Teacher dạy 2 lớp
     },
   });
 
@@ -47,7 +47,7 @@ async function main() {
       email: 'student1@eiu.edu.vn',
       name: 'Lê Văn Cường',
       role: 'STUDENT',
-      courses: 'CSE301', // Student học lớp CSE301
+      courses: ['CSE301'], // Student học lớp CSE301
     },
   });
 

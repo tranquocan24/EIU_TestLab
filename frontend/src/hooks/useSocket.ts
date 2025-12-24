@@ -1,15 +1,19 @@
 // Socket.IO hook for real-time features
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { io } from 'socket.io-client';
-import type { Socket } from 'socket.io-client';
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const socketIO = require('socket.io-client');
+const io = socketIO.io || socketIO.default || socketIO;
 import { useAuth } from './useAuth';
 import { SocketEvents } from '@/types';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type SocketType = ReturnType<typeof io>;
 
 export const useSocket = () => {
   const [isConnected, setIsConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { token, isAuthenticated } = useAuth();
-  const socketRef = useRef<Socket | null>(null);
+  const socketRef = useRef<SocketType | null>(null);
 
   useEffect(() => {
     if (!isAuthenticated || !token) {

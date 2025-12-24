@@ -15,6 +15,7 @@ import {
 import api from "@/lib/api";
 import { useExamPersistence } from "@/hooks/useExamPersistence";
 import { clearExpiredSessions, clearExamState } from "@/lib/examStorage";
+import WebcamRecorder from "@/components/proctoring/WebcamRecorder";
 
 // Prevent copying
 const preventCopy = (e: ClipboardEvent) => {
@@ -130,6 +131,11 @@ export default function ExamTakingPage() {
   const [tabSwitchCount, setTabSwitchCount] = useState(0); // For UI display only
   const isHandlingVisibilityChangeRef = useRef(false); // Prevent multiple triggers
 
+  // Proctoring state
+  const [isProctoringEnabled, setIsProctoringEnabled] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [proctoringStatus, setProctoringStatus] = useState<string>("idle");
+
   // Initialize exam persistence hook
   const { saveState, loadSavedState, findSession, clearState } =
     useExamPersistence({
@@ -161,6 +167,38 @@ export default function ExamTakingPage() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [examId]);
+
+  // Check proctoring status when attemptId is available
+  useEffect(() => {
+    if (!attemptId) return;
+    
+    const checkProctoringStatus = async () => {
+      try {
+        const status = await api.getProctoringStatus();
+        console.log("[Proctoring] Status:", status);
+        if (status.enabled) {
+          setIsProctoringEnabled(true);
+          setIsRecording(true);
+          console.log("[Proctoring] Enabled - starting recording");
+        }
+      } catch (error) {
+        console.warn("[Proctoring] Could not check status:", error);
+        // Default to enabled for security
+        setIsProctoringEnabled(true);
+        setIsRecording(true);
+      }
+    };
+    
+    checkProctoringStatus();
+  }, [attemptId]);
+
+  // Stop recording when exam is submitted
+  useEffect(() => {
+    if (isSubmitting) {
+      setIsRecording(false);
+      console.log("[Proctoring] Stopped recording - exam submitted");
+    }
+  }, [isSubmitting]);
 
   // Auto-submit function (defined before useEffect to avoid dependency issues)
   const autoSubmitExam = useCallback(async () => {
@@ -915,6 +953,39 @@ export default function ExamTakingPage() {
 
   return (
     <div className="space-y-4 sm:space-y-6 px-2 sm:px-0 pb-6 sm:pb-8 min-h-screen">
+      {/* Proctoring WebcamRecorder - Fixed position at bottom right */}
+      {isProctoringEnabled && attemptId && (
+        <div className="fixed bottom-4 right-4 z-50">
+          <WebcamRecorder
+            attemptId={attemptId}
+            isRecording={isRecording}
+            chunkInterval={10}
+            maxRetries={3}
+            onError={(error) => {
+              console.error("[Proctoring] Error:", error);
+              setProctoringStatus("error");
+            }}
+            onStatusChange={(status) => {
+              console.log("[Proctoring] Status changed:", status);
+              setProctoringStatus(status);
+            }}
+          />
+          {/* Proctoring status indicator */}
+          <div className={`mt-2 text-xs text-center px-2 py-1 rounded-full ${
+            proctoringStatus === "recording" 
+              ? "bg-red-100 text-red-700" 
+              : proctoringStatus === "error"
+              ? "bg-yellow-100 text-yellow-700"
+              : "bg-gray-100 text-gray-700"
+          }`}>
+            {proctoringStatus === "recording" && "🔴 Đang ghi hình"}
+            {proctoringStatus === "uploading" && "📤 Đang tải lên..."}
+            {proctoringStatus === "error" && "⚠️ Lỗi camera"}
+            {proctoringStatus === "idle" && "⏸️ Chờ ghi hình"}
+          </div>
+        </div>
+      )}
+
       {/* Recovery Banner */}
       {showRecoveryBanner && (
         <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 max-w-md w-full mx-4 animate-in slide-in-from-top duration-300">

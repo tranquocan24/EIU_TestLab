@@ -100,8 +100,8 @@ export default function StudentResultsPage() {
         if (gradedResults.length > 0) {
           const total = gradedResults.length;
           const avg =
-            gradedResults.reduce((sum, r) => sum + r.score, 0) / total;
-          const highest = Math.max(...gradedResults.map((r) => r.score));
+            gradedResults.reduce((sum, r) => sum + (r.score ?? 0), 0) / total;
+          const highest = Math.max(...gradedResults.map((r) => r.score ?? 0));
 
           setStats({
             totalExams: transformedResults.length, // Total includes pending
@@ -365,19 +365,19 @@ export default function StudentResultsPage() {
                     ) : (
                       <Card
                         className={`p-6 text-center min-w-[120px] border-2 ${getScoreColor(
-                          result.score
+                          result.score ?? 0
                         )}`}
                       >
                         <div
                           className={`text-4xl font-bold mb-1 ${
-                            result.score >= 80
+                            (result.score ?? 0) >= 80
                               ? "text-green-600"
-                              : result.score >= 60
+                              : (result.score ?? 0) >= 60
                               ? "text-yellow-600"
                               : "text-red-600"
                           }`}
                         >
-                          {Math.round(result.score * 100) / 100}%
+                          {Math.round((result.score ?? 0) * 100) / 100}%
                         </div>
                         <div className="text-xs text-gray-600 font-medium">
                           Điểm số

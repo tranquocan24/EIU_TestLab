@@ -224,7 +224,7 @@ export default function ResultDetailPage() {
   const isPending = attempt.score === null || attempt.score === undefined;
   const badge = isPending
     ? { text: "Đang chấm", color: "bg-purple-500" }
-    : getScoreBadge(attempt.score);
+    : getScoreBadge(attempt.score!);
   const correctCount = attempt.answers.filter((a) => a.isCorrect).length;
   const totalCount = attempt.answers.length;
 

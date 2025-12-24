@@ -82,7 +82,7 @@ export default function TeacherGradingPage() {
     essayQuestions.forEach((answer, index) => {
       const points = gradingPoints[answer.question.id];
 
-      if (points === undefined || points === null || points === "") {
+      if (points === undefined || points === null) {
         missingPoints.push(`Câu ${index + 1}`);
       } else if (points < 0 || points > answer.question.points) {
         invalidPoints.push(`Câu ${index + 1} (0-${answer.question.points})`);
@@ -286,12 +286,21 @@ export default function TeacherGradingPage() {
                       gradingPoints[answer.question.id] ?? answer.points ?? ""
                     }
                     onChange={(e) => {
-                      const value =
-                        e.target.value === "" ? "" : parseFloat(e.target.value);
-                      setGradingPoints({
-                        ...gradingPoints,
-                        [answer.question.id]: value,
-                      });
+                      const inputValue = e.target.value;
+                      if (inputValue === "") {
+                        // Remove the key when empty
+                        const newPoints = { ...gradingPoints };
+                        delete newPoints[answer.question.id];
+                        setGradingPoints(newPoints);
+                      } else {
+                        const value = parseFloat(inputValue);
+                        if (!isNaN(value)) {
+                          setGradingPoints({
+                            ...gradingPoints,
+                            [answer.question.id]: value,
+                          });
+                        }
+                      }
                     }}
                     className="w-full max-w-xs smooth-transition focus:border-[#112444] focus:ring-[#112444]"
                   />

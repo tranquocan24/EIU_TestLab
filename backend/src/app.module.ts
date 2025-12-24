@@ -10,6 +10,7 @@ import { StatsModule } from './modules/stats/stats.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { MessagesModule } from './modules/messages/messages.module';
 import { CoursesModule } from './modules/courses/courses.module';
+import { ProctoringModule } from './modules/proctoring/proctoring.module';
 import { AppController } from './app.controller';
 
 @Module({
@@ -27,6 +28,7 @@ import { AppController } from './app.controller';
     NotificationsModule,
     MessagesModule,
     CoursesModule,
+    ProctoringModule,
   ],
   controllers: [AppController],
 })

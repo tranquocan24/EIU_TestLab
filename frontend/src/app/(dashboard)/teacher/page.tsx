@@ -102,12 +102,12 @@ export default function TeacherDashboard() {
     }
   };
 
-  const formatDate = (dateString) => {
+  const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString("vi-VN");
   };
 
-  const formatDateTime = (dateString) => {
+  const formatDateTime = (dateString: string) => {
     const date = new Date(dateString);
     return (
       date.toLocaleDateString("vi-VN") +
@@ -119,7 +119,7 @@ export default function TeacherDashboard() {
     );
   };
 
-  const getScoreColor = (score) => {
+  const getScoreColor = (score: number) => {
     if (score >= 80) return "text-green-600";
     if (score >= 50) return "text-orange-600";
     return "text-red-600";

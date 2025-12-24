@@ -495,6 +495,63 @@ class ApiClient {
     const response = await this.client.get(`/courses/${courseId}/available-users`);
     return response.data;
   }
+
+  // ==================== Proctoring API ====================
+
+  /**
+   * Upload a proctoring video chunk
+   * @param attemptId - ID of the attempt
+   * @param sequence - Sequence number of the chunk
+   * @param formData - FormData containing the video blob
+   */
+  async uploadProctoringChunk(
+    attemptId: string,
+    sequence: number,
+    formData: FormData
+  ): Promise<{ success: boolean; path: string }> {
+    const response = await this.client.post(
+      `/attempts/${attemptId}/proctoring/chunk/${sequence}`,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        timeout: 60000, // 60 seconds timeout for upload
+      }
+    );
+    return response.data;
+  }
+
+  /**
+   * Get proctoring video playlist for an attempt
+   * @param attemptId - ID of the attempt
+   */
+  async getProctoringPlaylist(attemptId: string): Promise<{
+    data: { videos: string[]; totalChunks: number };
+  }> {
+    const response = await this.client.get(`/attempts/${attemptId}/proctoring/playlist`);
+    return { data: response.data };
+  }
+
+  /**
+   * Delete all proctoring videos for an attempt
+   * @param attemptId - ID of the attempt
+   */
+  async deleteProctoringVideos(attemptId: string): Promise<{
+    success: boolean;
+    deletedCount: number;
+  }> {
+    const response = await this.client.delete(`/attempts/${attemptId}/proctoring`);
+    return response.data;
+  }
+
+  /**
+   * Check if proctoring is enabled on the server
+   */
+  async getProctoringStatus(): Promise<{ enabled: boolean }> {
+    const response = await this.client.get('/attempts/proctoring/status');
+    return response.data;
+  }
 }
 
 // Create and export singleton instance

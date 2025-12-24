@@ -133,9 +133,9 @@ export default function EditExamPage() {
       const coursesArray = Array.isArray(user.courses)
         ? user.courses
         : typeof user.courses === "string"
-        ? user.courses
+        ? (user.courses as string)
             .split(",")
-            .map((c) => c.trim())
+            .map((c: string) => c.trim())
             .filter(Boolean)
         : [];
       setTeacherCourses(coursesArray);

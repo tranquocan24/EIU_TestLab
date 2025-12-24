@@ -14,8 +14,10 @@ import {
   Award,
   FileText,
   User,
+  Video,
 } from "lucide-react";
 import api from "@/lib/api";
+import SeamlessVideoPlayer from "@/components/proctoring/SeamlessVideoPlayer";
 
 interface Option {
   id: string;
@@ -73,6 +75,8 @@ export default function TeacherResultDetailPage() {
 
   const [attempt, setAttempt] = useState<AttemptDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showProctoringVideo, setShowProctoringVideo] = useState(false);
+  const [videoError, setVideoError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isAuthenticated || user?.role.toLowerCase() !== "teacher") {
@@ -237,7 +241,7 @@ export default function TeacherResultDetailPage() {
   const isPending = attempt.score === null || attempt.score === undefined;
   const badge = isPending
     ? { text: "Pending", color: "bg-purple-500" }
-    : getScoreBadge(attempt.score);
+    : getScoreBadge(attempt.score!);
   const correctCount = attempt.answers.filter((a) => a.isCorrect).length;
   const totalCount = attempt.answers.length;
 
@@ -382,6 +386,51 @@ export default function TeacherResultDetailPage() {
             </div>
           </div>
         </CardContent>
+      </Card>
+
+      {/* Proctoring Video Section */}
+      <Card className="border-2 border-indigo-200 bg-gradient-to-br from-indigo-50 to-white">
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <span className="flex items-center gap-3">
+              <Video className="h-6 w-6 text-indigo-600" />
+              Proctoring Recording
+            </span>
+            <Button
+              variant={showProctoringVideo ? "outline" : "default"}
+              onClick={() => {
+                setShowProctoringVideo(!showProctoringVideo);
+                setVideoError(null);
+              }}
+              className={showProctoringVideo ? "" : "bg-indigo-600 hover:bg-indigo-700"}
+            >
+              {showProctoringVideo ? "Hide Video" : "View Recording"}
+            </Button>
+          </CardTitle>
+        </CardHeader>
+        {showProctoringVideo && (
+          <CardContent>
+            {videoError ? (
+              <div className="text-center py-8">
+                <div className="text-yellow-600 mb-2">⚠️ {videoError}</div>
+                <p className="text-sm text-gray-500">
+                  No proctoring video available for this attempt.
+                </p>
+              </div>
+            ) : (
+              <div className="rounded-lg overflow-hidden bg-black">
+                <SeamlessVideoPlayer
+                  attemptId={attemptId}
+                  className="w-full"
+                  onError={(error) => {
+                    console.error("[Proctoring] Video error:", error);
+                    setVideoError(error);
+                  }}
+                />
+              </div>
+            )}
+          </CardContent>
+        )}
       </Card>
 
       {/* Questions and Answers */}

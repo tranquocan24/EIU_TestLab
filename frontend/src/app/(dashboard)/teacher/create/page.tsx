@@ -72,10 +72,10 @@ export default function CreateExamPage() {
       const coursesArray = Array.isArray(user.courses)
         ? user.courses
         : typeof user.courses === "string"
-        ? user.courses
+        ? (user.courses as string)
             .split(",")
-            .map((c) => c.trim())
-            .filter((c) => c)
+            .map((c: string) => c.trim())
+            .filter((c: string) => c)
         : [];
       setTeacherCourses(coursesArray);
 

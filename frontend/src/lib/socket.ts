@@ -1,4 +1,6 @@
-import { io } from 'socket.io-client';
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const socketIO = require('socket.io-client');
+const io = socketIO.io || socketIO.default || socketIO;
 
 // Socket.IO client configuration - connects to NestJS backend
 const socket = io(process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:4000', {
@@ -15,11 +17,11 @@ socket.on('connect', () => {
   console.log('✅ Connected to notification server');
 });
 
-socket.on('disconnect', (reason) => {
+socket.on('disconnect', (reason: string) => {
   console.log('❌ Disconnected from notification server:', reason);
 });
 
-socket.on('connect_error', (error) => {
+socket.on('connect_error', (error: Error) => {
   // Only log in development mode and if we actually tried to connect
   if (process.env.NODE_ENV === 'development') {
     // Check if user is authenticated before logging error
@@ -30,7 +32,7 @@ socket.on('connect_error', (error) => {
   // Silently fail for unauthenticated users
 });
 
-socket.on('connected', (data) => {
+socket.on('connected', (data: unknown) => {
   console.log('📡 Server welcome:', data);
 });
 
