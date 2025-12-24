@@ -66,6 +66,7 @@
 - ✅ Tự động lưu tiến trình làm bài
 - ✅ Xem kết quả và lịch sử thi
 - ✅ Nhận thông báo realtime về bài thi mới
+- ✅ **Hệ thống chống gian lận** (Anti-cheating) khi làm bài
 
 ### 👨‍🏫 Dành cho Giảng viên
 
@@ -85,6 +86,94 @@
 - ✅ Quản lý môn học và phân quyền
 - ✅ System monitoring và logs
 - ✅ Thống kê toàn hệ thống
+
+---
+
+## 🛡️ Hệ thống chống gian lận (Anti-Cheating)
+
+EIU TestLab tích hợp **8 biện pháp chống gian lận** để đảm bảo tính công bằng và minh bạch trong quá trình thi:
+
+### 1. Chế độ toàn màn hình (Fullscreen Mode)
+- 🔒 **Bắt buộc** làm bài trong chế độ toàn màn hình
+- ⚠️ **Cảnh báo tự động**: Thoát toàn màn hình 3 lần → Tự động nộp bài
+- 📊 Giám sát realtime và ghi log mỗi lần thoát fullscreen
+
+### 2. Phát hiện chuyển Tab/Cửa sổ
+- 👁️ Giám sát khi sinh viên **chuyển sang tab/cửa sổ khác**
+- ⚠️ **Hệ thống cảnh báo**: Chuyển tab 3 lần → Tự động nộp bài
+- 🔔 Hiển thị modal cảnh báo với số lần vi phạm còn lại
+
+### 3. Chặn Copy/Paste
+- 🚫 Ngăn chặn hoàn toàn việc **sao chép** nội dung đề thi
+- 🚫 Vô hiệu hóa `Ctrl+C`, `Ctrl+V`, `Ctrl+X`
+- 🔐 Bảo vệ nội dung đề thi khỏi bị sao chép ra ngoài
+
+### 4. Chặn chuột phải (Right-click)
+- 🖱️ Vô hiệu hóa **context menu** (menu chuột phải)
+- 🚫 Ngăn chặn "Inspect Element" và các developer tools
+- 🔒 Bảo vệ nguồn code và nội dung trang
+
+### 5. Chặn chọn văn bản (Text Selection)
+- 📝 Disable khả năng **highlight/chọn text**
+- 🚫 Sử dụng CSS `user-select: none`
+- 🔐 Ngăn chặn việc chụp màn hình với text được chọn
+
+### 6. Ẩn Navigation trong chế độ thi
+- 👻 Tự động **ẩn Navbar/Header** khi vào chế độ làm bài
+- 🎯 Tập trung 100% vào nội dung đề thi
+- 🚫 Giảm khả năng điều hướng ra khỏi trang thi
+
+### 7. Auto-save & Session Recovery
+- 💾 **Tự động lưu** tiến trình làm bài mỗi 30 giây
+- 🔄 **Khôi phục session** nếu bị gián đoạn không mong muốn
+- ⏱️ Đồng bộ thời gian làm bài chính xác
+
+### 8. Tự động nộp bài khi hết giờ
+- ⏰ **Countdown timer** hiển thị thời gian còn lại
+- 🔴 Cảnh báo khi còn < 5 phút
+- ✅ **Tự động nộp bài** ngay khi hết thời gian
+
+### Triển khai kỹ thuật
+
+```typescript
+// File: frontend/src/app/(dashboard)/student/exam/page.tsx
+
+// Chặn copy/paste
+const preventCopy = (e: ClipboardEvent) => {
+  e.preventDefault();
+  return false;
+};
+
+// Phát hiện chuyển tab
+const handleVisibilityChange = () => {
+  if (document.hidden && !isSubmitting) {
+    tabSwitchCount++;
+    if (tabSwitchCount >= 3) {
+      autoSubmitExam(); // Tự động nộp bài
+    }
+  }
+};
+
+// Giám sát fullscreen
+const handleFullscreenChange = () => {
+  if (!document.fullscreenElement) {
+    fullscreenExitCount++;
+    if (fullscreenExitCount >= 3) {
+      autoSubmitExam(); // Tự động nộp bài
+    }
+  }
+};
+```
+
+### ⚠️ Lưu ý
+
+Các biện pháp anti-cheating hiện tại tập trung vào **client-side restrictions** cơ bản. Để tăng cường bảo mật, có thể bổ sung thêm:
+
+- 📷 Camera monitoring (Proctoring)
+- 🎥 Screen recording
+- 🤖 AI behavior detection
+- 📱 Multiple device detection
+- 🌐 IP/Location tracking
 
 ---
 
