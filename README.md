@@ -116,7 +116,6 @@ EIU TestLab tích hợp **8 biện pháp chống gian lận** để đảm bảo
 ### 5. Chặn chọn văn bản (Text Selection)
 - 📝 Disable khả năng **highlight/chọn text**
 - 🚫 Sử dụng CSS `user-select: none`
-- 🔐 Ngăn chặn việc chụp màn hình với text được chọn
 
 ### 6. Ẩn Navigation trong chế độ thi
 - 👻 Tự động **ẩn Navbar/Header** khi vào chế độ làm bài
@@ -205,7 +204,6 @@ Các biện pháp anti-cheating hiện tại tập trung vào **client-side rest
 - **Version Control**: Git & GitHub
 - **Package Manager**: npm
 - **Code Quality**: ESLint, Prettier
-- **Testing**: Jest (Unit), Playwright (E2E)
 
 ---
 
