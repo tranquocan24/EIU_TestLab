@@ -1,6 +1,7 @@
 import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
+import { randomUUID } from 'crypto';
 import { PrismaService } from '@/common/prisma/prisma.service';
 import { LoginDto, RegisterDto } from './dto';
 
@@ -29,6 +30,9 @@ export class AuthService {
     // Hash password
     const hashedPassword = await bcrypt.hash(dto.password, 10);
 
+    // Generate initial session ID
+    const sessionId = randomUUID();
+
     // Create user
     const user = await this.prisma.user.create({
       data: {
@@ -37,6 +41,8 @@ export class AuthService {
         email: dto.email,
         name: dto.name,
         role: dto.role || 'STUDENT',
+        sessionId,
+        lastLoginAt: new Date(),
       },
       select: {
         id: true,
@@ -59,8 +65,8 @@ export class AuthService {
       },
     });
 
-    // Generate token
-    const token = await this.signToken(user.id, user.username, user.role);
+    // Generate token with session ID
+    const token = await this.signToken(user.id, user.username, user.role, sessionId);
 
     // Map coursesEnrolled to courses array for backward compatibility
     const courseCodes = user.coursesEnrolled?.map(e => e.course.code) || [];
@@ -104,8 +110,20 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    // Generate token
-    const token = await this.signToken(user.id, user.username, user.role);
+    // Generate new session ID
+    const sessionId = randomUUID();
+
+    // Update user session in database
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        sessionId,
+        lastLoginAt: new Date(),
+      },
+    });
+
+    // Generate token with session ID
+    const token = await this.signToken(user.id, user.username, user.role, sessionId);
 
     // Map coursesEnrolled to courses array for backward compatibility
     const courseCodes = user.coursesEnrolled?.map(e => e.course.code) || [];
@@ -123,11 +141,12 @@ export class AuthService {
     };
   }
 
-  async signToken(userId: string, username: string, role: string): Promise<string> {
+  async signToken(userId: string, username: string, role: string, sessionId: string): Promise<string> {
     const payload = {
       sub: userId,
       username,
       role,
+      sessionId,
     };
 
     return this.jwt.signAsync(payload);

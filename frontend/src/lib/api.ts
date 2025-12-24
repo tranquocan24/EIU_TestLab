@@ -57,11 +57,30 @@ class ApiClient {
         });
 
         if (error.response?.status === 401) {
-          console.warn('Unauthorized - Redirecting to login');
+          console.warn('Unauthorized - Session invalidated or expired');
           if (typeof window !== 'undefined') {
+            // Clear all auth data
             localStorage.removeItem('token');
-            localStorage.removeItem('user');
-            window.location.href = '/login';
+            localStorage.removeItem('auth-storage');
+            localStorage.removeItem('storage-version');
+            
+            // Only redirect if not already on login page
+            if (!window.location.pathname.includes('/login')) {
+              // Show notification if available
+              const message = error.response?.data?.message || 'Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại';
+              
+              // Try to show toast if it exists
+              if (window.dispatchEvent) {
+                window.dispatchEvent(new CustomEvent('session-expired', { 
+                  detail: { message } 
+                }));
+              }
+              
+              // Redirect after a short delay
+              setTimeout(() => {
+                window.location.href = '/login';
+              }, 500);
+            }
           }
         }
 

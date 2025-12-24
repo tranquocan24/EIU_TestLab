@@ -26,6 +26,7 @@ export class NotificationsGateway
 
   private readonly logger = new Logger(NotificationsGateway.name);
   private userSockets = new Map<number, string>(); // userId -> socketId
+  private socketUsers = new Map<string, number>(); // socketId -> userId
 
   constructor(
     private jwtService: JwtService,
@@ -49,8 +50,33 @@ export class NotificationsGateway
       const payload = await this.jwtService.verifyAsync(token);
       const userId = payload.sub;
 
+      // Check if user already has an active connection
+      const existingSocketId = this.userSockets.get(userId);
+      if (existingSocketId) {
+        // Disconnect the old session
+        const oldSocket = this.server.sockets.sockets.get(existingSocketId);
+        if (oldSocket) {
+          this.logger.warn(`🔄 User ${userId} logging in from new device. Kicking old session ${existingSocketId}`);
+          
+          // Emit session-kicked event to old client
+          oldSocket.emit('session-kicked', {
+            message: 'Bạn đã đăng nhập ở thiết bị khác',
+            timestamp: new Date().toISOString(),
+          });
+          
+          // Disconnect old socket after a short delay to ensure message is delivered
+          setTimeout(() => {
+            oldSocket.disconnect(true);
+          }, 100);
+        }
+        
+        // Clean up old mappings
+        this.socketUsers.delete(existingSocketId);
+      }
+
       // Store user socket mapping
       this.userSockets.set(userId, client.id);
+      this.socketUsers.set(client.id, userId);
       client.data.userId = userId;
 
       // Join user to their personal room
@@ -72,7 +98,11 @@ export class NotificationsGateway
   handleDisconnect(client: Socket) {
     const userId = client.data.userId;
     if (userId) {
-      this.userSockets.delete(userId);
+      // Only delete if this is the current socket for this user
+      if (this.userSockets.get(userId) === client.id) {
+        this.userSockets.delete(userId);
+      }
+      this.socketUsers.delete(client.id);
       this.logger.log(`❌ User ${userId} disconnected (${client.id})`);
     }
   }

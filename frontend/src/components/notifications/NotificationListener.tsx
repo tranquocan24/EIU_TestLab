@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import socket from "@/lib/socket";
 import { Notification, NotificationType } from "@/types";
@@ -45,6 +46,7 @@ export function NotificationListener({
   onNewNotification,
 }: NotificationListenerProps) {
   const { toast } = useToast();
+  const router = useRouter();
 
   const handleNewNotification = useCallback(
     (notification: Notification) => {
@@ -84,6 +86,53 @@ export function NotificationListener({
     [toast, onNewNotification]
   );
 
+  const handleSessionKicked = useCallback(() => {
+    // Show notification
+    toast({
+      title: "Phiên đăng nhập đã hết hạn",
+      description: "Bạn đã đăng nhập ở thiết bị khác. Vui lòng đăng nhập lại.",
+      variant: "destructive",
+      duration: 5000,
+    });
+
+    // Clear auth data
+    localStorage.removeItem("token");
+    localStorage.removeItem("auth-storage");
+    localStorage.removeItem("storage-version");
+
+    // Disconnect socket
+    if (socket.connected) {
+      socket.disconnect();
+    }
+
+    // Redirect to login page
+    setTimeout(() => {
+      router.push("/login");
+      // Force reload to clear all state
+      window.location.reload();
+    }, 1500);
+  }, [toast, router]);
+
+  // Handle session expired from API interceptor
+  const handleSessionExpired = useCallback(
+    (event: CustomEvent) => {
+      const message = event.detail?.message || "Phiên đăng nhập hết hạn";
+
+      toast({
+        title: "Phiên đăng nhập đã hết hạn",
+        description: message,
+        variant: "destructive",
+        duration: 3000,
+      });
+
+      // Disconnect socket if connected
+      if (socket.connected) {
+        socket.disconnect();
+      }
+    },
+    [toast]
+  );
+
   useEffect(() => {
     // Only connect if user is authenticated
     if (typeof window === "undefined") {
@@ -112,16 +161,27 @@ export function NotificationListener({
     socket.on("notification:new", handleNewNotification);
     socket.on("notification", handleNewNotification); // Support both event names
 
+    // Listen for session kicked event
+    socket.on("session-kicked", handleSessionKicked);
+
+    // Listen for session expired event from API interceptor
+    const sessionExpiredHandler = (event: Event) => {
+      handleSessionExpired(event as CustomEvent);
+    };
+    window.addEventListener("session-expired", sessionExpiredHandler);
+
     // Cleanup on unmount
     return () => {
       socket.off("notification:new", handleNewNotification);
       socket.off("notification", handleNewNotification);
+      socket.off("session-kicked", handleSessionKicked);
+      window.removeEventListener("session-expired", sessionExpiredHandler);
       // Disconnect socket when user logs out or component unmounts
       if (typeof window !== "undefined" && !localStorage.getItem("token")) {
         socket.disconnect();
       }
     };
-  }, [handleNewNotification]);
+  }, [handleNewNotification, handleSessionKicked, handleSessionExpired]);
 
   return null; // This is a listener component, no UI
 }

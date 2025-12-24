@@ -72,6 +72,10 @@ model User {
   courses   String[] @default([]) // Danh sách lớp (ví dụ: ["CSE301", "CSE302"]) - DEPRECATED: Use coursesEnrolled instead
   isActive  Boolean  @default(true)
   
+  // Session management for single login
+  sessionId    String?   // Current active session ID
+  lastLoginAt  DateTime? // Last successful login timestamp
+  
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   
