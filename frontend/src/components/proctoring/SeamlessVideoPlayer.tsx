@@ -21,6 +21,7 @@ import api from '@/lib/api';
 
 interface SeamlessVideoPlayerProps {
     readonly attemptId: string;
+    readonly type?: 'webcam' | 'screen'; // Type of recording to play
     readonly className?: string;
     readonly onError?: (error: string) => void;
 }
@@ -32,6 +33,7 @@ interface PlaylistData {
 
 export default function SeamlessVideoPlayer({
     attemptId,
+    type = 'webcam',
     className,
     onError,
 }: SeamlessVideoPlayerProps) {
@@ -50,6 +52,46 @@ export default function SeamlessVideoPlayer({
     const [chunkDurations, setChunkDurations] = useState<number[]>([]);
     const [error, setError] = useState<string | null>(null);
     const [isBuffering, setIsBuffering] = useState(false);
+    const [retryCount, setRetryCount] = useState(0);
+    const MAX_RETRIES = 3;
+
+    // Handle video error
+    const handleVideoError = useCallback((e: React.SyntheticEvent<HTMLVideoElement, Event>) => {
+        const video = e.currentTarget;
+        const mediaError = video.error;
+        const currentUrl = playlist?.videos[currentIndex] || 'unknown';
+        
+        console.error('Video error:', {
+            code: mediaError?.code,
+            message: mediaError?.message,
+            currentIndex,
+            currentUrl: currentUrl.substring(0, 150) + '...',
+        });
+        
+        // If we haven't exceeded retries, try to reload the current video
+        if (retryCount < MAX_RETRIES && playlist && playlist.videos[currentIndex]) {
+            console.log(`Retrying video load (attempt ${retryCount + 1}/${MAX_RETRIES})...`);
+            setRetryCount(prev => prev + 1);
+            
+            // Wait a bit and retry
+            setTimeout(() => {
+                if (videoRef.current) {
+                    videoRef.current.src = playlist.videos[currentIndex];
+                    videoRef.current.load();
+                }
+            }, 1000 * (retryCount + 1)); // Exponential backoff
+        } else {
+            // Skip to next chunk if available
+            if (playlist && currentIndex + 1 < playlist.videos.length) {
+                console.log('Skipping to next chunk due to error...');
+                setRetryCount(0);
+                setCurrentIndex(currentIndex + 1);
+            } else {
+                setError(`Video playback error: ${mediaError?.message || 'Unknown error'}`);
+                onError?.(`Video playback error: ${mediaError?.message || 'Unknown error'}`);
+            }
+        }
+    }, [currentIndex, playlist, retryCount, onError]);
 
     // Load video at index
     const loadVideo = useCallback((index: number) => {
@@ -58,8 +100,24 @@ export default function SeamlessVideoPlayer({
         if (index < 0 || index >= playlist.videos.length) return;
 
         const videoUrl = playlist.videos[index];
-        videoRef.current.src = videoUrl;
-        videoRef.current.load();
+        console.log(`[SeamlessVideoPlayer] loadVideo called for index ${index}:`, videoUrl?.substring(0, 100) + '...');
+        
+        // Reset retry count for new video
+        setRetryCount(0);
+        
+        // Reset video element before loading new source
+        const video = videoRef.current;
+        video.pause();
+        video.removeAttribute('src');
+        video.load();
+        
+        // Small delay to ensure browser has reset the element
+        setTimeout(() => {
+            if (videoRef.current) {
+                videoRef.current.src = videoUrl;
+                videoRef.current.load();
+            }
+        }, 100);
 
         // Preload next video
         if (preloadVideoRef.current && index + 1 < playlist.videos.length) {
@@ -73,6 +131,8 @@ export default function SeamlessVideoPlayer({
         if (!playlist || !videoRef.current) return;
 
         const nextIndex = currentIndex + 1;
+        console.log(`[SeamlessVideoPlayer] Video ended. Transitioning from chunk ${currentIndex + 1} to ${nextIndex + 1}`);
+        
         if (nextIndex < playlist.videos.length) {
             // Store current chunk duration if not already stored
             const dur = videoRef.current.duration;
@@ -87,11 +147,33 @@ export default function SeamlessVideoPlayer({
             });
 
             setCurrentIndex(nextIndex);
+            setRetryCount(0); // Reset retry count for new video
 
-            // Load next video - it will auto-play via canplay handler
+            // Reset and load next video with delay
             const videoUrl = playlist.videos[nextIndex];
-            videoRef.current.src = videoUrl;
-            videoRef.current.load();
+            console.log(`[SeamlessVideoPlayer] Loading next chunk URL:`, videoUrl?.substring(0, 100) + '...');
+            
+            const video = videoRef.current;
+            video.pause();
+            video.removeAttribute('src');
+            video.load();
+            
+            // Small delay to ensure browser has reset the element
+            setTimeout(() => {
+                if (videoRef.current) {
+                    videoRef.current.src = videoUrl;
+                    videoRef.current.load();
+                    
+                    // Wait for canplay event before playing
+                    const onCanPlayHandler = () => {
+                        videoRef.current?.play().catch(err => {
+                            console.warn('Auto-play after chunk transition failed:', err);
+                        });
+                        videoRef.current?.removeEventListener('canplay', onCanPlayHandler);
+                    };
+                    videoRef.current.addEventListener('canplay', onCanPlayHandler, { once: true });
+                }
+            }, 100);
 
             // Preload the one after
             if (preloadVideoRef.current && nextIndex + 1 < playlist.videos.length) {
@@ -237,24 +319,32 @@ export default function SeamlessVideoPlayer({
                 setIsLoading(true);
                 setError(null);
 
-                const response = await api.getProctoringPlaylist(attemptId);
+                // Call appropriate API based on type
+                const response = type === 'screen'
+                    ? await api.getScreenPlaylist(attemptId)
+                    : await api.getProctoringPlaylist(attemptId);
                 const data = response.data as PlaylistData;
 
                 if (!isMounted) return;
 
                 if (!data.videos || data.videos.length === 0) {
-                    setError('No proctoring videos available for this attempt.');
+                    const typeLabel = type === 'screen' ? 'màn hình' : 'webcam';
+                    setError(`Không có video ${typeLabel} cho bài thi này.`);
                     setIsLoading(false);
                     return;
                 }
 
                 setPlaylist(data);
+                console.log(`[SeamlessVideoPlayer] Loaded playlist for ${type}:`, {
+                    totalChunks: data.totalChunks,
+                    videoUrls: data.videos.map((url, i) => `Chunk ${i + 1}: ${url.substring(0, 100)}...`),
+                });
                 setIsLoading(false);
             } catch (err: unknown) {
                 if (!isMounted) return;
                 console.error('Failed to fetch playlist:', err);
                 const axiosError = err as { response?: { data?: { message?: string } } };
-                const errorMessage = axiosError.response?.data?.message || 'Failed to load proctoring videos.';
+                const errorMessage = axiosError.response?.data?.message || 'Không thể tải video giám sát.';
                 setError(errorMessage);
                 onError?.(errorMessage);
                 setIsLoading(false);
@@ -266,7 +356,7 @@ export default function SeamlessVideoPlayer({
         return () => {
             isMounted = false;
         };
-    }, [attemptId, onError]);
+    }, [attemptId, type, onError]);
 
     // Load first video when playlist is available
     useEffect(() => {
@@ -353,6 +443,7 @@ export default function SeamlessVideoPlayer({
                 onCanPlay={handleCanPlay}
                 onPlay={() => setIsPlaying(true)}
                 onPause={() => setIsPlaying(false)}
+                onError={handleVideoError}
                 muted={isMuted}
                 playsInline
                 aria-label="Proctoring video playback"

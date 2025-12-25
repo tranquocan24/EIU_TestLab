@@ -17,7 +17,7 @@ import {
   Video,
 } from "lucide-react";
 import api from "@/lib/api";
-import SeamlessVideoPlayer from "@/components/proctoring/SeamlessVideoPlayer";
+import ProctoringViewer from "@/components/proctoring/ProctoringViewer";
 
 interface Option {
   id: string;
@@ -418,14 +418,9 @@ export default function TeacherResultDetailPage() {
                 </p>
               </div>
             ) : (
-              <div className="rounded-lg overflow-hidden bg-black">
-                <SeamlessVideoPlayer
+              <div className="rounded-lg overflow-hidden">
+                <ProctoringViewer
                   attemptId={attemptId}
-                  className="w-full"
-                  onError={(error) => {
-                    console.error("[Proctoring] Video error:", error);
-                    setVideoError(error);
-                  }}
                 />
               </div>
             )}

@@ -1,7 +1,7 @@
 Hiện thực Hệ thống Giám sát thi (Proctoring) với Chunking Video & Supabase
 
   Role: Senior Fullstack Developer (NestJS + Next.js).
-  Objective: Xây dựng hệ thống giám sát thi tự động bằng Webcam. Hệ thống cần đảm bảo an toàn dữ liệu bằng cách chia nhỏ
+  Objective: Xây dựng hệ thống giám sát thi tự động bằng Webcam và Screen Recording. Hệ thống cần đảm bảo an toàn dữ liệu bằng cách chia nhỏ
   video (Chunking) và upload liên tục. Đặc biệt, giao diện giáo viên phải hỗ trợ xem lại các đoạn video này một cách
   liền mạch như đang xem một video duy nhất.
 
@@ -37,14 +37,20 @@ Hiện thực Hệ thống Giám sát thi (Proctoring) với Chunking Video & Su
     - ✅ Cấu hình RLS policies
     - ✅ Cài đặt @supabase/supabase-js
 
+  - [x] **Phase 6: Screen Recording** ✅ HOÀN THÀNH
+    - ✅ ScreenRecorder component với screen capture API
+    - ✅ Backend endpoints cho screen recording upload/playlist
+    - ✅ ProctoringViewer để xem cả webcam và màn hình
+    - ✅ Tích hợp vào trang thi (song song với webcam)
+
   ---
 
   ## FILES ĐƯỢC TẠO/SỬA ĐỔI
 
   **Backend:**
   - `backend/prisma/schema.prisma` - Thêm proctoringVideoPath field
-  - `backend/src/modules/proctoring/proctoring.service.ts` - Core Supabase service
-  - `backend/src/modules/proctoring/proctoring.controller.ts` - REST API endpoints
+  - `backend/src/modules/proctoring/proctoring.service.ts` - Core Supabase service (webcam + screen)
+  - `backend/src/modules/proctoring/proctoring.controller.ts` - REST API endpoints (webcam + screen)
   - `backend/src/modules/proctoring/proctoring.module.ts` - NestJS module
   - `backend/src/modules/proctoring/dto/` - DTOs
   - `backend/src/app.module.ts` - Đăng ký ProctoringModule
@@ -52,14 +58,16 @@ Hiện thực Hệ thống Giám sát thi (Proctoring) với Chunking Video & Su
 
   **Frontend:**
   - `frontend/src/components/proctoring/WebcamRecorder.tsx` - Student webcam recording
-  - `frontend/src/components/proctoring/SeamlessVideoPlayer.tsx` - Teacher video player
+  - `frontend/src/components/proctoring/ScreenRecorder.tsx` - Student screen recording
+  - `frontend/src/components/proctoring/SeamlessVideoPlayer.tsx` - Video player (hỗ trợ webcam/screen)
+  - `frontend/src/components/proctoring/ProctoringViewer.tsx` - Teacher view (webcam + screen)
   - `frontend/src/components/ui/slider.tsx` - Slider component cho video player
-  - `frontend/src/lib/api.ts` - Thêm proctoring API functions
-  - `frontend/src/app/(dashboard)/student/exam/page.tsx` - Tích hợp WebcamRecorder
-  - `frontend/src/app/(dashboard)/teacher/results/[id]/page.tsx` - Tích hợp SeamlessVideoPlayer
+  - `frontend/src/lib/api.ts` - Thêm proctoring API functions (webcam + screen)
+  - `frontend/src/app/(dashboard)/student/exam/page.tsx` - Tích hợp WebcamRecorder + ScreenRecorder
+  - `frontend/src/app/(dashboard)/teacher/results/[id]/page.tsx` - Tích hợp ProctoringViewer
 
   **Documentation:**
-  - `docs/PROCTORING_SETUP.md` - Hướng dẫn setup Supabase
+  - `docs/PROCTORING_SETUP.md` - Hướng dẫn setup Supabase (cập nhật cho screen recording)
 
   ---
 

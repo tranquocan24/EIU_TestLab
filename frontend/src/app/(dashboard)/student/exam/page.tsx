@@ -16,6 +16,7 @@ import api from "@/lib/api";
 import { useExamPersistence } from "@/hooks/useExamPersistence";
 import { clearExpiredSessions, clearExamState } from "@/lib/examStorage";
 import WebcamRecorder from "@/components/proctoring/WebcamRecorder";
+import ScreenRecorder from "@/components/proctoring/ScreenRecorder";
 
 // Prevent copying
 const preventCopy = (e: ClipboardEvent) => {
@@ -135,6 +136,7 @@ export default function ExamTakingPage() {
   const [isProctoringEnabled, setIsProctoringEnabled] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [proctoringStatus, setProctoringStatus] = useState<string>("idle");
+  const [screenRecordingStatus, setScreenRecordingStatus] = useState<string>("idle");
 
   // Initialize exam persistence hook
   const { saveState, loadSavedState, findSession, clearState } =
@@ -952,34 +954,66 @@ export default function ExamTakingPage() {
 
   return (
     <div className="space-y-4 sm:space-y-6 px-2 sm:px-0 pb-6 sm:pb-8 min-h-screen">
-      {/* Proctoring WebcamRecorder - Fixed position at bottom right */}
+      {/* Proctoring Panel - Fixed position at bottom right */}
       {isProctoringEnabled && attemptId && (
-        <div className="fixed bottom-4 right-4 z-50">
-          <WebcamRecorder
-            attemptId={attemptId}
-            isRecording={isRecording}
-            chunkInterval={10}
-            maxRetries={3}
-            onError={(error) => {
-              console.error("[Proctoring] Error:", error);
-              setProctoringStatus("error");
-            }}
-            onStatusChange={(status) => {
-              console.log("[Proctoring] Status changed:", status);
-              setProctoringStatus(status);
-            }}
-          />
-          {/* Proctoring status indicator */}
-          <div className={`mt-2 text-xs text-center px-2 py-1 rounded-full ${proctoringStatus === "recording"
-              ? "bg-red-100 text-red-700"
-              : proctoringStatus === "error"
-                ? "bg-yellow-100 text-yellow-700"
-                : "bg-gray-100 text-gray-700"
-            }`}>
-            {proctoringStatus === "recording" && "🔴 Đang ghi hình"}
-            {proctoringStatus === "uploading" && "📤 Đang tải lên..."}
-            {proctoringStatus === "error" && "⚠️ Lỗi camera"}
-            {proctoringStatus === "idle" && "⏸️ Chờ ghi hình"}
+        <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2">
+          {/* Screen Recorder - on top */}
+          <div>
+            <ScreenRecorder
+              attemptId={attemptId}
+              isRecording={isRecording}
+              chunkInterval={10}
+              maxRetries={3}
+              onError={(error) => {
+                console.error("[ScreenRecording] Error:", error);
+                setScreenRecordingStatus("error");
+              }}
+              onStatusChange={(status) => {
+                console.log("[ScreenRecording] Status changed:", status);
+                setScreenRecordingStatus(status);
+              }}
+            />
+            {/* Screen recording status indicator */}
+            <div className={`mt-1 text-xs text-center px-2 py-0.5 rounded-full ${screenRecordingStatus === "recording"
+                ? "bg-blue-100 text-blue-700"
+                : screenRecordingStatus === "error"
+                  ? "bg-yellow-100 text-yellow-700"
+                  : "bg-gray-100 text-gray-700"
+              }`}>
+              {screenRecordingStatus === "recording" && "🖥️ Đang ghi màn hình"}
+              {screenRecordingStatus === "error" && "⚠️ Lỗi màn hình"}
+              {screenRecordingStatus === "idle" && "🖥️ Chờ chia sẻ..."}
+            </div>
+          </div>
+
+          {/* Webcam Recorder - below */}
+          <div>
+            <WebcamRecorder
+              attemptId={attemptId}
+              isRecording={isRecording}
+              chunkInterval={10}
+              maxRetries={3}
+              onError={(error) => {
+                console.error("[Proctoring] Error:", error);
+                setProctoringStatus("error");
+              }}
+              onStatusChange={(status) => {
+                console.log("[Proctoring] Status changed:", status);
+                setProctoringStatus(status);
+              }}
+            />
+            {/* Proctoring status indicator */}
+            <div className={`mt-1 text-xs text-center px-2 py-0.5 rounded-full ${proctoringStatus === "recording"
+                ? "bg-red-100 text-red-700"
+                : proctoringStatus === "error"
+                  ? "bg-yellow-100 text-yellow-700"
+                  : "bg-gray-100 text-gray-700"
+              }`}>
+              {proctoringStatus === "recording" && "🔴 Đang ghi hình"}
+              {proctoringStatus === "uploading" && "📤 Đang tải lên..."}
+              {proctoringStatus === "error" && "⚠️ Lỗi camera"}
+              {proctoringStatus === "idle" && "⏸️ Chờ ghi hình"}
+            </div>
           </div>
         </div>
       )}

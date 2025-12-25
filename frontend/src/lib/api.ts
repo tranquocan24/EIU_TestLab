@@ -499,7 +499,7 @@ class ApiClient {
   // ==================== Proctoring API ====================
 
   /**
-   * Upload a proctoring video chunk
+   * Upload a proctoring video chunk (webcam)
    * @param attemptId - ID of the attempt
    * @param sequence - Sequence number of the chunk
    * @param formData - FormData containing the video blob
@@ -523,7 +523,31 @@ class ApiClient {
   }
 
   /**
-   * Get proctoring video playlist for an attempt
+   * Upload a screen recording chunk
+   * @param attemptId - ID of the attempt
+   * @param sequence - Sequence number of the chunk
+   * @param formData - FormData containing the video blob
+   */
+  async uploadScreenChunk(
+    attemptId: string,
+    sequence: number,
+    formData: FormData
+  ): Promise<{ success: boolean; path: string }> {
+    const response = await this.client.post(
+      `/attempts/${attemptId}/proctoring/screen/${sequence}`,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        timeout: 120000, // 120 seconds timeout for screen recording (larger files)
+      }
+    );
+    return response.data;
+  }
+
+  /**
+   * Get proctoring video playlist for an attempt (webcam)
    * @param attemptId - ID of the attempt
    */
   async getProctoringPlaylist(attemptId: string): Promise<{
@@ -531,6 +555,29 @@ class ApiClient {
   }> {
     const response = await this.client.get(`/attempts/${attemptId}/proctoring/playlist`);
     return { data: response.data };
+  }
+
+  /**
+   * Get screen recording playlist for an attempt
+   * @param attemptId - ID of the attempt
+   */
+  async getScreenPlaylist(attemptId: string): Promise<{
+    data: { videos: string[]; totalChunks: number };
+  }> {
+    const response = await this.client.get(`/attempts/${attemptId}/proctoring/screen/playlist`);
+    return { data: response.data };
+  }
+
+  /**
+   * Get all proctoring videos (webcam + screen) for an attempt
+   * @param attemptId - ID of the attempt
+   */
+  async getAllProctoringVideos(attemptId: string): Promise<{
+    webcam: { videos: string[]; totalChunks: number };
+    screen: { videos: string[]; totalChunks: number };
+  }> {
+    const response = await this.client.get(`/attempts/${attemptId}/proctoring/all`);
+    return response.data;
   }
 
   /**

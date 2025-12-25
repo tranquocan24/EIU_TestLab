@@ -4,7 +4,11 @@ Hướng dẫn thiết lập Supabase Storage cho hệ thống giám sát thi (P
 
 ## 📋 Tổng quan
 
-Hệ thống Proctoring sử dụng Supabase Storage để lưu trữ các video chunk từ webcam của sinh viên trong quá trình làm bài thi. Video được chia nhỏ thành các chunk 10 giây và upload liên tục để đảm bảo an toàn dữ liệu.
+Hệ thống Proctoring sử dụng Supabase Storage để lưu trữ:
+- **Video webcam** - Quay hình sinh viên trong quá trình thi
+- **Video màn hình** - Ghi lại màn hình máy tính của sinh viên
+
+Video được chia nhỏ thành các chunk 10 giây và upload liên tục để đảm bảo an toàn dữ liệu.
 
 ## 🚀 Bước 1: Tạo Supabase Project
 
@@ -135,13 +139,19 @@ curl http://localhost:4000/attempts/{attemptId}/proctoring/playlist \
 proctoring-videos/
 ├── exam_abc123/
 │   ├── attempt_xyz789/
-│   │   ├── 1.webm
-│   │   ├── 2.webm
-│   │   ├── 3.webm
-│   │   └── ...
+│   │   ├── webcam/
+│   │   │   ├── 1.webm
+│   │   │   ├── 2.webm
+│   │   │   └── ...
+│   │   └── screen/
+│   │       ├── 1.webm
+│   │       ├── 2.webm
+│   │       └── ...
 │   └── attempt_def456/
-│       ├── 1.webm
-│       └── ...
+│       ├── webcam/
+│       │   └── ...
+│       └── screen/
+│           └── ...
 └── exam_ghi012/
     └── ...
 ```
@@ -163,14 +173,56 @@ import { WebcamRecorder } from '@/components/proctoring';
 />
 ```
 
+### ScreenRecorder (Student Side)
+
+```tsx
+import { ScreenRecorder } from '@/components/proctoring';
+
+// Trong trang làm bài thi
+<ScreenRecorder
+  attemptId={attemptId}
+  isRecording={examInProgress}
+  chunkInterval={10} // 10 giây mỗi chunk
+  maxRetries={3}
+  onError={(error) => console.error('Screen recording error:', error)}
+  onStatusChange={(status) => console.log('Screen status:', status)}
+/>
+```
+
+### ProctoringViewer (Teacher Side)
+
+Component tổng hợp để xem cả video webcam và màn hình:
+
+```tsx
+import { ProctoringViewer } from '@/components/proctoring';
+
+// Trong trang xem kết quả bài thi
+<ProctoringViewer
+  attemptId={attemptId}
+/>
+```
+
+Hỗ trợ 2 chế độ xem:
+- **Tab**: Chuyển đổi giữa webcam và màn hình
+- **Song song (Side-by-side)**: Xem cả 2 video cùng lúc
+
 ### SeamlessVideoPlayer (Teacher Side)
 
 ```tsx
 import { SeamlessVideoPlayer } from '@/components/proctoring';
 
-// Trong trang xem lại bài thi
+// Xem video webcam
 <SeamlessVideoPlayer
   attemptId={attemptId}
+  type="webcam"
+  className="w-full max-w-3xl"
+  onError={(error) => console.error('Playback error:', error)}
+/>
+
+// Xem video màn hình
+<SeamlessVideoPlayer
+  attemptId={attemptId}
+  type="screen"
   className="w-full max-w-3xl"
   onError={(error) => console.error('Playback error:', error)}
 />

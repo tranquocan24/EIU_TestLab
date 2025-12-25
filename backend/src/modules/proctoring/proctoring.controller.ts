@@ -108,20 +108,82 @@ export class ProctoringController {
             attemptId,
             sequence,
             file,
+            'webcam', // Default to webcam for backward compatibility
         );
 
         return result;
     }
 
     /**
-     * Get playlist of all video chunks for an attempt (for teacher viewing)
+     * Upload a screen recording chunk with explicit sequence number
+     * POST /attempts/:id/proctoring/screen/:sequence
+     */
+    @Post(':id/proctoring/screen/:sequence')
+    @UseInterceptors(
+        FileInterceptor('video', {
+            limits: {
+                fileSize: 100 * 1024 * 1024, // 100MB max per screen chunk (larger than webcam)
+            },
+            fileFilter: (req, file, callback) => {
+                if (file.mimetype === 'video/webm' || file.mimetype === 'video/mp4') {
+                    callback(null, true);
+                } else {
+                    callback(new BadRequestException('Only webm and mp4 video formats are allowed'), false);
+                }
+            },
+        }),
+    )
+    async uploadScreenChunk(
+        @Param('id') attemptId: string,
+        @Param('sequence', ParseIntPipe) sequence: number,
+        @UploadedFile() file: Express.Multer.File,
+        @GetUser('id') userId: string,
+    ) {
+        if (!file) {
+            throw new BadRequestException('Video file is required');
+        }
+
+        const result = await this.proctoringService.uploadScreenChunk(
+            '', // examId will be fetched in service
+            attemptId,
+            sequence,
+            file,
+        );
+
+        return result;
+    }
+
+    /**
+     * Get playlist of all webcam video chunks for an attempt (for teacher viewing)
      * GET /attempts/:id/proctoring/playlist
      */
     @Get(':id/proctoring/playlist')
     @UseGuards(RolesGuard)
     @Roles('TEACHER', 'ADMIN')
     async getAttemptPlaylist(@Param('id') attemptId: string) {
-        return this.proctoringService.getAttemptVideos(attemptId);
+        return this.proctoringService.getAttemptVideos(attemptId, 'webcam');
+    }
+
+    /**
+     * Get playlist of all screen recording chunks for an attempt (for teacher viewing)
+     * GET /attempts/:id/proctoring/screen/playlist
+     */
+    @Get(':id/proctoring/screen/playlist')
+    @UseGuards(RolesGuard)
+    @Roles('TEACHER', 'ADMIN')
+    async getScreenPlaylist(@Param('id') attemptId: string) {
+        return this.proctoringService.getScreenVideos(attemptId);
+    }
+
+    /**
+     * Get all proctoring videos (webcam + screen) for an attempt
+     * GET /attempts/:id/proctoring/all
+     */
+    @Get(':id/proctoring/all')
+    @UseGuards(RolesGuard)
+    @Roles('TEACHER', 'ADMIN')
+    async getAllProctoringVideos(@Param('id') attemptId: string) {
+        return this.proctoringService.getAllProctoringVideos(attemptId);
     }
 
     /**
